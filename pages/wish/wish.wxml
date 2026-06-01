@@ -1,0 +1,79 @@
+<view class="container">
+  <view class="header-section">
+    <view class="wish-card">
+      <view class="wish-icon">🌟</view>
+      <view class="wish-info">
+        <text class="wish-value">{{wishPoints}}</text>
+        <text class="wish-label">心愿值</text>
+      </view>
+      <view class="wish-level">Lv.{{level}}</view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">获得心愿</text>
+    </view>
+    
+    <view class="tasks-grid">
+      <view class="task-item" wx:for="{{tasks}}" wx:key="index">
+        <view class="task-icon" style="background: {{item.bgColor}}">
+          <text>{{item.icon}}</text>
+        </view>
+        <view class="task-content">
+          <text class="task-name">{{item.name}}</text>
+          <text class="task-desc">{{item.desc}}</text>
+        </view>
+        <view class="task-points">+{{item.points}}</view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">心愿记录</text>
+    </view>
+    
+    <view class="history-list">
+      <block wx:for="{{history}}" wx:key="id">
+        <view class="history-item">
+          <view class="history-icon">
+            <text>{{item.amount > 0 ? '+' : ''}}{{item.amount}}</text>
+          </view>
+          <view class="history-content">
+            <text class="history-reason">{{item.reason}}</text>
+            <text class="history-time">{{item.time}}</text>
+          </view>
+          <view class="history-balance">余额: {{item.balance}}</view>
+        </view>
+      </block>
+      
+      <view wx:if="{{history.length === 0}}" class="empty-state">
+        <text class="empty-icon">📝</text>
+        <text class="empty-text">还没有心愿记录</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">心愿兑换</text>
+    </view>
+    
+    <view class="rewards-grid">
+      <view class="reward-item" wx:for="{{rewards}}" wx:key="index">
+        <view class="reward-icon">{{item.icon}}</view>
+        <text class="reward-name">{{item.name}}</text>
+        <text class="reward-cost">{{item.cost}}个心愿</text>
+        <view 
+          class="reward-btn {{wishPoints >= item.cost ? '' : 'disabled'}}" 
+          bindtap="exchangeReward"
+          data-index="{{index}}"
+        >
+          <text>{{wishPoints >= item.cost ? '兑换' : '心愿不足'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+</view>

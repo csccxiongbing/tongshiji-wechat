@@ -1,0 +1,61 @@
+<view class="container">
+  <view class="header">
+    <view class="back-btn" bindtap="goBack">
+      <text>←</text>
+    </view>
+    <text class="page-title">注册</text>
+  </view>
+  
+  <view class="form-card">
+    <view class="form-item">
+      <view class="input-wrapper">
+        <text class="input-icon">📱</text>
+        <input 
+          class="input-field" 
+          placeholder="请输入手机号" 
+          value="{{phone}}"
+          bindinput="onPhoneInput"
+          type="number"
+        />
+      </view>
+    </view>
+    
+    <view class="form-item">
+      <view class="input-wrapper">
+        <text class="input-icon">🔑</text>
+        <input 
+          class="input-field" 
+          placeholder="请输入验证码" 
+          value="{{code}}"
+          bindinput="onCodeInput"
+          type="number"
+        />
+        <view class="code-btn" bindtap="sendCode">
+          <text>{{codeBtnText}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="form-item">
+      <view class="input-wrapper">
+        <text class="input-icon">👤</text>
+        <input 
+          class="input-field" 
+          placeholder="点击修改昵称" 
+          value="{{nickname}}"
+          bindinput="onNicknameInput"
+        />
+      </view>
+    </view>
+    
+    <view class="btn-primary register-btn" bindtap="register">
+      <text>注册</text>
+    </view>
+    
+    <view class="bottom-link">
+      <text>已有账号？</text>
+      <text class="link" bindtap="goToLogin">立即登录</text>
+    </view>
+  </view>
+  
+</view>

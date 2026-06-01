@@ -1,0 +1,212 @@
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FFF5F5 0%, #FFE4E1 100%);
+  padding: 20rpx;
+  padding-bottom: 120rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.header-section {
+  padding: 20rpx 20rpx;
+}
+
+.user-card {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF0F5 100%);
+  border-radius: 24rpx;
+  padding: 30rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 8rpx 30rpx rgba(255, 105, 180, 0.15);
+  margin-bottom: 20rpx;
+}
+
+.user-avatar {
+  width: 100rpx;
+  height: 100rpx;
+  background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 40rpx;
+  font-weight: 600;
+  margin-right: 24rpx;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+  display: block;
+}
+
+.user-role {
+  font-size: 24rpx;
+  color: #FF69B4;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.edit-btn {
+  background: #FFE4E1;
+  color: #FF69B4;
+  border-radius: 30rpx;
+  padding: 12rpx 24rpx;
+  font-size: 24rpx;
+}
+
+.wish-card {
+  background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
+  border-radius: 24rpx;
+  padding: 28rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 8rpx 30rpx rgba(255, 105, 180, 0.3);
+}
+
+.wish-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+
+.wish-info {
+  flex: 1;
+}
+
+.wish-text {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
+  display: block;
+}
+
+.wish-value {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-top: 4rpx;
+  display: block;
+}
+
+.wish-arrow {
+  font-size: 32rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.section {
+  margin-bottom: 30rpx;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+.title-icon {
+  margin-right: 12rpx;
+  font-size: 36rpx;
+}
+
+.achievements-grid {
+  display: flex;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  box-shadow: 0 8rpx 30rpx rgba(255, 105, 180, 0.15);
+}
+
+.achievement-item {
+  flex: 1;
+  text-align: center;
+}
+
+.achievement-icon {
+  font-size: 48rpx;
+  margin-bottom: 16rpx;
+}
+
+.achievement-num {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #FF69B4;
+  display: block;
+}
+
+.achievement-label {
+  font-size: 24rpx;
+  color: #999999;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.menu-list {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 30rpx rgba(255, 105, 180, 0.15);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx;
+  border-bottom: 2rpx solid #FFE4E1;
+  transition: all 0.3s ease;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:active {
+  background: #FFF5F5;
+}
+
+.logout-btn:active {
+  background: #FFE4E1;
+}
+
+.menu-icon {
+  font-size: 40rpx;
+  margin-right: 20rpx;
+}
+
+.menu-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.menu-arrow {
+  font-size: 28rpx;
+  color: #CCCCCC;
+}
+
+.footer {
+  text-align: center;
+  padding: 40rpx 20rpx;
+}
+
+.footer-text {
+  font-size: 24rpx;
+  color: #999999;
+  display: block;
+}
+
+.footer-desc {
+  font-size: 22rpx;
+  color: #CCCCCC;
+  margin-top: 8rpx;
+  display: block;
+}
+
+

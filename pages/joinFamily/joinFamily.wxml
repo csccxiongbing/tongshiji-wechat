@@ -1,0 +1,37 @@
+<view class="container">
+  <view class="header">
+    <view class="back-btn" bindtap="goBack">
+      <text>←</text>
+    </view>
+    <text class="page-title">加入家庭</text>
+  </view>
+  
+  <view class="form-card">
+    <view class="invite-code-section">
+      <text class="invite-label">邀请码</text>
+      <view class="code-inputs">
+        <block wx:for="{{inviteCode}}" wx:key="index">
+          <input 
+            class="code-input"
+            focus="{{currentFocusIndex === index}}"
+            maxlength="1"
+            value="{{item}}"
+            bindinput="onCodeInput"
+            data-index="{{index}}"
+          />
+        </block>
+      </view>
+      <text class="code-tip">请输入6位邀请码</text>
+    </view>
+    
+    <view class="btn-primary join-btn" bindtap="joinFamily">
+      <text>加入家庭</text>
+    </view>
+    
+    <view class="tips-card">
+      <text class="tips-title">💡 温馨提示</text>
+      <text class="tips-content">邀请码由家庭管理员生成，可在家庭设置中查看</text>
+    </view>
+  </view>
+  
+</view>

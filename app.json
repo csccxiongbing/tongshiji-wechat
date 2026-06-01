@@ -1,0 +1,52 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/login/login",
+    "pages/register/register",
+    "pages/role/role",
+    "pages/home/home",
+    "pages/family/family",
+    "pages/addFamily/addFamily",
+    "pages/joinFamily/joinFamily",
+    "pages/schedule/schedule",
+    "pages/addSchedule/addSchedule",
+    "pages/scheduleDetail/scheduleDetail",
+    "pages/my/my",
+    "pages/points/points",
+    "pages/pomodoro/pomodoro",
+    "pages/monthly-schedule/monthly-schedule",
+    "pages/wish/wish"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "童时记",
+    "navigationBarBackgroundColor": "#FFE4E1",
+    "backgroundColor": "#FFF5F5"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#999999",
+    "selectedColor": "#FF69B4",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "今日"
+      },
+      {
+        "pagePath": "pages/pomodoro/pomodoro",
+        "text": "专注"
+      },
+      {
+        "pagePath": "pages/schedule/schedule",
+        "text": "周计划"
+      },
+      {
+        "pagePath": "pages/my/my",
+        "text": "我的"
+      }
+    ]
+  }
+}

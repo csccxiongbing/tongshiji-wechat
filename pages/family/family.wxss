@@ -1,0 +1,153 @@
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FFF5F5 0%, #FFE4E1 100%);
+  padding: 40rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 60rpx;
+  margin-top: 60rpx;
+}
+
+.page-title {
+  font-size: 44rpx;
+  font-weight: 600;
+  color: #333333;
+  display: block;
+}
+
+.page-subtitle {
+  font-size: 28rpx;
+  color: #999999;
+  margin-top: 16rpx;
+  display: block;
+}
+
+.family-section {
+  display: flex;
+  flex-direction: column;
+  gap: 30rpx;
+}
+
+.family-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 8rpx 30rpx rgba(255, 105, 180, 0.15);
+  transition: all 0.3s ease;
+  transform: translateY(0);
+}
+
+.card-hover {
+  transform: translateY(-4rpx) scale(1.02);
+  box-shadow: 0 12rpx 40rpx rgba(255, 105, 180, 0.25);
+}
+
+.card-hover .arrow {
+  transform: translateX(8rpx);
+}
+
+.create-card {
+  border-left: 8rpx solid #4ECDC4;
+}
+
+.create-card.card-hover {
+  box-shadow: 0 12rpx 40rpx rgba(78, 205, 196, 0.25);
+}
+
+.create-card .icon-hover {
+  background: rgba(78, 205, 196, 0.2);
+  box-shadow: 0 0 20rpx rgba(78, 205, 196, 0.4);
+}
+
+.join-card {
+  border-left: 8rpx solid #FF69B4;
+}
+
+.join-card.card-hover {
+  box-shadow: 0 12rpx 40rpx rgba(255, 105, 180, 0.25);
+}
+
+.join-card .icon-hover {
+  background: rgba(255, 105, 180, 0.2);
+  box-shadow: 0 0 20rpx rgba(255, 105, 180, 0.4);
+}
+
+.family-icon {
+  width: 100rpx;
+  height: 100rpx;
+  background: #FFF5F5;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  margin-right: 24rpx;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.icon-hover {
+  transform: scale(1.1);
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+
+.family-info {
+  flex: 1;
+}
+
+.family-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+  display: block;
+}
+
+.family-desc {
+  font-size: 24rpx;
+  color: #999999;
+  margin-top: 8rpx;
+  display: block;
+}
+
+.arrow {
+  font-size: 36rpx;
+  color: #CCCCCC;
+  transition: transform 0.3s ease;
+}
+
+.tips {
+  margin-top: 40rpx;
+  background: #FFF0F5;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+}
+
+.tips-icon {
+  font-size: 32rpx;
+  margin-right: 16rpx;
+}
+
+.tips-text {
+  font-size: 26rpx;
+  color: #FF69B4;
+}

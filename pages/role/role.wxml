@@ -1,0 +1,39 @@
+<view class="container">
+  <view class="header">
+    <text class="page-title">选择角色</text>
+    <text class="page-subtitle">告诉我们你是谁</text>
+  </view>
+  
+  <view class="role-section">
+    <view 
+      class="role-card {{selectedRole === 'parent' ? 'selected' : ''}}" 
+      bindtap="selectRole"
+      data-role="parent"
+    >
+      <view class="role-icon parent-icon">
+        <text>👨‍👩‍👧‍👦</text>
+      </view>
+      <text class="role-title">家长</text>
+      <text class="role-desc">为孩子管理日程</text>
+      <view wx:if="{{selectedRole === 'parent'}}" class="check-mark">✓</view>
+    </view>
+    
+    <view 
+      class="role-card {{selectedRole === 'child' ? 'selected' : ''}}" 
+      bindtap="selectRole"
+      data-role="child"
+    >
+      <view class="role-icon child-icon">
+        <text>👧</text>
+      </view>
+      <text class="role-title">孩子</text>
+      <text class="role-desc">查看自己的日程</text>
+      <view wx:if="{{selectedRole === 'child'}}" class="check-mark">✓</view>
+    </view>
+  </view>
+  
+  <view class="btn-primary confirm-btn" bindtap="confirmRole">
+    <text>确认选择</text>
+  </view>
+  
+</view>

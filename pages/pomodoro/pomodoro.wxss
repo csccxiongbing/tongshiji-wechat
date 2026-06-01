@@ -1,0 +1,253 @@
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FFF5F5 0%, #FFE4E1 100%);
+  padding: 0 0 120rpx;
+}
+
+.header-section {
+  padding: 60rpx 32rpx 32rpx;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.page-subtitle {
+  font-size: 26rpx;
+  color: #999;
+}
+
+.timer-section {
+  padding: 40rpx 32rpx;
+}
+
+.timer-ring {
+  width: 400rpx;
+  height: 400rpx;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-ring::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #FFE4E1;
+}
+
+.timer-ring::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(#FF69B4 0%, #FFE4E1 0%);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 24rpx), #fff calc(100% - 24rpx));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 24rpx), #fff calc(100% - 24rpx));
+}
+
+.timer-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.timer-time {
+  font-size: 80rpx;
+  font-weight: bold;
+  color: #FF69B4;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.timer-label {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.timer-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40rpx;
+  margin-top: 48rpx;
+}
+
+.control-btn {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+}
+
+.control-btn.primary {
+  background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
+  box-shadow: 0 8rpx 32rpx rgba(255, 105, 180, 0.4);
+}
+
+.control-btn.secondary {
+  background: #fff;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+}
+
+.mode-section {
+  padding: 0 32rpx;
+  display: flex;
+  gap: 20rpx;
+}
+
+.mode-item {
+  flex: 1;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 24rpx 16rpx;
+  text-align: center;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.mode-item.active {
+  background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
+}
+
+.mode-item.active .mode-name,
+.mode-item.active .mode-duration {
+  color: #fff;
+}
+
+.mode-icon {
+  font-size: 40rpx;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.mode-name {
+  font-size: 26rpx;
+  font-weight: bold;
+  color: #333;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.mode-duration {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.stats-section {
+  padding: 32rpx;
+  display: flex;
+  justify-content: center;
+  gap: 48rpx;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-icon {
+  font-size: 40rpx;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.stat-value {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: #FF69B4;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.section {
+  padding: 0 32rpx;
+}
+
+.section-header {
+  margin-bottom: 24rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.history-list {
+  background: #fff;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+}
+
+.history-item {
+  padding: 24rpx;
+  display: flex;
+  align-items: center;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-icon {
+  font-size: 36rpx;
+  margin-right: 20rpx;
+}
+
+.history-info {
+  flex: 1;
+}
+
+.history-name {
+  font-size: 28rpx;
+  color: #333;
+  display: block;
+}
+
+.history-time {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.history-duration {
+  font-size: 26rpx;
+  color: #FF69B4;
+  font-weight: bold;
+}
+
+.empty-state {
+  padding: 60rpx;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+  display: block;
+  margin-bottom: 16rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
+

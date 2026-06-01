@@ -1,0 +1,92 @@
+<view class="container">
+  <view class="header-section">
+    <view class="user-card">
+      <view class="user-avatar">
+        <text>{{nickname.charAt(0)}}</text>
+      </view>
+      <view class="user-info">
+        <text class="user-name">{{nickname}}</text>
+        <text class="user-role">{{roleText}}</text>
+      </view>
+      <view class="edit-btn" bindtap="goToEditProfile">
+        <text>编辑</text>
+      </view>
+    </view>
+    
+    <view class="wish-card" bindtap="goToWish">
+      <view class="wish-icon">🌟</view>
+      <view class="wish-info">
+        <text class="wish-text">我的心愿</text>
+        <text class="wish-value">{{wishPoints}}</text>
+      </view>
+      <view class="wish-arrow">→</view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-title">
+      <text class="title-icon">📊</text>
+      <text>我的成就</text>
+    </view>
+    
+    <view class="achievements-grid">
+      <view class="achievement-item">
+        <view class="achievement-icon">🏆</view>
+        <text class="achievement-num">{{achievements.totalDays}}</text>
+        <text class="achievement-label">连续打卡天数</text>
+      </view>
+      <view class="achievement-item">
+        <view class="achievement-icon">⭐</view>
+        <text class="achievement-num">{{achievements.completedTasks}}</text>
+        <text class="achievement-label">完成任务数</text>
+      </view>
+      <view class="achievement-item">
+        <view class="achievement-icon">🎁</view>
+        <text class="achievement-num">{{achievements.badges}}</text>
+        <text class="achievement-label">获得徽章</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="menu-list">
+      <view class="menu-item" bindtap="goToFamily">
+        <view class="menu-icon">👨‍👩‍👧‍👦</view>
+        <text class="menu-text">家庭成员</text>
+        <text class="menu-arrow">→</text>
+      </view>
+      <view class="menu-item" bindtap="goToWish">
+        <view class="menu-icon">🌟</view>
+        <text class="menu-text">心愿中心</text>
+        <text class="menu-arrow">→</text>
+      </view>
+      <view class="menu-item" bindtap="goToSettings">
+        <view class="menu-icon">⚙️</view>
+        <text class="menu-text">设置</text>
+        <text class="menu-arrow">→</text>
+      </view>
+      <view class="menu-item" bindtap="goToHelp">
+        <view class="menu-icon">💡</view>
+        <text class="menu-text">帮助与反馈</text>
+        <text class="menu-arrow">→</text>
+      </view>
+      <view class="menu-item" bindtap="printStorage">
+        <view class="menu-icon">🔍</view>
+        <text class="menu-text">查看本地存储</text>
+        <text class="menu-arrow">→</text>
+      </view>
+      <view class="menu-item logout-btn" bindtap="logout">
+        <view class="menu-icon">🚪</view>
+        <text class="menu-text">退出登录</text>
+        <text class="menu-arrow">→</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="footer">
+    <text class="footer-text">童时记 v1.0</text>
+    <text class="footer-desc">记录成长的每一刻</text>
+  </view>
+  
+  <custom-tab-bar />
+</view>

@@ -1,0 +1,69 @@
+<view class="container">
+  <view class="header-bar">
+    <view class="back-btn" bindtap="goBack">
+      <text class="back-icon">←</text>
+    </view>
+    <text class="header-title">日程详情</text>
+    <view class="header-placeholder"></view>
+  </view>
+
+  <view class="detail-card" wx:if="{{schedule}}">
+    <view class="detail-icon-wrapper">
+      <view class="detail-icon" style="background: {{schedule.color}}">
+        <text>{{schedule.icon}}</text>
+      </view>
+    </view>
+
+    <view class="detail-content">
+      <view class="detail-row">
+        <text class="detail-label">日程标题</text>
+        <text class="detail-title">{{schedule.title}}</text>
+      </view>
+
+      <view class="detail-row" wx:if="{{schedule.startTime && schedule.endTime}}">
+        <text class="detail-label">开始时间</text>
+        <text class="detail-value">{{schedule.startTime}}</text>
+      </view>
+
+      <view class="detail-row" wx:if="{{schedule.startTime && schedule.endTime}}">
+        <text class="detail-label">结束时间</text>
+        <text class="detail-value">{{schedule.endTime}}</text>
+      </view>
+
+      <view class="detail-row" wx:if="{{schedule.scheduleMembers && schedule.scheduleMembers.length > 0}}">
+        <text class="detail-label">参与成员</text>
+        <view class="detail-members">
+          <text wx:for="{{schedule.scheduleMembers}}" wx:key="index" class="member-tag">
+            {{item}}
+          </text>
+        </view>
+      </view>
+
+      <view class="detail-row" wx:if="{{schedule.points && schedule.points > 0}}">
+        <text class="detail-label">完成奖励</text>
+        <view class="detail-points">
+          <text class="points-icon">⭐</text>
+          <text class="points-value">+{{schedule.points}} 积分</text>
+        </view>
+      </view>
+
+      <view class="detail-row">
+        <text class="detail-label">完成状态</text>
+        <view class="detail-status {{schedule.completed ? 'completed' : ''}}">
+          <text>{{schedule.completed ? '已完成 ✓' : '未完成'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="action-section">
+    <view class="action-btn {{schedule.completed ? 'btn-cancel' : 'btn-complete'}}" bindtap="toggleComplete">
+      <text>{{schedule.completed ? '取消完成' : '标记完成'}}</text>
+    </view>
+  </view>
+
+  <view class="empty-state" wx:if="{{!schedule}}">
+    <text class="empty-icon">📋</text>
+    <text class="empty-text">未找到日程详情</text>
+  </view>
+</view>

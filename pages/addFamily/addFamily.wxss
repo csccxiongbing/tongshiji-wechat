@@ -1,0 +1,226 @@
+.container {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #FFF5F5 0%, #FFE4E1 100%);
+  padding: 40rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-card {
+  background: #FFFFFF;
+  border-radius: 32rpx;
+  padding: 40rpx;
+  box-shadow: 0 8rpx 40rpx rgba(255, 105, 180, 0.15);
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.role-select-section {
+  margin-bottom: 40rpx;
+}
+
+.role-icons {
+  display: flex;
+  justify-content: center;
+  gap: 60rpx;
+}
+
+.role-icon-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.icon-circle {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72rpx;
+  margin-bottom: 16rpx;
+  transition: all 0.3s ease;
+  border: 4rpx solid transparent;
+}
+
+.parent-bg {
+  background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+}
+
+.child-bg {
+  background: linear-gradient(135deg, #FFB6C1 0%, #FF69B4 100%);
+}
+
+.role-icon-option.selected .icon-circle {
+  border-color: #FF69B4;
+  transform: scale(1.1);
+  box-shadow: 0 8rpx 24rpx rgba(255, 105, 180, 0.3);
+}
+
+.role-label {
+  font-size: 28rpx;
+  color: #666666;
+}
+
+.role-icon-option.selected .role-label {
+  color: #FF69B4;
+  font-weight: 600;
+}
+
+.check-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 48rpx;
+  height: 48rpx;
+  background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 28rpx;
+  font-weight: bold;
+  box-shadow: 0 4rpx 12rpx rgba(255, 105, 180, 0.4);
+}
+
+.parent-name-section {
+  margin-bottom: 40rpx;
+  padding: 24rpx;
+  background: #FFF5F5;
+  border-radius: 20rpx;
+}
+
+.parent-options {
+  display: flex;
+  gap: 20rpx;
+  flex-wrap: wrap;
+}
+
+.parent-option {
+  padding: 16rpx 28rpx;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  font-size: 26rpx;
+  color: #666666;
+  border: 2rpx solid #FFB6C1;
+  transition: all 0.3s ease;
+}
+
+.parent-option.active {
+  background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
+  color: #FFFFFF;
+  border-color: transparent;
+}
+
+.custom-name-section {
+  margin-bottom: 40rpx;
+}
+
+.custom-input {
+  width: 100%;
+  padding: 24rpx 24rpx;
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  font-size: 30rpx;
+  color: #333333;
+  box-sizing: border-box;
+  border: 2rpx solid #E8E8E8;
+  line-height: 1.5;
+}
+
+.baby-info-section {
+  margin-bottom: 40rpx;
+}
+
+.input-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  background: #FFF5F5;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.input-item:last-child {
+  margin-bottom: 0;
+}
+
+.input-label {
+  font-size: 28rpx;
+  color: #666666;
+  font-weight: 500;
+  margin-right: 24rpx;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.baby-name-input {
+  flex: 1;
+  font-size: 30rpx;
+  color: #333333;
+  background: transparent;
+}
+
+.date-picker {
+  flex: 1;
+  font-size: 30rpx;
+  color: #333333;
+  background: transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.picker-arrow {
+  font-size: 36rpx;
+  color: #CCCCCC;
+}
+
+.members-section {
+  margin-bottom: 40rpx;
+}
+
+.members-list {
+  margin-bottom: 20rpx;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  background: #FFF5F5;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.member-name {
+  flex: 1;
+  font-size: 30rpx;
+  color: #333333;
+}
+
+.delete-btn {
+  width: 48rpx;
+  height: 48rpx;
+  background: #FFE4E1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FF69B4;
+  font-size: 32rpx;
+}
+
+.create-btn {
+  padding: 28rpx;
+  font-size: 32rpx;
+}

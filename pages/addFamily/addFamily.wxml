@@ -1,0 +1,113 @@
+<view class="container">
+  <view class="form-card">
+    <view class="role-select-section">
+      <text class="section-title">我的角色</text>
+      <view class="role-icons">
+        <view 
+          class="role-icon-option {{selectedRole === 'parent' ? 'selected' : ''}}" 
+          bindtap="selectRole"
+          data-role="parent"
+        >
+          <view class="icon-circle parent-bg">
+            <text>👨‍👩‍👧‍👦</text>
+          </view>
+          <text class="role-label">家长</text>
+          <view wx:if="{{selectedRole === 'parent'}}" class="check-icon">✓</view>
+        </view>
+        <view 
+          class="role-icon-option {{selectedRole === 'child' ? 'selected' : ''}}" 
+          bindtap="selectRole"
+          data-role="child"
+        >
+          <view class="icon-circle child-bg">
+            <text>👧</text>
+          </view>
+          <text class="role-label">孩子</text>
+          <view wx:if="{{selectedRole === 'child'}}" class="check-icon">✓</view>
+        </view>
+      </view>
+    </view>
+    
+    <view wx:if="{{selectedRole === 'parent'}}" class="parent-name-section">
+      <text class="section-title">我的角色名称</text>
+      <view class="parent-options">
+        <view 
+          class="parent-option {{parentRole === 'dad' ? 'active' : ''}}" 
+          bindtap="selectParentRole"
+          data-role="dad"
+        >
+          <text>👨 爸爸</text>
+        </view>
+        <view 
+          class="parent-option {{parentRole === 'mom' ? 'active' : ''}}" 
+          bindtap="selectParentRole"
+          data-role="mom"
+        >
+          <text>👩 妈妈</text>
+        </view>
+        <view 
+          class="parent-option custom {{parentRole === 'custom' ? 'active' : ''}}" 
+          bindtap="selectParentRole"
+          data-role="custom"
+        >
+          <text>✏️ 自定义</text>
+        </view>
+      </view>
+    </view>
+    
+    <view wx:if="{{selectedRole === 'parent'}}" class="members-section">
+      <view class="members-list">
+        <block wx:for="{{members}}" wx:key="index">
+          <view class="member-item">
+            <input 
+              wx:if="{{index === 0 && parentRole === 'custom'}}"
+              class="member-name" 
+              placeholder="请输入角色名称" 
+              placeholder-style="color: #CCCCCC"
+              value="{{customParentName}}"
+              bindinput="onCustomParentNameInput"
+            />
+            <input 
+              wx:else
+              class="member-name" 
+              placeholder="我的角色名称" 
+              value="{{item.name}}"
+              bindinput="onMemberNameInput"
+              data-index="{{index}}"
+            />
+            <view wx:if="{{members.length > 1}}" class="delete-btn" bindtap="deleteMember" data-index="{{index}}">
+              <text>×</text>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+    
+    <view wx:if="{{selectedRole === 'parent' || selectedRole === 'child'}}" class="baby-info-section">
+      <view class="input-item">
+        <text class="input-label">宝贝名字</text>
+        <input 
+          class="baby-name-input" 
+          placeholder="请输入宝贝姓名" 
+          placeholder-style="color: #CCCCCC"
+          value="{{babyName}}"
+          bindinput="onBabyNameInput"
+        />
+      </view>
+      <view class="input-item">
+        <text class="input-label">出生日期</text>
+        <picker mode="date" value="{{babyBirthday}}" bindchange="onBabyBirthdayChange">
+          <view class="date-picker">
+            <text>{{birthdayDisplay || '请选择日期'}}</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+    
+    <view class="btn-primary create-btn" bindtap="createFamily">
+      <text>马上创建</text>
+    </view>
+  </view>
+  
+</view>

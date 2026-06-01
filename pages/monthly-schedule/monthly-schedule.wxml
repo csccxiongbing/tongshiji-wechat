@@ -1,0 +1,92 @@
+<view class="container">
+  <view class="header-section">
+    <view class="month-nav">
+      <view class="nav-btn" bindtap="prevMonth">
+        <text>‹</text>
+      </view>
+      <view class="month-title-wrap">
+        <text class="month-title">{{currentYear}}.{{currentMonth < 10 ? '0' + currentMonth : currentMonth}}</text>
+      </view>
+      <view class="nav-btn" bindtap="nextMonth">
+        <text>›</text>
+      </view>
+    </view>
+    
+    <view class="stats-bar">
+      <view class="stat-item">
+        <text class="stat-num">{{totalSchedules}}</text>
+        <text class="stat-label">总日程</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num completed">{{completedSchedules}}</text>
+        <text class="stat-label">已完成</text>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-num">{{completionRate}}%</text>
+        <text class="stat-label">完成率</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="calendar-wrapper">
+    <view class="week-header">
+      <view class="week-day" wx:for="{{weekHeaders}}" wx:key="index">
+        <text>{{item}}</text>
+      </view>
+    </view>
+    
+    <view class="calendar-grid">
+      <block wx:for="{{calendarDays}}" wx:key="index">
+        <view 
+          class="day-cell {{item.isToday ? 'today' : ''}} {{item.isCurrentMonth ? '' : 'other-month'}} {{item.selected ? 'selected' : ''}}"
+          bindtap="selectDate"
+          data-date="{{item.dateStr}}"
+        >
+          <text class="day-num">{{item.day}}</text>
+          <view class="day-schedules">
+            <block wx:for="{{item.schedules}}" wx:for-item="sched" wx:key="id">
+              <view class="mini-schedule" style="background: {{sched.color}}">
+                <text>{{sched.icon}}</text>
+              </view>
+            </block>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+  
+  <view class="selected-day-section">
+    <view class="section-header">
+      <text class="section-title">{{selectedDateStr}} 日程</text>
+      <view class="add-btn" bindtap="goToAddSchedule">
+        <text>＋ 添加</text>
+      </view>
+    </view>
+    
+    <view class="day-schedules-list">
+      <block wx:for="{{selectedDaySchedules}}" wx:key="id">
+        <view class="schedule-card {{item.completed ? 'completed' : ''}}" bindtap="toggleSchedule" data-index="{{index}}">
+          <view class="schedule-icon" style="background: {{item.color}}">
+            <text>{{item.icon}}</text>
+          </view>
+          <view class="schedule-info">
+            <text class="schedule-title">{{item.title}}</text>
+            <text class="schedule-time">{{item.time}}</text>
+          </view>
+          <view class="schedule-check">
+            <text wx:if="{{item.completed}}">✓</text>
+          </view>
+        </view>
+      </block>
+      
+      <view wx:if="{{selectedDaySchedules.length === 0}}" class="empty-state">
+        <text class="empty-icon">📅</text>
+        <text class="empty-text">这天还没有日程安排</text>
+      </view>
+    </view>
+  </view>
+  
+  <custom-tab-bar />
+</view>

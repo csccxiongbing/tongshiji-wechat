@@ -1,0 +1,182 @@
+<view class="container">
+  <view class="content">
+    <view class="form-section">
+      <view class="form-item">
+        <input 
+          class="input-full" 
+          placeholder="请输入日程" 
+          value="{{title}}"
+          bindinput="onTitleInput"
+        />
+      </view>
+    </view>
+    
+    <view class="schedule-members-section">
+      <view class="section-header">
+        <text class="section-title">日程成员</text>
+        <text class="select-all-btn" bindtap="toggleSelectAll">
+          {{isAllSelected ? '取消全选' : '全选'}}
+        </text>
+      </view>
+      <view class="schedule-members-list">
+        <block wx:for="{{scheduleMemberList}}" wx:key="name">
+          <view 
+            class="member-tag {{item.selected ? 'selected' : ''}}"
+            bindtap="toggleScheduleMember"
+            data-index="{{index}}"
+          >
+            <text>{{item.name}}</text>
+            <text class="check-icon" wx:if="{{item.selected}}">✓</text>
+          </view>
+        </block>
+      </view>
+    </view>
+    
+    <view class="form-section">
+      <view class="form-item-row-right">
+        <text class="label">开始时间</text>
+        <view class="datetime-picker-right">
+          <picker mode="date" value="{{date}}" bindchange="onDateChange">
+            <view class="picker-box">
+              <text>{{date || '选择日期'}}</text>
+            </view>
+          </picker>
+          <picker mode="time" value="{{startTime}}" bindchange="onStartTimeChange">
+            <view class="picker-box">
+              <text>{{startTime || '时间'}}</text>
+            </view>
+          </picker>
+        </view>
+      </view>
+      
+      <view class="form-item-row-right">
+        <text class="label">结束时间</text>
+        <view class="datetime-picker-right">
+          <picker mode="date" value="{{endDate}}" bindchange="onEndDateChange">
+            <view class="picker-box">
+              <text>{{endDate || '选择日期'}}</text>
+            </view>
+          </picker>
+          <picker mode="time" value="{{endTime}}" bindchange="onEndTimeChange">
+            <view class="picker-box">
+              <text>{{endTime || '时间'}}</text>
+            </view>
+          </picker>
+        </view>
+      </view>
+    </view>
+    
+    <view class="form-section">
+      <view class="form-item-row-right">
+        <text class="label">重复规则</text>
+        <view class="rule-picker" bindtap="showRepeatRule">
+          <text>{{repeatRuleText}}</text>
+          <text class="arrow">›</text>
+        </view>
+      </view>
+      
+      <view wx:if="{{repeatRule !== 'never'}}" class="form-item-row-right">
+        <text class="label">结束重复</text>
+        <view class="rule-picker" bindtap="showEndRepeat">
+          <text>{{endRepeatText}}</text>
+          <text class="arrow">›</text>
+        </view>
+      </view>
+      
+      <view wx:if="{{repeatRule !== 'never' && endRepeat === 'date'}}" class="form-item-row-right">
+        <text class="label">结束日期</text>
+        <picker mode="date" value="{{endRepeatDate}}" bindchange="onEndRepeatDateChange">
+          <view class="rule-picker">
+            <text>{{endRepeatDate || '选择日期'}}</text>
+            <text class="arrow">›</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+    
+    <view class="form-section">
+      <view class="icon-grid">
+        <view 
+          wx:for="{{icons}}" 
+          wx:key="icon"
+          class="icon-item {{selectedIcon === item.icon ? 'active' : ''}}" 
+          bindtap="selectIcon"
+          data-icon="{{item.icon}}"
+          data-color="{{item.color}}"
+        >
+          <text class="icon-emoji">{{item.icon}}</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="form-section">
+      <view class="form-item-row-right">
+        <text class="label">积分奖励</text>
+        <view class="wish-input">
+          <input 
+            class="input-number" 
+            placeholder="" 
+            value="{{points}}"
+            type="number"
+            bindinput="onPointsInput"
+          />
+          <text class="unit">个</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="form-section">
+      <view class="form-item-row-right">
+        <text class="label">提醒</text>
+        <switch 
+          class="toggle-switch" 
+          checked="{{remindEnabled}}" 
+          bindchange="onRemindToggle"
+        />
+      </view>
+      
+      <view wx:if="{{remindEnabled}}" class="form-item">
+        <text class="label">提醒角色</text>
+        <view class="remind-members">
+          <block wx:for="{{remindMemberList}}" wx:key="name">
+            <view 
+              class="member-tag {{item.selected ? 'selected' : ''}}"
+              bindtap="toggleRemindMember"
+              data-index="{{index}}"
+            >
+              <text>{{item.name}}</text>
+              <text class="check-icon" wx:if="{{item.selected}}">✓</text>
+            </view>
+          </block>
+        </view>
+      </view>
+      
+      <view wx:if="{{remindEnabled}}" class="form-item-row-right">
+        <text class="label">提醒时间</text>
+        <view class="rule-picker" bindtap="showRemindTime">
+          <text>{{remindTimeText}}</text>
+          <text class="arrow">›</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="form-section">
+      <view class="form-item">
+        <input 
+          class="input-full" 
+          placeholder="添加备注信息（可选）" 
+          value="{{note}}"
+          bindinput="onNoteInput"
+          maxlength="200"
+        />
+      </view>
+    </view>
+  </view>
+  
+  <view class="footer">
+    <view class="btn-primary" bindtap="saveSchedule">
+      <text>保存日程</text>
+    </view>
+  </view>
+  
+</view>

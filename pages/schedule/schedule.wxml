@@ -1,0 +1,80 @@
+<view class="container">
+  <view class="header-section">
+    <view class="month-info">
+      <text class="month-title">{{currentMonth}}月</text>
+      <text class="year-text">{{currentYear}}年</text>
+    </view>
+  </view>
+  
+  <view class="week-nav">
+    <block wx:for="{{weekDays}}" wx:key="index">
+      <view 
+        class="week-item {{selectedDay === index ? 'active' : ''}}" 
+        bindtap="selectDay"
+        data-day="{{index}}"
+      >
+        <text class="week-name">{{item.name}}</text>
+        <text class="week-date">{{item.date}}</text>
+        <view wx:if="{{item.hasSchedule}}" class="week-dot"></view>
+      </view>
+    </block>
+  </view>
+  
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">{{selectedDayName}}日程</text>
+      <view class="add-btn" bindtap="goToAddSchedule">
+        <text>+ 添加</text>
+      </view>
+    </view>
+    
+    <view class="schedule-list">
+      <block wx:for="{{daySchedules}}" wx:key="index">
+        <view 
+          class="schedule-item {{item.completed ? 'completed' : ''}}" 
+          bindtap="toggleSchedule"
+          data-index="{{index}}"
+        >
+          <view class="schedule-icon" style="background: {{item.color}}">
+            <text>{{item.icon}}</text>
+          </view>
+          <view class="schedule-content">
+            <text class="schedule-title">{{item.title}}</text>
+            <text class="schedule-time">{{item.time}}</text>
+          </view>
+          <view class="schedule-checkbox {{item.completed ? 'checked' : ''}}">
+            <text wx:if="{{item.completed}}">✓</text>
+          </view>
+        </view>
+      </block>
+      
+      <view wx:if="{{daySchedules.length === 0}}" class="empty-state">
+        <text class="empty-icon">📅</text>
+        <text class="empty-text">这天还没有日程安排</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">本周统计</text>
+    </view>
+    
+    <view class="stats-grid">
+      <view class="stat-card">
+        <text class="stat-num">{{totalSchedules}}</text>
+        <text class="stat-label">总日程</text>
+      </view>
+      <view class="stat-card completed-card">
+        <text class="stat-num">{{completedSchedules}}</text>
+        <text class="stat-label">已完成</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-num">{{avgCompletion}}%</text>
+        <text class="stat-label">平均完成率</text>
+      </view>
+    </view>
+  </view>
+  
+  <custom-tab-bar />
+</view>

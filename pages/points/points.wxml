@@ -1,0 +1,79 @@
+<view class="container">
+  <view class="header-section">
+    <view class="points-card">
+      <view class="points-icon">🎁</view>
+      <view class="points-info">
+        <text class="points-value">{{points}}</text>
+        <text class="points-label">积分</text>
+      </view>
+      <view class="points-level">Lv.{{level}}</view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">获取积分</text>
+    </view>
+    
+    <view class="tasks-grid">
+      <view class="task-card" wx:for="{{tasks}}" wx:key="index">
+        <view class="task-icon" style="background: {{item.bgColor}}">
+          <text>{{item.icon}}</text>
+        </view>
+        <view class="task-info">
+          <text class="task-name">{{item.name}}</text>
+          <text class="task-desc">{{item.desc}}</text>
+        </view>
+        <view class="task-points">+{{item.points}}</view>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">积分记录</text>
+    </view>
+    
+    <view class="history-list">
+      <block wx:for="{{pointsHistory}}" wx:key="id">
+        <view class="history-item">
+          <view class="history-icon">
+            <text>{{item.amount > 0 ? '+' : ''}}{{item.amount}}</text>
+          </view>
+          <view class="history-info">
+            <text class="history-reason">{{item.reason}}</text>
+            <text class="history-time">{{item.time}}</text>
+          </view>
+          <view class="history-balance">余额: {{item.balance}}</view>
+        </view>
+      </block>
+      
+      <view wx:if="{{pointsHistory.length === 0}}" class="empty-state">
+        <text class="empty-icon">📝</text>
+        <text class="empty-text">暂无积分记录</text>
+      </view>
+    </view>
+  </view>
+  
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">积分兑换</text>
+    </view>
+    
+    <view class="rewards-grid">
+      <view class="reward-card" wx:for="{{rewards}}" wx:key="index">
+        <view class="reward-icon">{{item.icon}}</view>
+        <text class="reward-name">{{item.name}}</text>
+        <text class="reward-cost">{{item.cost}}积分</text>
+        <view 
+          class="reward-btn {{points >= item.cost ? '' : 'disabled'}}" 
+          bindtap="exchangeReward"
+          data-index="{{index}}"
+        >
+          <text>{{points >= item.cost ? '兑换' : '积分不足'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+  
+</view>
