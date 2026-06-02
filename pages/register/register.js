@@ -101,7 +101,15 @@ Page({
       role: null
     }
     
-    app.saveUserInfo(userInfo)
+    const result = app.registerUser(userInfo)
+    
+    if (!result.success) {
+      wx.showToast({
+        title: result.message,
+        icon: 'none'
+      })
+      return
+    }
     
     wx.showToast({
       title: '注册成功',

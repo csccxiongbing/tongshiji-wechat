@@ -2,8 +2,7 @@
   <view class="header-section">
     <view class="date-member-row">
       <view class="date-info">
-        <text class="weekday">{{weekday}}</text>
-        <text class="date">{{date}}</text>
+        <text class="weekday-date"> {{date}} {{weekday}}</text>
       </view>
       <view class="member-selector" bindtap="toggleMemberPicker">
         <text class="member-text">家庭成员</text>
@@ -74,17 +73,17 @@
     
     <view class="schedule-list">
       <block wx:for="{{displaySchedules}}" wx:key="id">
-        <view class="schedule-item {{item.completed ? 'completed' : ''}}">
+        <view class="schedule-item {{item.completed ? 'completed' : ''}}" bindtap="viewScheduleDetail" data-id="{{item.id}}">
           <view class="schedule-main">
             <view class="schedule-top">
               <view class="top-left">
                 <view class="top-row">
                   <view class="time-capsule" wx:if="{{item.startTime && item.endTime}}">
-                    <text class="time-icon">📅</text>
-                    <text class="time-text">{{item.startTime}} - {{item.endTime}}</text>
+                    <text class="time-icon">🕐</text>
+                    <text class="time-text">{{item.formattedStartTime}} - {{item.formattedEndTime}}</text>
                   </view>
                   <view class="time-capsule" wx:elif="{{item.time}}">
-                    <text class="time-icon">📅</text>
+                    <text class="time-icon">🕐</text>
                     <text class="time-text">{{item.time}}</text>
                   </view>
                   
@@ -117,9 +116,9 @@
                 </view>
               </view>
               
-              <view 
+              <view
                 class="schedule-checkbox {{item.completed ? 'checked' : ''}}"
-                bindtap="toggleSchedule"
+                catchtap="toggleSchedule"
                 data-index="{{index}}"
                 data-id="{{item.id}}"
               >

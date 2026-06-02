@@ -79,13 +79,15 @@ Page({
       return
     }
     
-    const userInfo = {
-      phone: this.data.phone,
-      role: null,
-      nickname: '小朋友'
-    }
+    const result = app.loginUser(this.data.phone)
     
-    app.saveUserInfo(userInfo)
+    if (!result.success) {
+      wx.showToast({
+        title: result.message,
+        icon: 'none'
+      })
+      return
+    }
     
     this.checkAndNavigate()
   },

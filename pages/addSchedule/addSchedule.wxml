@@ -38,11 +38,11 @@
         <view class="datetime-picker-right">
           <picker mode="date" value="{{date}}" bindchange="onDateChange">
             <view class="picker-box">
-              <text>{{date || '选择日期'}}</text>
+              <text>{{date || '选择日期'}}{{dateWeekDay ? ' ' + dateWeekDay : ''}}</text>
             </view>
           </picker>
           <picker mode="time" value="{{startTime}}" bindchange="onStartTimeChange">
-            <view class="picker-box">
+            <view class="picker-box time">
               <text>{{startTime || '时间'}}</text>
             </view>
           </picker>
@@ -54,11 +54,11 @@
         <view class="datetime-picker-right">
           <picker mode="date" value="{{endDate}}" bindchange="onEndDateChange">
             <view class="picker-box">
-              <text>{{endDate || '选择日期'}}</text>
+              <text>{{endDate || '选择日期'}}{{endDateWeekDay ? ' ' + endDateWeekDay : ''}}</text>
             </view>
           </picker>
           <picker mode="time" value="{{endTime}}" bindchange="onEndTimeChange">
-            <view class="picker-box">
+            <view class="picker-box time">
               <text>{{endTime || '时间'}}</text>
             </view>
           </picker>

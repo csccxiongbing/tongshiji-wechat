@@ -32,7 +32,7 @@ Page({
   
   initData: function() {
     const now = new Date()
-    const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+    const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
     
     this.setData({
       weekday: weekdays[now.getDay()],
@@ -56,13 +56,13 @@ Page({
   },
   
   loadSchedules: function() {
-    const schedules = app.globalData.schedules || [
+    const schedules = (app.globalData.schedules && app.globalData.schedules.length > 0) ? app.globalData.schedules : [
       { 
         id: 1, 
         title: '早餐时间', 
         time: '07:30', 
-        startTime: '2026-06-01 07:30', 
-        endTime: '2026-06-01 08:00', 
+        startTime: '2026-06-02 07:30', 
+        endTime: '2026-06-02 08:00', 
         icon: '🍞', 
         color: '#FFE4B5', 
         completed: true, 
@@ -79,8 +79,8 @@ Page({
         id: 2, 
         title: '上学', 
         time: '08:30', 
-        startTime: '2026-06-01 08:30', 
-        endTime: '2026-06-01 16:00', 
+        startTime: '2026-06-02 08:30', 
+        endTime: '2026-06-02 16:00', 
         icon: '🎒', 
         color: '#B5E3FF', 
         completed: true, 
@@ -97,8 +97,8 @@ Page({
         id: 3, 
         title: '午餐', 
         time: '12:00', 
-        startTime: '2026-06-01 12:00', 
-        endTime: '2026-06-01 12:30', 
+        startTime: '2026-06-02 12:00', 
+        endTime: '2026-06-02 12:30', 
         icon: '🍱', 
         color: '#FFB5B5', 
         completed: false, 
@@ -115,8 +115,8 @@ Page({
         id: 4, 
         title: '做作业', 
         time: '15:30', 
-        startTime: '2026-06-01 15:30', 
-        endTime: '2026-06-01 17:00', 
+        startTime: '2026-06-02 15:30', 
+        endTime: '2026-06-02 17:00', 
         icon: '📝', 
         color: '#D4B5FF', 
         completed: false, 
@@ -133,8 +133,8 @@ Page({
         id: 5, 
         title: '晚餐', 
         time: '18:00', 
-        startTime: '2026-06-01 18:00', 
-        endTime: '2026-06-01 18:30', 
+        startTime: '2026-06-02 18:00', 
+        endTime: '2026-06-02 18:30', 
         icon: '🍲', 
         color: '#B5FFD9', 
         completed: false, 
@@ -151,8 +151,8 @@ Page({
         id: 6, 
         title: '睡前故事', 
         time: '20:30', 
-        startTime: '2026-06-01 20:30', 
-        endTime: '2026-06-01 21:00', 
+        startTime: '2026-06-02 20:30', 
+        endTime: '2026-06-02 21:00', 
         icon: '📚', 
         color: '#FFE4FF', 
         completed: false, 
@@ -167,17 +167,93 @@ Page({
       }
     ]
     
-    // 确保每个日程都有 time 字段（兼容旧数据）
-    const formattedSchedules = schedules.map(s => ({
+    // 获取当前日期
+    const now = new Date()
+    const todayStr = this.formatDate(now)
+    const todayWeekday = now.getDay() // 0-6, 0是周日
+    
+    // 筛选今天的日程：开始时间 >= 今天0点 且 结束时间 <= 今天24点
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+
+    const todaySchedules = schedules.filter(schedule => {
+      // 没有时间字段，直接显示
+      if (!schedule.startTime && !schedule.endTime) {
+        return true
+      }
+
+      let startInRange = true
+      let endInRange = true
+
+      if (schedule.startTime) {
+        const startDate = new Date(schedule.startTime.replace(/-/g, '/'))
+        startInRange = startDate >= todayStart
+      }
+
+      if (schedule.endTime) {
+        const endDate = new Date(schedule.endTime.replace(/-/g, '/'))
+        endInRange = endDate <= todayEnd
+      }
+
+      return startInRange && endInRange
+    })
+    
+    // 获取星期几的函数
+    const getWeekDay = (dateStr) => {
+      const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+      const date = new Date(dateStr.replace(/-/g, '/'))
+      return weekdays[date.getDay()]
+    }
+    
+    // 提取时间部分的函数
+    const extractTime = (datetimeStr) => {
+      if (!datetimeStr) return ''
+      // 匹配时间格式：HH:MM 或 HH:MM:SS
+      const match = datetimeStr.match(/(\d{2}:\d{2})(:\d{2})?/)
+      return match ? match[1] : datetimeStr
+    }
+    
+    // 确保每个日程都有 time 字段（兼容旧数据），并添加格式化的时间和星期
+    const formattedSchedules = todaySchedules.map(s => ({
       ...s,
-      time: s.time || s.startTime || '00:00'
+      time: s.time || s.startTime || '00:00',
+      formattedStartTime: extractTime(s.startTime),
+      formattedEndTime: extractTime(s.endTime),
+      weekDay: s.startTime ? getWeekDay(s.startTime) : weekdays[todayWeekday]
     }))
     
+    // 对日程进行排序：待完成（completed=false）在前，已完成（completed=true）在后
+    const sortedSchedules = formattedSchedules.sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1
+      }
+      return 0
+    })
+    
     this.setData({
-      todaySchedules: formattedSchedules
+      todaySchedules: sortedSchedules
     })
     
     this.filterSchedules()
+  },
+  
+  formatDate: function(date) {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  },
+  
+  isSameWeekday: function(dateStr1, dateStr2) {
+    const d1 = new Date(dateStr1)
+    const d2 = new Date(dateStr2)
+    return d1.getDay() === d2.getDay()
+  },
+  
+  isSameMonthDay: function(dateStr1, dateStr2) {
+    const d1 = new Date(dateStr1)
+    const d2 = new Date(dateStr2)
+    return d1.getDate() === d2.getDate()
   },
   
   loadFamilyMembers: function() {
@@ -336,18 +412,27 @@ Page({
   toggleSchedule: function(e) {
     const index = parseInt(e.currentTarget.dataset.index)
     const scheduleId = parseInt(e.currentTarget.dataset.id)
-    
+
     const todaySchedules = this.data.todaySchedules.map(s => {
       if (s.id === scheduleId) {
-        return { ...s, completed: !s.completed }
+        const newCompleted = !s.completed
+        if (s.points && s.points > 0 && s.scheduleMembers && s.scheduleMembers.length > 0) {
+          const membersText = s.scheduleMembers.join('、')
+          if (newCompleted) {
+            app.addPoints(s.points, `完成"${s.title}"任务，成员：${membersText}`)
+          } else {
+            app.addPoints(-s.points, `取消完成"${s.title}"任务，成员：${membersText}`)
+          }
+        }
+        return { ...s, completed: newCompleted }
       }
       return s
     })
-    
+
     this.setData({
       todaySchedules: todaySchedules
     })
-    
+
     this.filterSchedules()
     app.saveSchedules(todaySchedules)
   },

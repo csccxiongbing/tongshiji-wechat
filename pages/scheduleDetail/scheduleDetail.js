@@ -28,8 +28,9 @@ Page({
     
     if (schedule) {
       console.log('找到日程:', schedule)
+      const formattedSchedule = this.formatScheduleTime(schedule)
       this.setData({
-        schedule: schedule
+        schedule: formattedSchedule
       })
     } else {
       console.log('未找到日程，使用默认数据')
@@ -46,9 +47,31 @@ Page({
         points: 0
       }
       this.setData({
-        schedule: defaultSchedule
+        schedule: this.formatScheduleTime(defaultSchedule)
       })
     }
+  },
+
+  formatScheduleTime: function(schedule) {
+    if (!schedule.startTime || !schedule.endTime) return schedule
+    
+    const result = { ...schedule }
+    
+    // 格式化开始时间
+    const startParts = schedule.startTime.split(' ')
+    if (startParts.length >= 2) {
+      result.startDate = startParts[0]
+      result.startTimeOnly = startParts[1]
+    }
+    
+    // 格式化结束时间
+    const endParts = schedule.endTime.split(' ')
+    if (endParts.length >= 2) {
+      result.endDate = endParts[0]
+      result.endTimeOnly = endParts[1]
+    }
+    
+    return result
   },
 
   toggleComplete: function() {

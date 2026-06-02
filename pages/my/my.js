@@ -108,10 +108,7 @@ Page({
       content: '确定要退出登录吗？',
       success: (res) => {
         if (res.confirm) {
-          // 只清空内存中的全局数据，不删除本地存储
-          app.globalData.userInfo = null
-          app.globalData.familyMembers = []
-          app.globalData.schedules = []
+          app.logout()
           
           wx.showToast({
             title: '退出成功',

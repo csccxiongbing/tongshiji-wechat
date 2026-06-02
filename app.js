@@ -1,5 +1,6 @@
 App({
   globalData: {
+    users: [],
     userInfo: null,
     familyMembers: {
       members: [
@@ -26,6 +27,14 @@ App({
   onLaunch: function () {
     try {
       console.log('App初始化中...')
+      const users = wx.getStorageSync('users')
+      if (users && Array.isArray(users)) {
+        this.globalData.users = users
+        console.log('加载用户列表成功:', users)
+      } else {
+        console.log('没有找到用户列表')
+      }
+      
       const userInfo = wx.getStorageSync('userInfo')
       if (userInfo && typeof userInfo === 'object') {
         this.globalData.userInfo = userInfo
@@ -66,10 +75,126 @@ App({
     }
   },
   
+  getUsers: function() {
+    return this.globalData.users
+  },
+  
+  saveUsers: function(users) {
+    try {
+      this.globalData.users = users
+      wx.setStorageSync('users', users)
+    } catch (e) {
+      console.error('保存用户列表错误:', e)
+    }
+  },
+  
+  findUserByPhone: function(phone) {
+    return this.globalData.users.find(u => u.phone === phone)
+  },
+  
+  registerUser: function(userInfo) {
+    try {
+      const existingUser = this.findUserByPhone(userInfo.phone)
+      if (existingUser) {
+        return { success: false, message: '该手机号已注册' }
+      }
+      
+      const newUser = {
+        ...userInfo,
+        id: Date.now(),
+        familyMembers: {
+          members: []
+        },
+        schedules: [],
+        points: 0,
+        pointsHistory: [],
+        pomodoroHistory: []
+      }
+      
+      const updatedUsers = [...this.globalData.users, newUser]
+      this.saveUsers(updatedUsers)
+      this.saveUserInfo(newUser)
+      
+      return { success: true, user: newUser }
+    } catch (e) {
+      console.error('注册用户错误:', e)
+      return { success: false, message: '注册失败' }
+    }
+  },
+  
+  loginUser: function(phone) {
+    try {
+      const user = this.findUserByPhone(phone)
+      if (!user) {
+        return { success: false, message: '该手机号未注册' }
+      }
+      
+      this.globalData.userInfo = user
+      this.globalData.familyMembers = user.familyMembers || { members: [] }
+      this.globalData.schedules = user.schedules || []
+      this.globalData.points = user.points || 150
+      this.globalData.pointsHistory = user.pointsHistory || []
+      this.globalData.pomodoroHistory = user.pomodoroHistory || []
+      
+      wx.setStorageSync('userInfo', user)
+      wx.setStorageSync('familyMembers', user.familyMembers || { members: [] })
+      wx.setStorageSync('schedules', user.schedules || [])
+      wx.setStorageSync('points', user.points || 150)
+      wx.setStorageSync('pointsHistory', user.pointsHistory || [])
+      wx.setStorageSync('pomodoroHistory', user.pomodoroHistory || [])
+      
+      return { success: true, user: user }
+    } catch (e) {
+      console.error('登录用户错误:', e)
+      return { success: false, message: '登录失败' }
+    }
+  },
+  
+  logout: function() {
+    try {
+      this.saveCurrentUserToUsersList()
+      
+      this.globalData.userInfo = null
+      this.globalData.familyMembers = { members: [] }
+      this.globalData.schedules = []
+      this.globalData.points = 150
+      this.globalData.pointsHistory = []
+      this.globalData.pomodoroHistory = []
+      
+      wx.removeStorageSync('userInfo')
+      wx.removeStorageSync('familyMembers')
+      wx.removeStorageSync('schedules')
+      wx.removeStorageSync('points')
+      wx.removeStorageSync('pointsHistory')
+      wx.removeStorageSync('pomodoroHistory')
+    } catch (e) {
+      console.error('退出登录错误:', e)
+    }
+  },
+  
+  saveCurrentUserToUsersList: function() {
+    if (!this.globalData.userInfo) return
+    
+    const userIndex = this.globalData.users.findIndex(u => u.phone === this.globalData.userInfo.phone)
+    if (userIndex !== -1) {
+      const updatedUser = {
+        ...this.globalData.userInfo,
+        familyMembers: this.globalData.familyMembers,
+        schedules: this.globalData.schedules,
+        points: this.globalData.points,
+        pointsHistory: this.globalData.pointsHistory,
+        pomodoroHistory: this.globalData.pomodoroHistory
+      }
+      this.globalData.users[userIndex] = updatedUser
+      this.saveUsers(this.globalData.users)
+    }
+  },
+  
   saveUserInfo: function(userInfo) {
     try {
       this.globalData.userInfo = userInfo
       wx.setStorageSync('userInfo', userInfo)
+      this.saveCurrentUserToUsersList()
     } catch (e) {
       console.error('保存用户信息错误:', e)
     }
@@ -79,8 +204,19 @@ App({
     try {
       this.globalData.schedules = schedules
       wx.setStorageSync('schedules', schedules)
+      this.saveCurrentUserToUsersList()
     } catch (e) {
       console.error('保存日程错误:', e)
+    }
+  },
+  
+  clearSchedules: function() {
+    try {
+      this.globalData.schedules = []
+      wx.setStorageSync('schedules', [])
+      this.saveCurrentUserToUsersList()
+    } catch (e) {
+      console.error('清空日程错误:', e)
     }
   },
   
@@ -88,6 +224,7 @@ App({
     try {
       this.globalData.familyMembers = members
       wx.setStorageSync('familyMembers', members)
+      this.saveCurrentUserToUsersList()
     } catch (e) {
       console.error('保存家庭成员错误:', e)
     }
@@ -97,6 +234,7 @@ App({
     try {
       this.globalData.points = points
       wx.setStorageSync('points', points)
+      this.saveCurrentUserToUsersList()
     } catch (e) {
       console.error('保存积分错误:', e)
     }
@@ -118,6 +256,7 @@ App({
       
       wx.setStorageSync('points', newPoints)
       wx.setStorageSync('pointsHistory', this.globalData.pointsHistory)
+      this.saveCurrentUserToUsersList()
     } catch (e) {
       console.error('添加积分错误:', e)
     }
@@ -127,6 +266,7 @@ App({
     try {
       this.globalData.pomodoroHistory.unshift(history)
       wx.setStorageSync('pomodoroHistory', this.globalData.pomodoroHistory)
+      this.saveCurrentUserToUsersList()
     } catch (e) {
       console.error('保存番茄钟记录错误:', e)
     }

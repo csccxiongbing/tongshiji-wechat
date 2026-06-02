@@ -4,8 +4,10 @@ Page({
   data: {
     title: '',
     date: '',
+    dateWeekDay: '',
     startTime: '',
     endDate: '',
+    endDateWeekDay: '',
     endTime: '',
     selectedIcon: '📝',
     selectedColor: '#D4B5FF',
@@ -41,12 +43,19 @@ Page({
     ]
   },
   
+  getWeekDay: function(dateStr) {
+    const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+    const date = new Date(dateStr)
+    return weekDays[date.getDay()]
+  },
+  
   onLoad: function() {
     const today = new Date()
     const year = today.getFullYear()
     const month = String(today.getMonth() + 1).padStart(2, '0')
     const day = String(today.getDate()).padStart(2, '0')
     const dateStr = `${year}-${month}-${day}`
+    const weekDay = this.getWeekDay(dateStr)
     
     const familyMembers = app.globalData.familyMembers?.members || []
     const members = familyMembers.map(m => ({ name: m.name, role: m.role }))
@@ -64,7 +73,9 @@ Page({
     
     this.setData({
       date: dateStr,
+      dateWeekDay: weekDay,
       endDate: dateStr,
+      endDateWeekDay: weekDay,
       familyMembers: members,
       scheduleMembers: selectedNames,
       remindMembers: selectedNames,
@@ -85,8 +96,10 @@ Page({
   },
   
   onDateChange: function(e) {
+    const date = e.detail.value
     this.setData({
-      date: e.detail.value
+      date: date,
+      dateWeekDay: this.getWeekDay(date)
     })
   },
   
@@ -97,8 +110,10 @@ Page({
   },
   
   onEndDateChange: function(e) {
+    const endDate = e.detail.value
     this.setData({
-      endDate: e.detail.value
+      endDate: endDate,
+      endDateWeekDay: this.getWeekDay(endDate)
     })
   },
   
@@ -309,9 +324,8 @@ Page({
       id: Date.now(),
       title: this.data.title,
       date: this.data.date,
-      startTime: this.data.startTime,
-      endDate: this.data.endDate,
-      endTime: this.data.endTime,
+      startTime: `${this.data.date} ${this.data.startTime}`,
+      endTime: `${this.data.endDate} ${this.data.endTime}`,
       icon: this.data.selectedIcon,
       color: this.data.selectedColor,
       note: this.data.note,

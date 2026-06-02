@@ -20,14 +20,20 @@
         <text class="detail-title">{{schedule.title}}</text>
       </view>
 
-      <view class="detail-row" wx:if="{{schedule.startTime && schedule.endTime}}">
+      <view class="detail-row time-row" wx:if="{{schedule.startTime}}">
         <text class="detail-label">开始时间</text>
-        <text class="detail-value">{{schedule.startTime}}</text>
+        <view class="time-display">
+          <text class="time-date">{{schedule.startDate}}</text>
+          <text class="time-clock">{{schedule.startTimeOnly}}</text>
+        </view>
       </view>
 
-      <view class="detail-row" wx:if="{{schedule.startTime && schedule.endTime}}">
+      <view class="detail-row time-row" wx:if="{{schedule.endTime}}">
         <text class="detail-label">结束时间</text>
-        <text class="detail-value">{{schedule.endTime}}</text>
+        <view class="time-display">
+          <text class="time-date">{{schedule.endDate}}</text>
+          <text class="time-clock">{{schedule.endTimeOnly}}</text>
+        </view>
       </view>
 
       <view class="detail-row" wx:if="{{schedule.scheduleMembers && schedule.scheduleMembers.length > 0}}">
@@ -39,24 +45,39 @@
         </view>
       </view>
 
+      <view class="detail-row" wx:if="{{schedule.repeatRule && schedule.repeatRuleText}}">
+        <text class="detail-label">重复规则</text>
+        <text class="detail-value">🔄 {{schedule.repeatRuleText}}</text>
+      </view>
+
+      <view class="detail-row" wx:if="{{schedule.remindEnabled}}">
+        <text class="detail-label">提醒设置</text>
+        <view class="remind-section">
+          <text class="remind-status">{{schedule.remindEnabled ? '已开启' : '未开启'}}</text>
+          <view class="detail-members remind-members" wx:if="{{schedule.remindMembers && schedule.remindMembers.length > 0}}">
+            <text wx:for="{{schedule.remindMembers}}" wx:key="index" class="member-tag remind-tag">
+              {{item}}
+            </text>
+          </view>
+        </view>
+      </view>
+
       <view class="detail-row" wx:if="{{schedule.points && schedule.points > 0}}">
-        <text class="detail-label">完成奖励</text>
+        <text class="detail-label">积分奖励</text>
         <view class="detail-points">
           <text class="points-icon">⭐</text>
           <text class="points-value">+{{schedule.points}} 积分</text>
         </view>
       </view>
 
-      <view class="detail-row">
-        <text class="detail-label">完成状态</text>
-        <view class="detail-status {{schedule.completed ? 'completed' : ''}}">
-          <text>{{schedule.completed ? '已完成 ✓' : '未完成'}}</text>
-        </view>
+      <view class="detail-row" wx:if="{{schedule.note}}">
+        <text class="detail-label">备注</text>
+        <text class="detail-value note-text">{{schedule.note}}</text>
       </view>
     </view>
   </view>
 
-  <view class="action-section">
+  <view class="action-section" wx:if="{{schedule}}">
     <view class="action-btn {{schedule.completed ? 'btn-cancel' : 'btn-complete'}}" bindtap="toggleComplete">
       <text>{{schedule.completed ? '取消完成' : '标记完成'}}</text>
     </view>

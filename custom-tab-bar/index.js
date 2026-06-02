@@ -32,11 +32,6 @@ Component({
         icon: '📅'
       },
       {
-        pagePath: '/pages/monthly-schedule/monthly-schedule',
-        text: '月计划',
-        icon: '🗓️'
-      },
-      {
         pagePath: '/pages/schedule/schedule',
         text: '周计划',
         icon: '📋'

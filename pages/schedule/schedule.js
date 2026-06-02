@@ -22,8 +22,11 @@ Page({
   
   updateTabBar: function() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      const userInfo = app.globalData.userInfo
+      const role = userInfo?.role || 'child'
+      const currentIndex = role === 'parent' ? 1 : 2
       this.getTabBar().setData({
-        currentIndex: 2
+        currentIndex: currentIndex
       })
     }
   },
