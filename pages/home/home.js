@@ -487,7 +487,7 @@ Page({
     // 显示小型积分提示在按钮上方
     this.showMiniPointsPopup(scheduleId, memberName, points)
     
-    // 播放卡通跳跃Q弹啾飞音效
+    // 播放清脆愉悦的水晶音效
     this.playPointsSound()
   },
   
