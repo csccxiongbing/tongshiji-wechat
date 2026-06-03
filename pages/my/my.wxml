@@ -1,15 +1,23 @@
 <view class="container">
   <view class="header-section">
     <view class="user-card">
-      <view class="user-avatar">
-        <text>{{nickname.charAt(0)}}</text>
+      <view class="user-info-left" bindtap="goToEditProfile">
+        <view class="user-avatar">
+          <text>{{nickname.charAt(0)}}</text>
+        </view>
+        <view class="user-info">
+          <view class="name-row">
+            <text class="user-name">{{nickname}}</text>
+            <view class="edit-icon-wrapper">
+              <text class="edit-icon">✏️</text>
+            </view>
+          </view>
+          <text class="user-role">{{roleText}}</text>
+        </view>
       </view>
-      <view class="user-info">
-        <text class="user-name">{{nickname}}</text>
-        <text class="user-role">{{roleText}}</text>
-      </view>
-      <view class="edit-btn" bindtap="goToEditProfile">
-        <text>编辑</text>
+      <view class="member-selector" bindtap="toggleMemberPicker">
+        <text class="member-text">家庭成员</text>
+        <text class="arrow">{{showMemberPicker ? '▲' : '▼'}}</text>
       </view>
     </view>
     
@@ -20,6 +28,38 @@
         <text class="wish-value">{{wishPoints}}</text>
       </view>
       <view class="wish-arrow">→</view>
+    </view>
+    
+    <view class="member-picker-overlay" wx:if="{{showMemberPicker}}" bindtap="toggleMemberPicker"></view>
+    <view class="member-picker" wx:if="{{showMemberPicker}}">
+      <view class="picker-arrow"></view>
+      <view 
+        class="picker-item picker-item-first {{selectedMembers.length === familyMembers.length ? 'active' : ''}}" 
+        bindtap="toggleSelectAll"
+      >
+        <view class="member-checkbox-wrapper">
+          <view class="member-checkbox {{selectedMembers.length === familyMembers.length ? 'member-checked' : ''}}">
+            <text wx:if="{{selectedMembers.length === familyMembers.length}}">✓</text>
+          </view>
+        </view>
+        <text>我的家庭</text>
+      </view>
+      <view class="divider"></view>
+      <block wx:for="{{familyMembers}}" wx:key="name">
+        <view 
+          class="picker-item picker-item-child {{item.isSelected ? 'active' : ''}}" 
+          bindtap="toggleMember"
+          data-member="{{item.name}}"
+          data-index="{{index}}"
+        >
+          <view class="member-checkbox-wrapper">
+            <view class="member-checkbox {{item.isSelected ? 'member-checked' : ''}}">
+              <text wx:if="{{item.isSelected}}">✓</text>
+            </view>
+          </view>
+          <text>{{item.name}}</text>
+        </view>
+      </block>
     </view>
   </view>
   
@@ -52,7 +92,7 @@
     <view class="menu-list">
       <view class="menu-item" bindtap="goToFamily">
         <view class="menu-icon">👨‍👩‍👧‍👦</view>
-        <text class="menu-text">家庭成员</text>
+        <text class="menu-text">家庭管理</text>
         <text class="menu-arrow">→</text>
       </view>
       <view class="menu-item" bindtap="goToWish">

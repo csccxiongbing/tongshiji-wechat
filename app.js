@@ -11,11 +11,16 @@ App({
     },
     schedules: [],
     points: 150,
+    memberPoints: {
+      '爸爸': 50,
+      '妈妈': 50,
+      '小明': 50
+    },
     pointsHistory: [
-      { id: 1, amount: 10, reason: '完成早餐任务', time: '2026/5/29 08:30', balance: 150 },
-      { id: 2, amount: 20, reason: '完成番茄专注', time: '2026/5/28 16:00', balance: 140 },
-      { id: 3, amount: 10, reason: '完成午餐任务', time: '2026/5/28 12:00', balance: 120 },
-      { id: 4, amount: 50, reason: '连续打卡奖励', time: '2026/5/27 20:00', balance: 110 }
+      { id: 1, amount: 10, reason: '完成早餐任务', time: '2026/5/29 08:30', balance: 150, member: '小明' },
+      { id: 2, amount: 20, reason: '完成番茄专注', time: '2026/5/28 16:00', balance: 140, member: '小明' },
+      { id: 3, amount: 10, reason: '完成午餐任务', time: '2026/5/28 12:00', balance: 120, member: '妈妈' },
+      { id: 4, amount: 50, reason: '连续打卡奖励', time: '2026/5/27 20:00', balance: 110, member: '小明' }
     ],
     pomodoroHistory: [
       { id: 1, type: 'pomodoro', time: '09:30', duration: 25 },
@@ -70,6 +75,11 @@ App({
       if (pomodoroHistory && Array.isArray(pomodoroHistory)) {
         this.globalData.pomodoroHistory = pomodoroHistory
       }
+      
+      const memberPoints = wx.getStorageSync('memberPoints')
+      if (memberPoints && typeof memberPoints === 'object') {
+        this.globalData.memberPoints = memberPoints
+      }
     } catch (e) {
       console.error('数据加载错误:', e)
     }
@@ -107,6 +117,7 @@ App({
         },
         schedules: [],
         points: 0,
+        memberPoints: {},
         pointsHistory: [],
         pomodoroHistory: []
       }
@@ -133,6 +144,7 @@ App({
       this.globalData.familyMembers = user.familyMembers || { members: [] }
       this.globalData.schedules = user.schedules || []
       this.globalData.points = user.points || 150
+      this.globalData.memberPoints = user.memberPoints || {}
       this.globalData.pointsHistory = user.pointsHistory || []
       this.globalData.pomodoroHistory = user.pomodoroHistory || []
       
@@ -140,6 +152,7 @@ App({
       wx.setStorageSync('familyMembers', user.familyMembers || { members: [] })
       wx.setStorageSync('schedules', user.schedules || [])
       wx.setStorageSync('points', user.points || 150)
+      wx.setStorageSync('memberPoints', user.memberPoints || {})
       wx.setStorageSync('pointsHistory', user.pointsHistory || [])
       wx.setStorageSync('pomodoroHistory', user.pomodoroHistory || [])
       
@@ -158,6 +171,7 @@ App({
       this.globalData.familyMembers = { members: [] }
       this.globalData.schedules = []
       this.globalData.points = 150
+      this.globalData.memberPoints = {}
       this.globalData.pointsHistory = []
       this.globalData.pomodoroHistory = []
       
@@ -165,6 +179,7 @@ App({
       wx.removeStorageSync('familyMembers')
       wx.removeStorageSync('schedules')
       wx.removeStorageSync('points')
+      wx.removeStorageSync('memberPoints')
       wx.removeStorageSync('pointsHistory')
       wx.removeStorageSync('pomodoroHistory')
     } catch (e) {
@@ -182,6 +197,7 @@ App({
         familyMembers: this.globalData.familyMembers,
         schedules: this.globalData.schedules,
         points: this.globalData.points,
+        memberPoints: this.globalData.memberPoints,
         pointsHistory: this.globalData.pointsHistory,
         pomodoroHistory: this.globalData.pomodoroHistory
       }
@@ -240,17 +256,24 @@ App({
     }
   },
   
-  addPoints: function(amount, reason) {
+  addPoints: function(amount, reason, member) {
     try {
       const newPoints = this.globalData.points + amount
       this.globalData.points = newPoints
+      
+      if (member) {
+        const memberCurrentPoints = this.globalData.memberPoints[member] || 0
+        this.globalData.memberPoints[member] = memberCurrentPoints + amount
+        wx.setStorageSync('memberPoints', this.globalData.memberPoints)
+      }
       
       const history = {
         id: Date.now(),
         amount: amount,
         reason: reason,
         time: new Date().toLocaleString(),
-        balance: newPoints
+        balance: newPoints,
+        member: member
       }
       this.globalData.pointsHistory.unshift(history)
       

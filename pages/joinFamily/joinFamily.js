@@ -28,13 +28,10 @@ Page({
     const inputValue = value.slice(-1)
     code[index] = inputValue
     
-    // 判断是否需要移动焦点
     let newFocusIndex = index
     if (inputValue && index < 5) {
-      // 输入了字符，自动跳到下一个
       newFocusIndex = index + 1
-    } else if (!inputValue && index > 0 && !code[index - 1]) {
-      // 删除了字符且当前为空且前一个也为空，跳到前一个
+    } else if (!inputValue && index > 0) {
       newFocusIndex = index - 1
     }
     
@@ -42,6 +39,54 @@ Page({
       inviteCode: code,
       currentFocusIndex: newFocusIndex
     })
+  },
+  
+  onCodeFocus: function(e) {
+    const index = parseInt(e.currentTarget.dataset.index)
+    this.setData({
+      currentFocusIndex: index
+    })
+  },
+  
+  onPaste: function() {
+    const that = this
+    wx.getClipboardData({
+      success: function(res) {
+        const clipboardData = (res.data || '').toUpperCase().replace(/[^A-Z0-9]/g, '')
+        if (clipboardData.length >= 6) {
+          const code = clipboardData.slice(0, 6).split('')
+          that.setData({
+            inviteCode: code,
+            currentFocusIndex: 5
+          })
+          wx.showToast({
+            title: '粘贴成功',
+            icon: 'success'
+          })
+        } else {
+          wx.showToast({
+            title: '剪贴板内容无效',
+            icon: 'none'
+          })
+        }
+      },
+      fail: function() {
+        wx.showToast({
+          title: '获取剪贴板失败',
+          icon: 'none'
+        })
+      }
+    })
+  },
+  
+  findFamilyByCode: function(code) {
+    const users = app.globalData.users || []
+    for (const user of users) {
+      if (user.familyMembers && user.familyMembers.familyCode === code) {
+        return user.familyMembers
+      }
+    }
+    return null
   },
   
   joinFamily: function() {
@@ -54,15 +99,27 @@ Page({
       return
     }
     
-    wx.showToast({
-      title: '加入成功',
-      icon: 'success'
-    })
+    const foundFamily = this.findFamilyByCode(code)
     
-    setTimeout(() => {
-      wx.switchTab({
-        url: '/pages/home/home'
+    if (foundFamily) {
+      app.globalData.familyMembers = foundFamily
+      wx.setStorageSync('familyMembers', foundFamily)
+      
+      wx.showToast({
+        title: '加入成功',
+        icon: 'success'
       })
-    }, 1500)
+      
+      setTimeout(() => {
+        wx.switchTab({
+          url: '/pages/home/home'
+        })
+      }, 1500)
+    } else {
+      wx.showToast({
+        title: '邀请码不正确',
+        icon: 'none'
+      })
+    }
   }
 })

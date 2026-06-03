@@ -19,6 +19,12 @@
   align-items: center;
   box-shadow: 0 8rpx 30rpx rgba(255, 105, 180, 0.15);
   margin-bottom: 20rpx;
+  justify-content: space-between;
+}
+
+.user-info-left {
+  display: flex;
+  align-items: center;
 }
 
 .user-avatar {
@@ -39,11 +45,30 @@
   flex: 1;
 }
 
+.name-row {
+  display: flex;
+  align-items: center;
+}
+
 .user-name {
   font-size: 32rpx;
   font-weight: 600;
   color: #333333;
-  display: block;
+}
+
+.edit-icon-wrapper {
+  margin-left: 12rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: #FFE4E1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-icon {
+  font-size: 22rpx;
 }
 
 .user-role {
@@ -53,12 +78,110 @@
   display: block;
 }
 
-.edit-btn {
-  background: #FFE4E1;
-  color: #FF69B4;
-  border-radius: 30rpx;
+.member-selector {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 105, 180, 0.1);
   padding: 12rpx 24rpx;
+  border-radius: 30rpx;
+  border: 2rpx solid #FFB6C1;
+}
+
+.member-text {
+  font-size: 26rpx;
+  color: #FF69B4;
+  margin-right: 8rpx;
+}
+
+.arrow {
+  font-size: 20rpx;
+  color: #FF69B4;
+}
+
+.member-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+.member-picker {
+  position: fixed;
+  top: 150rpx;
+  right: 30rpx;
+  width: 320rpx;
+  background: white;
+  border-radius: 20rpx;
+  box-shadow: 0 10rpx 40rpx rgba(0, 0, 0, 0.15);
+  z-index: 101;
+  padding: 20rpx 0;
+}
+
+.picker-arrow {
+  position: absolute;
+  top: -15rpx;
+  right: 100rpx;
+  width: 30rpx;
+  height: 30rpx;
+  background: white;
+  transform: rotate(45deg);
+  box-shadow: -2rpx -2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.picker-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  transition: background 0.2s;
+}
+
+.picker-item.active {
+  background: #FFF5F5;
+}
+
+.picker-item-child {
+  padding-left: 60rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.picker-item-child.active {
+  background: #FFF5F5;
+}
+
+.member-checkbox-wrapper {
+  margin-right: 20rpx;
+}
+
+.member-checkbox {
+  width: 40rpx;
+  height: 40rpx;
+  border: 3rpx solid #E0E0E0;
+  border-radius: 10rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.member-checkbox.member-checked {
+  background: #FF69B4;
+  border-color: #FF69B4;
+}
+
+.member-checkbox text {
+  color: white;
   font-size: 24rpx;
+  font-weight: bold;
+}
+
+.divider {
+  height: 1rpx;
+  background: #F0F0F0;
+  margin: 10rpx 0;
 }
 
 .wish-card {

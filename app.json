@@ -8,6 +8,8 @@
     "pages/family/family",
     "pages/addFamily/addFamily",
     "pages/joinFamily/joinFamily",
+    "pages/familyMember/familyMember",
+    "pages/addFamilyMember/addFamilyMember",
     "pages/schedule/schedule",
     "pages/addSchedule/addSchedule",
     "pages/scheduleDetail/scheduleDetail",

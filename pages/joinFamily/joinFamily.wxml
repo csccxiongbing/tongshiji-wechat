@@ -17,9 +17,13 @@
             maxlength="1"
             value="{{item}}"
             bindinput="onCodeInput"
+            bindfocus="onCodeFocus"
             data-index="{{index}}"
           />
         </block>
+      </view>
+      <view class="code-actions">
+        <text class="paste-btn" bindtap="onPaste">粘贴邀请码</text>
       </view>
       <text class="code-tip">请输入6位邀请码</text>
     </view>
@@ -30,7 +34,7 @@
     
     <view class="tips-card">
       <text class="tips-title">💡 温馨提示</text>
-      <text class="tips-content">邀请码由家庭管理员生成，可在家庭设置中查看</text>
+      <text class="tips-content">邀请码由家庭管理员生成，可在家庭管理中查看</text>
     </view>
   </view>
   

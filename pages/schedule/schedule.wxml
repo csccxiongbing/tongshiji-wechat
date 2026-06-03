@@ -1,10 +1,50 @@
 <view class="container">
   <view class="header-section">
-    <view class="month-info">
-      <text class="month-title">{{currentMonth}}月</text>
-      <text class="year-text">{{currentYear}}年</text>
+    <view class="date-member-row">
+      <view class="month-info">
+        <text class="month-title">{{currentMonth}}月</text>
+        <text class="year-text">{{currentYear}}年</text>
+      </view>
+      <view class="member-selector" bindtap="toggleMemberPicker">
+        <text class="member-text">家庭成员</text>
+        <text class="arrow">{{showMemberPicker ? '▲' : '▼'}}</text>
+      </view>
     </view>
   </view>
+  
+  <view class="member-picker-overlay" wx:if="{{showMemberPicker}}" bindtap="toggleMemberPicker"></view>
+  <view class="member-picker" wx:if="{{showMemberPicker}}">
+    <view class="picker-arrow"></view>
+    <view 
+      class="picker-item picker-item-first {{selectedMembers.length === familyMembers.length ? 'active' : ''}}" 
+      bindtap="toggleSelectAll"
+    >
+      <view class="member-checkbox-wrapper">
+        <view class="member-checkbox {{selectedMembers.length === familyMembers.length ? 'member-checked' : ''}}">
+          <text wx:if="{{selectedMembers.length === familyMembers.length}}">✓</text>
+        </view>
+      </view>
+      <text>我的家庭</text>
+    </view>
+    <view class="divider"></view>
+    <block wx:for="{{familyMembers}}" wx:key="name">
+      <view 
+        class="picker-item picker-item-child {{item.isSelected ? 'active' : ''}}" 
+        bindtap="toggleMember"
+        data-member="{{item.name}}"
+        data-index="{{index}}"
+      >
+        <view class="member-checkbox-wrapper">
+          <view class="member-checkbox {{item.isSelected ? 'member-checked' : ''}}">
+            <text wx:if="{{item.isSelected}}">✓</text>
+          </view>
+        </view>
+        <text>{{item.name}}</text>
+      </view>
+    </block>
+  </view>
+  
+  <scroll-view scroll-y class="scroll-content">
   
   <view class="week-nav">
     <block wx:for="{{weekDays}}" wx:key="index">
@@ -29,21 +69,65 @@
     </view>
     
     <view class="schedule-list">
-      <block wx:for="{{daySchedules}}" wx:key="index">
-        <view 
-          class="schedule-item {{item.completed ? 'completed' : ''}}" 
-          bindtap="toggleSchedule"
-          data-index="{{index}}"
-        >
-          <view class="schedule-icon" style="background: {{item.color}}">
-            <text>{{item.icon}}</text>
-          </view>
-          <view class="schedule-content">
-            <text class="schedule-title">{{item.title}}</text>
-            <text class="schedule-time">{{item.time}}</text>
-          </view>
-          <view class="schedule-checkbox {{item.completed ? 'checked' : ''}}">
-            <text wx:if="{{item.completed}}">✓</text>
+      <block wx:for="{{daySchedules}}" wx:key="id">
+        <view class="schedule-item {{item.completed ? 'completed' : ''}}" bindtap="viewScheduleDetail" data-id="{{item.id}}">
+          <view class="schedule-main">
+            <view class="schedule-top">
+              <view class="top-left">
+                <view class="top-row">
+                  <view class="time-capsule" wx:if="{{item.startTime && item.endTime}}">
+                    <text class="time-icon">🕐</text>
+                    <text class="time-text">{{item.formattedStartTime}} - {{item.formattedEndTime}}</text>
+                  </view>
+                  <view class="time-capsule" wx:elif="{{item.time}}">
+                    <text class="time-icon">🕐</text>
+                    <text class="time-text">{{item.time}}</text>
+                  </view>
+                  
+                  <text class="badge-item badge-repeat" wx:if="{{item.repeatRule && item.repeatRule !== 'never'}}">🔄 {{item.repeatRuleText}}</text>
+                  <text class="badge-item badge-points" wx:if="{{item.points && item.points > 0}}">⭐ {{item.points}}</text>
+                </view>
+              </view>
+              
+              <view class="top-right" wx:if="{{item.remindEnabled && item.remindMembers && item.remindMembers.length > 0}}">
+                <text class="remind-badge">🔔</text>
+                <text class="remind-name" wx:for="{{item.remindMembers}}" wx:for-item="remindMember">{{remindMember}}</text>
+              </view>
+            </view>
+            
+            <view class="schedule-divider"></view>
+            
+            <view class="schedule-content">
+              <view class="schedule-icon" style="background: {{item.color}}">
+                <text>{{item.icon}}</text>
+              </view>
+              
+              <view class="content-text">
+                <view class="schedule-title-row">
+                  <text class="schedule-title">{{item.title}}</text>
+                </view>
+                
+                <view class="schedule-note" wx:if="{{item.note}}">
+                  <text class="note-icon">📝</text>
+                  <text class="note-text">{{item.note}}</text>
+                </view>
+              </view>
+              
+              <view class="member-buttons">
+                <view
+                  wx:for="{{item.memberStatus}}"
+                  wx:for-item="ms"
+                  wx:key="ms.name"
+                  class="member-button {{ms.completed ? 'completed' : ''}}"
+                  catchtap="toggleMemberComplete"
+                  data-id="{{item.id}}"
+                  data-member="{{ms.name}}"
+                >
+                  <text class="member-name">{{ms.name}}</text>
+                  <text wx:if="{{ms.completed}}" class="check-icon">✓</text>
+                </view>
+              </view>
+            </view>
           </view>
         </view>
       </block>
@@ -55,26 +139,24 @@
     </view>
   </view>
   
-  <view class="section">
-    <view class="section-header">
-      <text class="section-title">本周统计</text>
+  <view class="stats-card">
+    <view class="stat-item">
+      <text class="stat-value">{{totalSchedules}}</text>
+      <text class="stat-label">总日程</text>
     </view>
-    
-    <view class="stats-grid">
-      <view class="stat-card">
-        <text class="stat-num">{{totalSchedules}}</text>
-        <text class="stat-label">总日程</text>
-      </view>
-      <view class="stat-card completed-card">
-        <text class="stat-num">{{completedSchedules}}</text>
-        <text class="stat-label">已完成</text>
-      </view>
-      <view class="stat-card">
-        <text class="stat-num">{{avgCompletion}}%</text>
-        <text class="stat-label">平均完成率</text>
-      </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-value">{{completedSchedules}}</text>
+      <text class="stat-label">已完成</text>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <text class="stat-value">{{avgCompletion}}%</text>
+      <text class="stat-label">完成率</text>
     </view>
   </view>
+  
+  </scroll-view>
   
   <custom-tab-bar />
 </view>

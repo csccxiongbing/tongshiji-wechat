@@ -11,13 +11,17 @@ Page({
     selectedDayName: '周日',
     totalSchedules: 14,
     completedSchedules: 3,
-    avgCompletion: 21
+    avgCompletion: 21,
+    familyMembers: [],
+    selectedMembers: [],
+    showMemberPicker: false
   },
   
   onShow: function() {
-    this.initWeekDays()
-    this.initSchedules()
-    this.updateTabBar()
+    this.initWeekDays();
+    this.loadFamilyMembers();
+    this.initSchedules();
+    this.updateTabBar();
   },
   
   updateTabBar: function() {
@@ -49,7 +53,7 @@ Page({
         name: weekdays[i],
         date: date.getDate(),
         fullDate: `${date.getMonth() + 1}-${date.getDate()}`,
-        hasSchedule: true
+        hasSchedule: false
       })
     }
     
@@ -63,98 +67,380 @@ Page({
   },
   
   initSchedules: function() {
-    const weekSchedules = {
-      '0': [
-        { id: 1, title: '周日公园游玩', time: '09:00', icon: '🏞️', color: '#B5FFD9', completed: true },
-        { id: 2, title: '家庭聚餐', time: '12:00', icon: '🍽️', color: '#FFE4B5', completed: false }
-      ],
-      '1': [
-        { id: 3, title: '上学', time: '08:30', icon: '🎒', color: '#B5E3FF', completed: true },
-        { id: 4, title: '数学作业', time: '16:00', icon: '📐', color: '#D4B5FF', completed: false }
-      ],
-      '2': [
-        { id: 5, title: '上学', time: '08:30', icon: '🎒', color: '#B5E3FF', completed: true },
-        { id: 6, title: '英语课', time: '17:00', icon: '🔤', color: '#FFB5B5', completed: false }
-      ],
-      '3': [
-        { id: 7, title: '上学', time: '08:30', icon: '🎒', color: '#B5E3FF', completed: false },
-        { id: 8, title: '画画', time: '15:30', icon: '🎨', color: '#FFE4FF', completed: false }
-      ],
-      '4': [
-        { id: 9, title: '上学', time: '08:30', icon: '🎒', color: '#B5E3FF', completed: false },
-        { id: 10, title: '游泳课', time: '16:30', icon: '🏊', color: '#B5E3FF', completed: false }
-      ],
-      '5': [
-        { id: 11, title: '上学', time: '08:30', icon: '🎒', color: '#B5E3FF', completed: false },
-        { id: 12, title: '钢琴课', time: '14:00', icon: '🎹', color: '#FFE4B5', completed: false }
-      ],
-      '6': [
-        { id: 13, title: '周末早餐', time: '09:00', icon: '🍳', color: '#FFB5B5', completed: false },
-        { id: 14, title: '看电影', time: '15:00', icon: '🎬', color: '#D4B5FF', completed: false }
-      ]
+    const schedules = app.globalData.schedules || [];
+    
+    // 初始化本周日期
+    const now = new Date();
+    const today = now.getDate();
+    const dayOfWeek = now.getDay();
+    
+    const weekStart = new Date(now);
+    weekStart.setDate(today - dayOfWeek);
+    
+    const weekDaysList = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
+      weekDaysList.push({
+        index: i,
+        date: date
+      });
     }
     
-    const day = this.data.selectedDay
+    // 按星期几筛选日程
+    const weekSchedules = {};
+    weekDaysList.forEach(day => {
+      const daySchedules = this.getSchedulesForDate(schedules, day.date);
+      weekSchedules[day.index] = daySchedules;
+    });
+    
+    // 更新 weekDays 中的 hasSchedule 标志（考虑成员筛选）
+    const { selectedMembers } = this.data;
+    const updatedWeekDays = this.data.weekDays.map((day, i) => {
+      let daySchedules = weekSchedules[i] || [];
+      
+      // 如果有成员筛选，过滤出选中成员的日程
+      if (selectedMembers.length > 0) {
+        daySchedules = daySchedules.filter(schedule => {
+          return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
+        });
+      }
+      
+      return {
+        ...day,
+        hasSchedule: daySchedules.length > 0
+      };
+    });
+    
+    const day = this.data.selectedDay;
     this.setData({
-      weekSchedules: weekSchedules,
-      daySchedules: weekSchedules[day] || [],
-      totalSchedules: 14,
-      completedSchedules: 3,
-      avgCompletion: 21
-    })
+      weekDays: updatedWeekDays,
+      weekSchedules: weekSchedules
+    });
+    
+    this.filterSchedules();
+  },
+
+  getSchedulesForDate: function(schedules, targetDate) {
+    const targetDateStr = this.formatDate(targetDate);
+    const targetWeekDay = targetDate.getDay();
+    
+    const result = [];
+    
+    schedules.forEach(schedule => {
+      let shouldShow = false;
+      
+      if (schedule.startTime) {
+        const scheduleDate = new Date(schedule.startTime.replace(/-/g, '/'));
+        const scheduleDateStr = this.formatDate(scheduleDate);
+        
+        // 检查是否是当天或重复日程
+        if (scheduleDateStr === targetDateStr) {
+          shouldShow = true;
+        } else if (schedule.repeatRule && schedule.repeatRule !== 'never') {
+          const scheduleStartDate = new Date(schedule.startTime.replace(/-/g, '/'));
+          if (scheduleStartDate <= targetDate) {
+            if (schedule.repeatRule === 'daily') {
+              shouldShow = true;
+            } else if (schedule.repeatRule === 'weekly' && scheduleDate.getDay() === targetWeekDay) {
+              shouldShow = true;
+            } else if (schedule.repeatRule === 'weekday' && targetWeekDay >= 1 && targetWeekDay <= 5) {
+              shouldShow = true;
+            } else if (schedule.repeatRule === 'weekend' && (targetWeekDay === 0 || targetWeekDay === 6)) {
+              shouldShow = true;
+            }
+          }
+        }
+      }
+      
+      if (shouldShow) {
+        result.push({
+          ...schedule,
+          formattedStartTime: this.extractTime(schedule.startTime),
+          formattedEndTime: this.extractTime(schedule.endTime),
+          memberStatus: this.getMemberStatus(schedule)
+        });
+      }
+    });
+    
+    // 排序：未完成的在前，已完成的在后
+    return result.sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      return 0;
+    });
+  },
+
+  formatDate: function(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  },
+
+  extractTime: function(datetimeStr) {
+    if (!datetimeStr) return '';
+    const match = datetimeStr.match(/(\d{2}:\d{2})(:\d{2})?/);
+    return match ? match[1] : datetimeStr;
   },
   
   selectDay: function(e) {
-    const day = parseInt(e.currentTarget.dataset.day)
-    const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
-    const schedules = this.data.weekSchedules[day] || []
-    
-    let completed = 0
-    schedules.forEach(s => {
-      if (s.completed) completed++
-    })
+    const day = parseInt(e.currentTarget.dataset.day);
+    const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     
     this.setData({
       selectedDay: day,
-      selectedDayName: dayNames[day],
-      daySchedules: schedules,
-      completedSchedules: completed
-    })
+      selectedDayName: dayNames[day]
+    });
+    
+    this.filterSchedules();
   },
   
-  toggleSchedule: function(e) {
-    const index = parseInt(e.currentTarget.dataset.index)
-    const day = this.data.selectedDay
-    const schedules = [...this.data.daySchedules]
-    schedules[index].completed = !schedules[index].completed
-    
-    const weekSchedules = {...this.data.weekSchedules}
-    weekSchedules[day] = schedules
-    
-    let completed = 0
-    schedules.forEach(s => {
-      if (s.completed) completed++
-    })
-    
-    let totalCompleted = 0
-    Object.values(weekSchedules).forEach(daySchedules => {
-      daySchedules.forEach(s => {
-        if (s.completed) totalCompleted++
-      })
-    })
-    
-    this.setData({
-      daySchedules: schedules,
-      weekSchedules: weekSchedules,
-      completedSchedules: completed,
-      totalSchedules: totalCompleted + (14 - Object.values(weekSchedules).reduce((acc, s) => acc + s.length, 0)),
-      avgCompletion: Math.round((totalCompleted / 14) * 100)
-    })
-  },
+  
   
   goToAddSchedule: function() {
     wx.navigateTo({
       url: '/pages/addSchedule/addSchedule'
+    })
+  },
+
+  loadFamilyMembers: function() {
+    let family = app.globalData.familyMembers
+    let members = []
+    
+    if (family && Array.isArray(family.members)) {
+      members = family.members
+    } else if (family && Array.isArray(family)) {
+      members = family
+    } else {
+      members = [
+        { name: '爸爸', role: 'parent' },
+        { name: '妈妈', role: 'parent' },
+        { name: '小明', role: 'child' }
+      ]
+    }
+    
+    const membersWithState = members.map(m => ({
+      ...m,
+      isSelected: true
+    }))
+    
+    const selectedMembers = members.map(m => m.name)
+    
+    this.setData({
+      familyMembers: membersWithState,
+      selectedMembers: selectedMembers
+    })
+  },
+
+  toggleMemberPicker: function() {
+    this.setData({
+      showMemberPicker: !this.data.showMemberPicker
+    })
+  },
+
+  toggleMember: function(e) {
+    const member = e.currentTarget.dataset.member
+    const index = e.currentTarget.dataset.index
+    
+    const updatedFamilyMembers = this.data.familyMembers.map((m, i) => {
+      if (i === index || m.name === member) {
+        return {
+          ...m,
+          isSelected: !m.isSelected
+        }
+      }
+      return m
+    })
+    
+    let selectedMembers = [...this.data.selectedMembers]
+    const selectedIndex = selectedMembers.indexOf(member)
+    if (selectedIndex > -1) {
+      selectedMembers.splice(selectedIndex, 1)
+    } else {
+      selectedMembers.push(member)
+    }
+    
+    this.setData({
+      familyMembers: updatedFamilyMembers,
+      selectedMembers: selectedMembers
+    })
+    
+    this.updateWeekDaysWithMemberFilter()
+    this.filterSchedules()
+  },
+
+  toggleSelectAll: function() {
+    const { familyMembers, selectedMembers } = this.data
+    const allMemberNames = familyMembers.map(m => m.name)
+    
+    let updatedFamilyMembers = []
+    let newSelectedMembers = []
+    
+    if (selectedMembers.length === allMemberNames.length) {
+      updatedFamilyMembers = familyMembers.map(m => ({
+        ...m,
+        isSelected: false
+      }))
+      newSelectedMembers = []
+    } else {
+      updatedFamilyMembers = familyMembers.map(m => ({
+        ...m,
+        isSelected: true
+      }))
+      newSelectedMembers = allMemberNames
+    }
+    
+    this.setData({
+      familyMembers: updatedFamilyMembers,
+      selectedMembers: newSelectedMembers
+    })
+    
+    this.updateWeekDaysWithMemberFilter()
+    this.filterSchedules()
+  },
+
+  getMemberStatus: function(schedule) {
+    const members = schedule.scheduleMembers || []
+    const completedBy = schedule.completedBy || []
+    return members.map(name => ({
+      name: name,
+      completed: completedBy.includes(name)
+    }))
+  },
+
+  checkAllCompleted: function(members, completedBy) {
+    if (!members || members.length === 0) return false
+    if (!completedBy || completedBy.length === 0) return false
+    return members.every(member => completedBy.includes(member))
+  },
+
+  toggleMemberComplete: function(e) {
+    const scheduleId = parseInt(e.currentTarget.dataset.id);
+    const memberName = e.currentTarget.dataset.member;
+    const day = this.data.selectedDay;
+
+    const daySchedules = [...this.data.weekSchedules[day]];
+    const scheduleIndex = daySchedules.findIndex(s => s.id === scheduleId);
+    const schedule = daySchedules[scheduleIndex];
+    
+    let completedBy = schedule.completedBy || [];
+    const isCompleted = completedBy.includes(memberName);
+    
+    if (isCompleted) {
+      completedBy = completedBy.filter(m => m !== memberName);
+      if (schedule.points && schedule.points > 0) {
+        app.addPoints(-schedule.points, `取消完成"${schedule.title}"任务`, memberName);
+      }
+    } else {
+      completedBy = [...completedBy, memberName];
+      if (schedule.points && schedule.points > 0) {
+        app.addPoints(schedule.points, `完成"${schedule.title}"任务`, memberName);
+      }
+    }
+    
+    const allCompleted = this.checkAllCompleted(schedule.scheduleMembers, completedBy);
+    
+    const memberStatus = (schedule.scheduleMembers || []).map(name => ({
+      name: name,
+      completed: completedBy.includes(name)
+    }));
+    
+    const updatedSchedule = { 
+      ...schedule, 
+      completedBy: completedBy,
+      completed: allCompleted,
+      memberStatus: memberStatus
+    };
+    
+    daySchedules[scheduleIndex] = updatedSchedule;
+    
+    const weekSchedules = {...this.data.weekSchedules};
+    weekSchedules[day] = daySchedules;
+    
+    // 更新 app.globalData.schedules
+    const globalSchedules = app.globalData.schedules || [];
+    const globalScheduleIndex = globalSchedules.findIndex(s => s.id === scheduleId);
+    if (globalScheduleIndex !== -1) {
+      globalSchedules[globalScheduleIndex] = {
+        ...updatedSchedule
+      };
+      app.saveSchedules(globalSchedules);
+    }
+    
+    this.setData({
+      weekSchedules: weekSchedules
+    });
+    
+    this.filterSchedules();
+  },
+
+  filterSchedules: function() {
+    const day = this.data.selectedDay;
+    const { weekSchedules, selectedMembers } = this.data;
+    let schedules = weekSchedules[day] || [];
+    
+    if (selectedMembers.length > 0) {
+      schedules = schedules.filter(schedule => {
+        return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
+      });
+    }
+    
+    // 计算本周统计（考虑成员筛选）
+    let totalSchedules = 0;
+    let totalCompleted = 0;
+    Object.values(weekSchedules).forEach(daySchedules => {
+      let filteredDaySchedules = daySchedules;
+      if (selectedMembers.length > 0) {
+        filteredDaySchedules = daySchedules.filter(schedule => {
+          return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
+        });
+      }
+      totalSchedules += filteredDaySchedules.length;
+      filteredDaySchedules.forEach(s => {
+        if (s.completed) totalCompleted++;
+      });
+    });
+    
+    const avgCompletion = totalSchedules > 0 ? Math.round((totalCompleted / totalSchedules) * 100) : 0;
+    
+    this.setData({
+      daySchedules: schedules,
+      completedSchedules: totalCompleted,
+      totalSchedules: totalSchedules,
+      avgCompletion: avgCompletion
+    });
+  },
+
+  updateWeekDaysWithMemberFilter: function() {
+    const { weekDays, weekSchedules, selectedMembers } = this.data;
+    
+    const updatedWeekDays = weekDays.map((day, i) => {
+      let daySchedules = weekSchedules[i] || [];
+      
+      // 如果有成员筛选，过滤出选中成员的日程
+      if (selectedMembers.length > 0) {
+        daySchedules = daySchedules.filter(schedule => {
+          return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
+        });
+      }
+      
+      return {
+        ...day,
+        hasSchedule: daySchedules.length > 0
+      };
+    });
+    
+    this.setData({
+      weekDays: updatedWeekDays
+    });
+  },
+
+  viewScheduleDetail: function(e) {
+    const scheduleId = parseInt(e.currentTarget.dataset.id)
+    wx.navigateTo({
+      url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}`
     })
   }
 })

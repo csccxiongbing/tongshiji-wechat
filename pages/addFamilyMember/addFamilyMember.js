@@ -14,29 +14,16 @@ Page({
   },
   
   onLoad: function(options) {
-    const role = options.role || ''
     this.setData({
-      selectedRole: role,
+      selectedRole: 'child',
       parentRole: 'dad',
-      fixedRole: role, // 标记固定的角色
-      members: role === 'parent' ? [
-        { name: '爸爸', role: role || 'parent' }
-      ] : [
+      members: [
         { name: '', role: 'child' }
       ]
     })
   },
   
   selectRole: function(e) {
-    // 如果有固定角色，则不允许切换
-    if (this.data.fixedRole) {
-      wx.showToast({
-        title: '角色已在注册时确定',
-        icon: 'none'
-      })
-      return
-    }
-    
     const role = e.currentTarget.dataset.role
     this.setData({
       selectedRole: role,
@@ -130,16 +117,7 @@ Page({
     })
   },
   
-  generateInviteCode: function() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    let code = ''
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    return code
-  },
-  
-  createFamily: function() {
+  addMember: function() {
     if (!this.data.selectedRole) {
       wx.showToast({
         title: '请选择角色',
@@ -148,10 +126,11 @@ Page({
       return
     }
     
+    let memberName = ''
+    let memberRole = this.data.selectedRole
+    let birthday = this.data.babyBirthday
     const userInfo = app.globalData.userInfo || {}
     const userPhone = userInfo.phone || ''
-    
-    let validMembers = []
     
     if (this.data.selectedRole === 'child') {
       if (!this.data.babyName.trim()) {
@@ -161,72 +140,43 @@ Page({
         })
         return
       }
-      validMembers = [
-        { 
-          name: this.data.babyName, 
-          role: 'child', 
-          birthday: this.data.babyBirthday,
-          phone: userPhone,
-          isCurrentUser: true
-        }
-      ]
+      memberName = this.data.babyName
     } else {
-      validMembers = this.data.members.filter(m => m.name.trim()).map(m => ({
-        ...m,
-        phone: userPhone,
-        isCurrentUser: true
-      }))
+      const validMembers = this.data.members.filter(m => m.name.trim())
       if (validMembers.length === 0) {
         wx.showToast({
-          title: '请添加至少一位成员',
+          title: '请输入成员名称',
           icon: 'none'
         })
         return
       }
-      if (this.data.babyName.trim()) {
-        validMembers.push({
-          name: this.data.babyName,
-          role: 'child',
-          birthday: this.data.babyBirthday
-        })
-      }
+      memberName = validMembers[0].name
     }
     
-    const inviteCode = this.generateInviteCode()
+    let family = app.globalData.familyMembers || { members: [] }
     
-    let familyName = ''
-    if (this.data.selectedRole === 'parent') {
-      if (this.data.parentRole === 'dad') {
-        familyName = '爸爸的家庭'
-      } else if (this.data.parentRole === 'mom') {
-        familyName = '妈妈的家庭'
-      } else {
-        familyName = (this.data.customParentName || '家长') + '的家庭'
-      }
-    } else {
-      familyName = this.data.babyName + '的家庭'
+    if (!family.members) {
+      family.members = []
     }
     
-    const familyInfo = {
-      name: familyName,
-      familyCode: inviteCode,
-      members: validMembers,
-      creatorRole: this.data.selectedRole,
-      parentRole: this.data.selectedRole === 'parent' ? this.data.parentRole : null,
-      customParentName: this.data.customParentName
-    }
+    family.members.push({
+      name: memberName,
+      role: memberRole,
+      birthday: birthday,
+      phone: userPhone,
+      joinedAt: Date.now(),
+      isCurrentUser: true
+    })
     
-    app.saveFamilyMembers(familyInfo)
+    app.saveFamilyMembers(family)
     
     wx.showToast({
-      title: '创建成功',
+      title: '添加成功',
       icon: 'success'
     })
     
     setTimeout(() => {
-      wx.switchTab({
-        url: '/pages/home/home'
-      })
+      wx.navigateBack()
     }, 1500)
   }
 })

@@ -10,7 +10,10 @@ Page({
       totalDays: 7,
       completedTasks: 42,
       badges: 5
-    }
+    },
+    familyMembers: [],
+    selectedMembers: [],
+    showMemberPicker: false
   },
   
   onShow: function() {
@@ -25,7 +28,99 @@ Page({
       roleText: role === 'parent' ? '家长' : '孩子',
       wishPoints: wishPoints
     })
+    
+    this.loadFamilyMembers()
     this.updateTabBar()
+  },
+  
+  loadFamilyMembers: function() {
+    let family = app.globalData.familyMembers
+    let members = []
+    
+    if (family && Array.isArray(family.members)) {
+      members = family.members
+    } else if (family && Array.isArray(family)) {
+      members = family
+    } else {
+      members = [
+        { name: '爸爸', role: 'parent' },
+        { name: '妈妈', role: 'parent' },
+        { name: '小明', role: 'child' }
+      ]
+    }
+    
+    const membersWithState = members.map(m => ({
+      ...m,
+      isSelected: true
+    }))
+    
+    const selectedMembers = members.map(m => m.name)
+    
+    this.setData({
+      familyMembers: membersWithState,
+      selectedMembers: selectedMembers
+    })
+  },
+  
+  toggleMemberPicker: function() {
+    this.setData({
+      showMemberPicker: !this.data.showMemberPicker
+    })
+  },
+  
+  toggleMember: function(e) {
+    const member = e.currentTarget.dataset.member
+    const index = e.currentTarget.dataset.index
+    
+    const updatedFamilyMembers = this.data.familyMembers.map((m, i) => {
+      if (i === index || m.name === member) {
+        return {
+          ...m,
+          isSelected: !m.isSelected
+        }
+      }
+      return m
+    })
+    
+    let selectedMembers = [...this.data.selectedMembers]
+    const selectedIndex = selectedMembers.indexOf(member)
+    if (selectedIndex > -1) {
+      selectedMembers.splice(selectedIndex, 1)
+    } else {
+      selectedMembers.push(member)
+    }
+    
+    this.setData({
+      familyMembers: updatedFamilyMembers,
+      selectedMembers: selectedMembers
+    })
+  },
+  
+  toggleSelectAll: function() {
+    const { familyMembers, selectedMembers } = this.data
+    const allMemberNames = familyMembers.map(m => m.name)
+    
+    let updatedFamilyMembers = []
+    let newSelectedMembers = []
+    
+    if (selectedMembers.length === allMemberNames.length) {
+      updatedFamilyMembers = familyMembers.map(m => ({
+        ...m,
+        isSelected: false
+      }))
+      newSelectedMembers = []
+    } else {
+      updatedFamilyMembers = familyMembers.map(m => ({
+        ...m,
+        isSelected: true
+      }))
+      newSelectedMembers = allMemberNames
+    }
+    
+    this.setData({
+      familyMembers: updatedFamilyMembers,
+      selectedMembers: newSelectedMembers
+    })
   },
   
   updateTabBar: function() {
@@ -61,7 +156,7 @@ Page({
   
   goToFamily: function() {
     wx.navigateTo({
-      url: '/pages/family/family'
+      url: '/pages/familyMember/familyMember'
     })
   },
   

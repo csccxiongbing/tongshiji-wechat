@@ -76,6 +76,16 @@
   outline: none;
 }
 
+.code-actions {
+  margin-bottom: 20rpx;
+}
+
+.paste-btn {
+  font-size: 26rpx;
+  color: #FF69B4;
+  text-decoration: underline;
+}
+
 .code-tip {
   font-size: 24rpx;
   color: #999999;

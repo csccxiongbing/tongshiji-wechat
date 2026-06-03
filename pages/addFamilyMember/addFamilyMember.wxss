@@ -92,28 +92,6 @@
   box-shadow: 0 4rpx 12rpx rgba(255, 105, 180, 0.4);
 }
 
-.fixed-tag {
-  position: absolute;
-  bottom: -20rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 6rpx 16rpx;
-  background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
-  color: #FFFFFF;
-  font-size: 20rpx;
-  border-radius: 20rpx;
-  white-space: nowrap;
-}
-
-.role-icon-option.disabled {
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-.role-icon-option.disabled .icon-circle {
-  filter: grayscale(100%);
-}
-
 .parent-name-section {
   margin-bottom: 40rpx;
   padding: 24rpx;
@@ -143,22 +121,6 @@
   border-color: transparent;
 }
 
-.custom-name-section {
-  margin-bottom: 40rpx;
-}
-
-.custom-input {
-  width: 100%;
-  padding: 24rpx 24rpx;
-  background: #FFFFFF;
-  border-radius: 16rpx;
-  font-size: 30rpx;
-  color: #333333;
-  box-sizing: border-box;
-  border: 2rpx solid #E8E8E8;
-  line-height: 1.5;
-}
-
 .baby-info-section {
   margin-bottom: 40rpx;
 }
@@ -176,11 +138,15 @@
   margin-bottom: 0;
 }
 
+.birthday-item {
+  display: flex;
+  align-items: center;
+}
+
 .input-label {
   font-size: 28rpx;
   color: #666666;
   font-weight: 500;
-  margin-right: 24rpx;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -190,21 +156,32 @@
   font-size: 30rpx;
   color: #333333;
   background: transparent;
+  margin-left: 24rpx;
 }
 
 .date-picker {
-  flex: 1;
-  font-size: 30rpx;
-  color: #333333;
-  background: transparent;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  margin-left: 24rpx;
+}
+
+.date-picker text:first-child {
+  font-size: 30rpx;
+  color: #CCCCCC;
+  flex: 1;
+  text-align: center;
+}
+
+.date-picker text.has-value {
+  color: #333333;
 }
 
 .picker-arrow {
   font-size: 36rpx;
   color: #CCCCCC;
+  flex-shrink: 0;
 }
 
 .members-section {
@@ -245,4 +222,20 @@
 .create-btn {
   padding: 28rpx;
   font-size: 32rpx;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
+  border-radius: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-weight: 600;
+  box-shadow: 0 8rpx 30rpx rgba(255, 105, 180, 0.3);
+  transition: all 0.3s ease;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
 }

@@ -67,6 +67,7 @@ Page({
         color: '#FFE4B5', 
         completed: true, 
         scheduleMembers: ['爸爸', '妈妈', '小明'], 
+        completedBy: ['爸爸', '妈妈', '小明'],
         points: 10,
         repeatRule: 'daily',
         repeatRuleText: '每天',
@@ -85,6 +86,7 @@ Page({
         color: '#B5E3FF', 
         completed: true, 
         scheduleMembers: ['小明'], 
+        completedBy: ['小明'],
         points: 20,
         repeatRule: 'weekday',
         repeatRuleText: '工作日',
@@ -103,6 +105,7 @@ Page({
         color: '#FFB5B5', 
         completed: false, 
         scheduleMembers: ['爸爸', '妈妈', '小明'], 
+        completedBy: [],
         points: 10,
         repeatRule: 'daily',
         repeatRuleText: '每天',
@@ -121,6 +124,7 @@ Page({
         color: '#D4B5FF', 
         completed: false, 
         scheduleMembers: ['小明'], 
+        completedBy: [],
         points: 30,
         repeatRule: 'weekly',
         repeatRuleText: '每周',
@@ -139,6 +143,7 @@ Page({
         color: '#B5FFD9', 
         completed: false, 
         scheduleMembers: ['爸爸', '妈妈', '小明'], 
+        completedBy: [],
         points: 10,
         repeatRule: 'daily',
         repeatRuleText: '每天',
@@ -157,6 +162,7 @@ Page({
         color: '#FFE4FF', 
         completed: false, 
         scheduleMembers: ['妈妈', '小明'], 
+        completedBy: [],
         points: 15,
         repeatRule: 'never',
         repeatRuleText: '',
@@ -213,13 +219,24 @@ Page({
       return match ? match[1] : datetimeStr
     }
     
+    // 生成成员状态数组
+    const getMemberStatus = (schedule) => {
+      const members = schedule.scheduleMembers || []
+      const completedBy = schedule.completedBy || []
+      return members.map(name => ({
+        name: name,
+        completed: completedBy.includes(name)
+      }))
+    }
+    
     // 确保每个日程都有 time 字段（兼容旧数据），并添加格式化的时间和星期
     const formattedSchedules = todaySchedules.map(s => ({
       ...s,
       time: s.time || s.startTime || '00:00',
       formattedStartTime: extractTime(s.startTime),
       formattedEndTime: extractTime(s.endTime),
-      weekDay: s.startTime ? getWeekDay(s.startTime) : weekdays[todayWeekday]
+      weekDay: s.startTime ? getWeekDay(s.startTime) : weekdays[todayWeekday],
+      memberStatus: getMemberStatus(s)
     }))
     
     // 对日程进行排序：待完成（completed=false）在前，已完成（completed=true）在后
@@ -409,22 +426,40 @@ Page({
     })
   },
   
-  toggleSchedule: function(e) {
-    const index = parseInt(e.currentTarget.dataset.index)
+  toggleMemberComplete: function(e) {
     const scheduleId = parseInt(e.currentTarget.dataset.id)
+    const memberName = e.currentTarget.dataset.member
 
     const todaySchedules = this.data.todaySchedules.map(s => {
       if (s.id === scheduleId) {
-        const newCompleted = !s.completed
-        if (s.points && s.points > 0 && s.scheduleMembers && s.scheduleMembers.length > 0) {
-          const membersText = s.scheduleMembers.join('、')
-          if (newCompleted) {
-            app.addPoints(s.points, `完成"${s.title}"任务，成员：${membersText}`)
-          } else {
-            app.addPoints(-s.points, `取消完成"${s.title}"任务，成员：${membersText}`)
+        let completedBy = s.completedBy || []
+        const isCompleted = completedBy.includes(memberName)
+        
+        if (isCompleted) {
+          completedBy = completedBy.filter(m => m !== memberName)
+          if (s.points && s.points > 0) {
+            app.addPoints(-s.points, `取消完成"${s.title}"任务`, memberName)
+          }
+        } else {
+          completedBy = [...completedBy, memberName]
+          if (s.points && s.points > 0) {
+            app.addPoints(s.points, `完成"${s.title}"任务`, memberName)
           }
         }
-        return { ...s, completed: newCompleted }
+        
+        const allCompleted = this.checkAllCompleted(s.scheduleMembers, completedBy)
+        
+        const memberStatus = (s.scheduleMembers || []).map(name => ({
+          name: name,
+          completed: completedBy.includes(name)
+        }))
+        
+        return { 
+          ...s, 
+          completedBy: completedBy,
+          completed: allCompleted,
+          memberStatus: memberStatus
+        }
       }
       return s
     })
@@ -435,6 +470,13 @@ Page({
 
     this.filterSchedules()
     app.saveSchedules(todaySchedules)
+  },
+  
+  checkAllCompleted: function(members, completedBy) {
+    if (!members || members.length === 0) return false
+    if (!completedBy || completedBy.length === 0) return false
+    
+    return members.every(member => completedBy.includes(member))
   },
   
   viewScheduleDetail: function(e) {

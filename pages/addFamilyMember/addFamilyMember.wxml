@@ -1,10 +1,10 @@
 <view class="container">
   <view class="form-card">
     <view class="role-select-section">
-      <text class="section-title">我的角色</text>
+      <text class="section-title">选择角色</text>
       <view class="role-icons">
         <view 
-          class="role-icon-option {{selectedRole === 'parent' ? 'selected' : ''}} {{fixedRole ? (selectedRole !== 'parent' ? 'disabled' : '') : ''}}" 
+          class="role-icon-option {{selectedRole === 'parent' ? 'selected' : ''}}" 
           bindtap="selectRole"
           data-role="parent"
         >
@@ -15,7 +15,7 @@
           <view wx:if="{{selectedRole === 'parent'}}" class="check-icon">✓</view>
         </view>
         <view 
-          class="role-icon-option {{selectedRole === 'child' ? 'selected' : ''}} {{fixedRole ? (selectedRole !== 'child' ? 'disabled' : '') : ''}}" 
+          class="role-icon-option {{selectedRole === 'child' ? 'selected' : ''}}" 
           bindtap="selectRole"
           data-role="child"
         >
@@ -83,7 +83,7 @@
       </view>
     </view>
     
-    <view wx:if="{{selectedRole === 'parent' || selectedRole === 'child'}}" class="baby-info-section">
+    <view wx:if="{{selectedRole === 'child'}}" class="baby-info-section">
       <view class="input-item">
         <text class="input-label">宝贝名字</text>
         <input 
@@ -94,19 +94,19 @@
           bindinput="onBabyNameInput"
         />
       </view>
-      <view class="input-item">
+      <view class="input-item birthday-item">
         <text class="input-label">出生日期</text>
         <picker mode="date" value="{{babyBirthday}}" bindchange="onBabyBirthdayChange">
           <view class="date-picker">
-            <text>{{birthdayDisplay || '请选择日期'}}</text>
+            <text class="{{birthdayDisplay ? 'has-value' : ''}}">{{birthdayDisplay || '请选择日期'}}</text>
             <text class="picker-arrow">›</text>
           </view>
         </picker>
       </view>
     </view>
     
-    <view class="btn-primary create-btn" bindtap="createFamily">
-      <text>马上创建</text>
+    <view class="btn-primary create-btn" bindtap="addMember">
+      <text>添加成员</text>
     </view>
   </view>
   

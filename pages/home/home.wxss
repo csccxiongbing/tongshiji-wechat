@@ -214,7 +214,7 @@
 .schedule-list {
   display: flex;
   flex-direction: column;
-  margin-bottom: 80rpx;
+  margin-bottom: 60rpx;
 }
 
 .schedule-item {
@@ -387,27 +387,44 @@
   white-space: nowrap;
 }
 
-.schedule-checkbox {
-  width: 50rpx;
-  height: 50rpx;
-  border: 3rpx solid #cc8b8b;
-  border-radius: 50%;
+.member-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 10rpx;
+  flex-shrink: 0;
+}
+
+.member-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* margin-left: 20rpx; */
-  flex-shrink: 0;
+  padding: 12rpx 20rpx;
+  background: #F5F5F5;
+  border: 2rpx solid #E0E0E0;
+  border-radius: 20rpx;
+  min-width: 80rpx;
   transition: all 0.2s;
 }
 
-.schedule-checkbox.checked {
-  background: #4CAF50;
+.member-button.completed {
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
   border-color: #4CAF50;
 }
 
-.schedule-checkbox text {
+.member-name {
+  font-size: 22rpx;
+  color: #666;
+  font-weight: 500;
+}
+
+.member-button.completed .member-name {
   color: white;
-  font-size: 28rpx;
+}
+
+.check-icon {
+  margin-left: 6rpx;
+  font-size: 20rpx;
+  color: white;
   font-weight: bold;
 }
 
