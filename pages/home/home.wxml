@@ -126,6 +126,10 @@
                   data-id="{{item.id}}"
                   data-member="{{ms.name}}"
                 >
+                  <!-- 小型积分弹出提示 -->
+                  <view wx:if="{{showPointsPopup && pointsScheduleId === item.id && pointsPopupMember === ms.name}}" class="points-popup">
+                    <text class="points-popup-text">{{pointsPopupText}}</text>
+                  </view>
                   <text class="member-name">{{ms.name}}</text>
                   <text wx:if="{{ms.completed}}" class="check-icon">✓</text>
                   <!-- 烟花特效 -->

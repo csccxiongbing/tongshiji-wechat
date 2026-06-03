@@ -484,15 +484,29 @@ Page({
     // 触发按钮烟花特效
     this.triggerFireworks(scheduleId, memberName)
     
-    // 显示积分特效
-    wx.showToast({
-      title: `⭐ +${points}`,
-      icon: 'none',
-      duration: 1000
+    // 显示小型积分提示在按钮上方
+    this.showMiniPointsPopup(scheduleId, memberName, points)
+    
+    // 播放卡通跳跃Q弹啾飞音效
+    this.playPointsSound()
+  },
+  
+  showMiniPointsPopup: function(scheduleId, memberName, points) {
+    this.setData({
+      showPointsPopup: true,
+      pointsPopupText: `⭐ +${points}`,
+      pointsScheduleId: scheduleId,
+      pointsPopupMember: memberName
     })
     
-    // 播放短促音效果
-    this.playPointsSound()
+    setTimeout(() => {
+      this.setData({
+        showPointsPopup: false,
+        pointsPopupText: '',
+        pointsScheduleId: null,
+        pointsPopupMember: ''
+      })
+    }, 1000)
   },
   
   triggerFireworks: function(scheduleId, memberName) {
@@ -534,9 +548,9 @@ Page({
   
   playPointsSound: function() {
     try {
-      // 创建音频上下文播放音效
+      // 卡通跳跃Q弹啾飞音效
       const audio = wx.createInnerAudioContext()
-      audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleEoAMLi/t3QABw0sR2Z/lJqUj4+Vn6evraGUgm9jXFpeZGVpamtsb3FzdHV2d3h5ent8fX5/gIGCg4SFhoaHiImJiouLjI2Njo6PkJCRkZKSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=='
+      audio.src = 'data:audio/wav;base64,UklGRmQFAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZQFAACAf4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7PwMHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE='
       audio.play()
       audio.onEnded(() => {
         audio.destroy()

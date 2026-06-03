@@ -489,6 +489,48 @@
   margin: 0 20rpx;
 }
 
+/* 小型积分弹出提示 */
+.points-popup {
+  position: absolute;
+  top: -50rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(255, 165, 0, 0.4);
+  animation: popupBounce 1s ease-out forwards;
+  z-index: 100;
+}
+
+.points-popup-text {
+  font-size: 24rpx;
+  font-weight: bold;
+  color: #8B4513;
+  white-space: nowrap;
+}
+
+@keyframes popupBounce {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20rpx) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-10rpx) scale(1.1);
+  }
+  40% {
+    transform: translateX(-50%) translateY(0rpx) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20rpx) scale(0.8);
+  }
+}
+
 /* 烟花特效 */
 .member-button.fireworks {
   position: relative;
