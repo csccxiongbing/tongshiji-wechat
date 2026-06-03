@@ -347,20 +347,59 @@ Page({
     
     // 如果获得积分，显示特效和音效
     if (earnedPoints > 0) {
-      this.showPointsEffect(earnedPoints, memberName);
+      this.showPointsEffect(earnedPoints, memberName, scheduleId);
     }
     
     this.filterSchedules();
   },
   
-  showPointsEffect: function(points, memberName) {
+  showPointsEffect: function(points, memberName, scheduleId) {
+    // 触发按钮烟花特效
+    this.triggerFireworks(scheduleId, memberName);
+    
     wx.showToast({
-      title: `⭐ +${points} 积分`,
+      title: `⭐ +${points}`,
       icon: 'none',
-      duration: 2000
+      duration: 1000
     });
     
     this.playPointsSound();
+  },
+  
+  triggerFireworks: function(scheduleId, memberName) {
+    const day = this.data.selectedDay;
+    const weekSchedules = {...this.data.weekSchedules};
+    const daySchedules = [...weekSchedules[day]];
+    const scheduleIndex = daySchedules.findIndex(s => s.id === scheduleId);
+    
+    if (scheduleIndex !== -1) {
+      const updatedMemberStatus = (daySchedules[scheduleIndex].memberStatus || []).map(ms => ({
+        ...ms,
+        showFireworks: ms.name === memberName ? true : false
+      }));
+      
+      daySchedules[scheduleIndex].memberStatus = updatedMemberStatus;
+      
+      weekSchedules[day] = [...daySchedules];
+      this.setData({
+        weekSchedules: weekSchedules
+      });
+      
+      setTimeout(() => {
+        const resetWeekSchedules = {...this.data.weekSchedules};
+        const resetDaySchedules = [...resetWeekSchedules[day]];
+        const resetMemberStatus = (resetDaySchedules[scheduleIndex].memberStatus || []).map(ms => ({
+          ...ms,
+          showFireworks: false
+        }));
+        resetDaySchedules[scheduleIndex].memberStatus = resetMemberStatus;
+        resetWeekSchedules[day] = resetDaySchedules;
+        
+        this.setData({
+          weekSchedules: resetWeekSchedules
+        });
+      }, 1000);
+    }
   },
   
   playPointsSound: function() {

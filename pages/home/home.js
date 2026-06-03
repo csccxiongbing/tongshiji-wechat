@@ -473,23 +473,63 @@ Page({
 
     // 如果获得积分，显示特效和音效
     if (earnedPoints > 0) {
-      this.showPointsEffect(earnedPoints, memberName)
+      this.showPointsEffect(earnedPoints, memberName, scheduleId)
     }
 
     this.filterSchedules()
     app.saveSchedules(todaySchedules)
   },
   
-  showPointsEffect: function(points, memberName) {
+  showPointsEffect: function(points, memberName, scheduleId) {
+    // 触发按钮烟花特效
+    this.triggerFireworks(scheduleId, memberName)
+    
     // 显示积分特效
     wx.showToast({
-      title: `⭐ +${points} 积分`,
+      title: `⭐ +${points}`,
       icon: 'none',
-      duration: 2000
+      duration: 1000
     })
     
     // 播放短促音效果
     this.playPointsSound()
+  },
+  
+  triggerFireworks: function(scheduleId, memberName) {
+    // 更新数据，触发烟花特效
+    const todaySchedules = this.data.todaySchedules.map(s => {
+      if (s.id === scheduleId) {
+        const memberStatus = (s.memberStatus || []).map(ms => ({
+          ...ms,
+          showFireworks: ms.name === memberName ? true : false
+        }))
+        
+        return {
+          ...s,
+          memberStatus: memberStatus
+        }
+      }
+      return s
+    })
+    
+    this.setData({
+      todaySchedules: todaySchedules
+    })
+    
+    // 1秒后清除烟花状态
+    setTimeout(() => {
+      const resetSchedules = this.data.todaySchedules.map(s => ({
+        ...s,
+        memberStatus: (s.memberStatus || []).map(ms => ({
+          ...ms,
+          showFireworks: false
+        }))
+      }))
+      
+      this.setData({
+        todaySchedules: resetSchedules
+      })
+    }, 1000)
   },
   
   playPointsSound: function() {

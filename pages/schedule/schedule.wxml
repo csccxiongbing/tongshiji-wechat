@@ -118,13 +118,24 @@
                   wx:for="{{item.memberStatus}}"
                   wx:for-item="ms"
                   wx:key="ms.name"
-                  class="member-button {{ms.completed ? 'completed' : ''}}"
+                  class="member-button {{ms.completed ? 'completed' : ''}} {{ms.showFireworks ? 'fireworks' : ''}}"
                   catchtap="toggleMemberComplete"
                   data-id="{{item.id}}"
                   data-member="{{ms.name}}"
                 >
                   <text class="member-name">{{ms.name}}</text>
                   <text wx:if="{{ms.completed}}" class="check-icon">✓</text>
+                  <!-- 烟花特效 -->
+                  <view wx:if="{{ms.showFireworks}}" class="fireworks-container">
+                    <view class="firework firework-1"></view>
+                    <view class="firework firework-2"></view>
+                    <view class="firework firework-3"></view>
+                    <view class="firework firework-4"></view>
+                    <view class="firework firework-5"></view>
+                    <view class="firework firework-6"></view>
+                    <view class="firework firework-7"></view>
+                    <view class="firework firework-8"></view>
+                  </view>
                 </view>
               </view>
             </view>
