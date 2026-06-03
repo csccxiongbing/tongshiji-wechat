@@ -238,9 +238,13 @@ App({
   
   saveFamilyMembers: function(members) {
     try {
+      console.log('=== app.saveFamilyMembers ===')
+      console.log('要保存的家庭成员数据:', members)
       this.globalData.familyMembers = members
       wx.setStorageSync('familyMembers', members)
+      console.log('已保存到 storage')
       this.saveCurrentUserToUsersList()
+      console.log('已保存到 users 数组')
     } catch (e) {
       console.error('保存家庭成员错误:', e)
     }
