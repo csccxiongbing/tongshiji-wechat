@@ -585,5 +585,34 @@ Page({
     wx.navigateTo({
       url: '/pages/addSchedule/addSchedule'
     })
+  },
+  
+  clearAllData: function() {
+    wx.showModal({
+      title: '确认清空',
+      content: '确定要清空所有用户数据和任务数据吗？此操作不可恢复。',
+      confirmColor: '#FF6B6B',
+      success: (res) => {
+        if (res.confirm) {
+          const result = app.clearAllData()
+          if (result.success) {
+            wx.showToast({
+              title: '数据已清空',
+              icon: 'success'
+            })
+            setTimeout(() => {
+              wx.reLaunch({
+                url: '/pages/index/index'
+              })
+            }, 1500)
+          } else {
+            wx.showToast({
+              title: '清空失败',
+              icon: 'none'
+            })
+          }
+        }
+      }
+    })
   }
 })

@@ -12,6 +12,9 @@
     <view class="greeting">
       <text class="greeting-text">{{greeting}}，{{nickname}} 👋</text>
     </view>
+    <view class="clear-data-btn" bindtap="clearAllData">
+      <text>清空数据</text>
+    </view>
   </view>
   
   <view class="member-picker-overlay" wx:if="{{showMemberPicker}}" bindtap="toggleMemberPicker"></view>

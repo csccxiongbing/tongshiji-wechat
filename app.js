@@ -181,6 +181,34 @@ App({
     }
   },
   
+  clearAllData: function() {
+    try {
+      this.globalData.users = []
+      this.globalData.userInfo = null
+      this.globalData.familyMembers = {}
+      this.globalData.schedules = []
+      this.globalData.points = 150
+      this.globalData.memberPoints = {}
+      this.globalData.pointsHistory = []
+      this.globalData.pomodoroHistory = []
+      
+      wx.removeStorageSync('users')
+      wx.removeStorageSync('userInfo')
+      wx.removeStorageSync('familyMembers')
+      wx.removeStorageSync('schedules')
+      wx.removeStorageSync('points')
+      wx.removeStorageSync('memberPoints')
+      wx.removeStorageSync('pointsHistory')
+      wx.removeStorageSync('pomodoroHistory')
+      
+      console.log('所有数据已清空')
+      return { success: true, message: '所有数据已清空' }
+    } catch (e) {
+      console.error('清空数据错误:', e)
+      return { success: false, message: '清空数据失败' }
+    }
+  },
+  
   saveCurrentUserToUsersList: function() {
     if (!this.globalData.userInfo) return
     
