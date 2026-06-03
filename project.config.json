@@ -33,7 +33,7 @@
     "disableSWC": true
   },
   "compileType": "miniprogram",
-  "libVersion": "2.19.4",
+  "libVersion": "3.16.1",
   "appid": "wx09cfbe260ed1df78",
   "projectname": "童时记",
   "isGameTourist": false,

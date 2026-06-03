@@ -126,9 +126,10 @@ Page({
         }, 1500)
       } else {
         // 不在家庭中，加入
+        const newMemberName = currentUser.nickname || '新成员'
         const newMembers = [...(foundFamily.members || [])]
         newMembers.push({
-          name: currentUser.nickname || '新成员',
+          name: newMemberName,
           role: currentUser.role || 'parent', // 使用用户注册时的角色
           phone: userPhone,
           joinedAt: Date.now(),
@@ -139,6 +140,12 @@ Page({
         foundFamily.members = newMembers
         app.globalData.familyMembers = foundFamily
         wx.setStorageSync('familyMembers', foundFamily)
+        
+        // 为新成员初始化积分为0
+        if (!app.globalData.memberPoints[newMemberName]) {
+          app.globalData.memberPoints[newMemberName] = 0
+          wx.setStorageSync('memberPoints', app.globalData.memberPoints)
+        }
         
         // 同步到用户列表
         app.saveCurrentUserToUsersList()

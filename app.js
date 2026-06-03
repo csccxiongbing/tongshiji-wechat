@@ -4,23 +4,10 @@ App({
     userInfo: null,
     familyMembers: {},
     schedules: [],
-    points: 150,
-    memberPoints: {
-      '爸爸': 50,
-      '妈妈': 50,
-      '小明': 50
-    },
-    pointsHistory: [
-      { id: 1, amount: 10, reason: '完成早餐任务', time: '2026/5/29 08:30', balance: 150, member: '小明' },
-      { id: 2, amount: 20, reason: '完成番茄专注', time: '2026/5/28 16:00', balance: 140, member: '小明' },
-      { id: 3, amount: 10, reason: '完成午餐任务', time: '2026/5/28 12:00', balance: 120, member: '妈妈' },
-      { id: 4, amount: 50, reason: '连续打卡奖励', time: '2026/5/27 20:00', balance: 110, member: '小明' }
-    ],
-    pomodoroHistory: [
-      { id: 1, type: 'pomodoro', time: '09:30', duration: 25 },
-      { id: 2, type: 'shortBreak', time: '10:00', duration: 5 },
-      { id: 3, type: 'pomodoro', time: '10:15', duration: 25 }
-    ]
+    points: 0,
+    memberPoints: {},
+    pointsHistory: [],
+    pomodoroHistory: []
   },
   
   onLaunch: function () {
@@ -137,7 +124,7 @@ App({
       this.globalData.userInfo = user
       this.globalData.familyMembers = user.familyMembers || { members: [] }
       this.globalData.schedules = user.schedules || []
-      this.globalData.points = user.points || 150
+      this.globalData.points = user.points || 0
       this.globalData.memberPoints = user.memberPoints || {}
       this.globalData.pointsHistory = user.pointsHistory || []
       this.globalData.pomodoroHistory = user.pomodoroHistory || []
@@ -145,7 +132,7 @@ App({
       wx.setStorageSync('userInfo', user)
       wx.setStorageSync('familyMembers', user.familyMembers || { members: [] })
       wx.setStorageSync('schedules', user.schedules || [])
-      wx.setStorageSync('points', user.points || 150)
+      wx.setStorageSync('points', user.points || 0)
       wx.setStorageSync('memberPoints', user.memberPoints || {})
       wx.setStorageSync('pointsHistory', user.pointsHistory || [])
       wx.setStorageSync('pomodoroHistory', user.pomodoroHistory || [])
@@ -164,7 +151,7 @@ App({
       this.globalData.userInfo = null
       this.globalData.familyMembers = { members: [] }
       this.globalData.schedules = []
-      this.globalData.points = 150
+      this.globalData.points = 0
       this.globalData.memberPoints = {}
       this.globalData.pointsHistory = []
       this.globalData.pomodoroHistory = []
@@ -187,7 +174,7 @@ App({
       this.globalData.userInfo = null
       this.globalData.familyMembers = {}
       this.globalData.schedules = []
-      this.globalData.points = 150
+      this.globalData.points = 0
       this.globalData.memberPoints = {}
       this.globalData.pointsHistory = []
       this.globalData.pomodoroHistory = []

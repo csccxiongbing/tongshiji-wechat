@@ -142,6 +142,34 @@
   margin-left: 8rpx;
 }
 
+.points-fixed {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  background: #f0f0f0;
+  padding: 12rpx 16rpx;
+  border-radius: 12rpx;
+  border: 2rpx solid #ddd;
+}
+
+.points-value {
+  font-size: 28rpx;
+  color: #666;
+  font-weight: bold;
+}
+
+.points-unit {
+  font-size: 28rpx;
+  color: #666;
+  margin-left: 8rpx;
+}
+
+.points-hint {
+  font-size: 22rpx;
+  color: #999;
+  margin-left: 8rpx;
+}
+
 .remind-members {
   flex: 1;
   display: flex;

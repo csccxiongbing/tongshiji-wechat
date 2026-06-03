@@ -13,6 +13,7 @@ Page({
     selectedColor: '#D4B5FF',
     note: '',
     points: '0',
+    pointsEditable: true,  // 积分是否可编辑
     repeatRule: 'never',
     repeatRuleText: '永不',
     endRepeat: 'never',
@@ -71,6 +72,10 @@ Page({
       selected: true
     }))
     
+    // 检查当前用户角色，如果是孩子则积分默认5分且不可编辑
+    const userInfo = app.globalData.userInfo || {}
+    const isChildRole = userInfo.role === 'child'
+    
     this.setData({
       date: dateStr,
       dateWeekDay: weekDay,
@@ -81,7 +86,9 @@ Page({
       remindMembers: selectedNames,
       scheduleMemberList: scheduleMemberList,
       remindMemberList: remindMemberList,
-      isAllSelected: true
+      isAllSelected: true,
+      points: isChildRole ? '5' : '0',
+      pointsEditable: !isChildRole
     })
   },
   
@@ -133,6 +140,14 @@ Page({
   },
   
   onPointsInput: function(e) {
+    // 如果积分不可编辑，不允许修改
+    if (!this.data.pointsEditable) {
+      wx.showToast({
+        title: '积分奖励由家长设置',
+        icon: 'none'
+      })
+      return
+    }
     this.setData({
       points: e.detail.value
     })
@@ -374,6 +389,10 @@ Page({
       selected: true
     }))
     
+    // 检查当前用户角色，如果是孩子则积分默认5分且不可编辑
+    const userInfo = app.globalData.userInfo || {}
+    const isChildRole = userInfo.role === 'child'
+    
     this.setData({
       title: '',
       date: dateStr,
@@ -383,7 +402,8 @@ Page({
       selectedIcon: '📝',
       selectedColor: '#D4B5FF',
       note: '',
-      points: '0',
+      points: isChildRole ? '5' : '0',
+      pointsEditable: !isChildRole,
       repeatRule: 'never',
       repeatRuleText: '永不',
       endRepeat: 'never',

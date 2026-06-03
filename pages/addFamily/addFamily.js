@@ -230,6 +230,14 @@ Page({
       customParentName: this.data.customParentName
     }
     
+    // 为新成员初始化积分为0
+    validMembers.forEach(member => {
+      if (!app.globalData.memberPoints[member.name]) {
+        app.globalData.memberPoints[member.name] = 0
+      }
+    })
+    wx.setStorageSync('memberPoints', app.globalData.memberPoints)
+    
     app.saveFamilyMembers(familyInfo)
     
     wx.showToast({

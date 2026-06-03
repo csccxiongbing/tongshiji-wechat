@@ -177,6 +177,12 @@ Page({
       isCurrentUser: false // 新增成员不是当前用户
     })
     
+    // 为新成员初始化积分为0
+    if (!app.globalData.memberPoints[memberName]) {
+      app.globalData.memberPoints[memberName] = 0
+      wx.setStorageSync('memberPoints', app.globalData.memberPoints)
+    }
+    
     app.saveFamilyMembers(family)
     
     wx.showToast({
