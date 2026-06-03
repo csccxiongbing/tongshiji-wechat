@@ -297,6 +297,7 @@ Page({
     
     let completedBy = schedule.completedBy || [];
     const isCompleted = completedBy.includes(memberName);
+    let earnedPoints = 0;
     
     if (isCompleted) {
       completedBy = completedBy.filter(m => m !== memberName);
@@ -307,6 +308,7 @@ Page({
       completedBy = [...completedBy, memberName];
       if (schedule.points && schedule.points > 0) {
         app.addPoints(schedule.points, `完成"${schedule.title}"任务`, memberName);
+        earnedPoints = schedule.points;
       }
     }
     
@@ -343,7 +345,38 @@ Page({
       weekSchedules: weekSchedules
     });
     
+    // 如果获得积分，显示特效和音效
+    if (earnedPoints > 0) {
+      this.showPointsEffect(earnedPoints, memberName);
+    }
+    
     this.filterSchedules();
+  },
+  
+  showPointsEffect: function(points, memberName) {
+    wx.showToast({
+      title: `⭐ +${points} 积分`,
+      icon: 'none',
+      duration: 2000
+    });
+    
+    this.playPointsSound();
+  },
+  
+  playPointsSound: function() {
+    try {
+      const audio = wx.createInnerAudioContext();
+      audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleEoAMLi/t3QABw0sR2Z/lJqUj4+Vn6evraGUgm9jXFpeZGVpamtsb3FzdHV2d3h5ent8fX5/gIGCg4SFhoaHiImJiouLjI2Njo6PkJCRkZKSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==';
+      audio.play();
+      audio.onEnded(() => {
+        audio.destroy();
+      });
+      audio.onError(() => {
+        audio.destroy();
+      });
+    } catch (e) {
+      console.error('播放音效失败:', e);
+    }
   },
 
   filterSchedules: function() {

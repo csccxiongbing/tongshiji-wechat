@@ -430,6 +430,8 @@ Page({
     const scheduleId = parseInt(e.currentTarget.dataset.id)
     const memberName = e.currentTarget.dataset.member
 
+    let earnedPoints = 0
+    
     const todaySchedules = this.data.todaySchedules.map(s => {
       if (s.id === scheduleId) {
         let completedBy = s.completedBy || []
@@ -444,6 +446,7 @@ Page({
           completedBy = [...completedBy, memberName]
           if (s.points && s.points > 0) {
             app.addPoints(s.points, `完成"${s.title}"任务`, memberName)
+            earnedPoints = s.points
           }
         }
         
@@ -468,8 +471,42 @@ Page({
       todaySchedules: todaySchedules
     })
 
+    // 如果获得积分，显示特效和音效
+    if (earnedPoints > 0) {
+      this.showPointsEffect(earnedPoints, memberName)
+    }
+
     this.filterSchedules()
     app.saveSchedules(todaySchedules)
+  },
+  
+  showPointsEffect: function(points, memberName) {
+    // 显示积分特效
+    wx.showToast({
+      title: `⭐ +${points} 积分`,
+      icon: 'none',
+      duration: 2000
+    })
+    
+    // 播放短促音效果
+    this.playPointsSound()
+  },
+  
+  playPointsSound: function() {
+    try {
+      // 创建音频上下文播放音效
+      const audio = wx.createInnerAudioContext()
+      audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleEoAMLi/t3QABw0sR2Z/lJqUj4+Vn6evraGUgm9jXFpeZGVpamtsb3FzdHV2d3h5ent8fX5/gIGCg4SFhoaHiImJiouLjI2Njo6PkJCRkZKSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w=='
+      audio.play()
+      audio.onEnded(() => {
+        audio.destroy()
+      })
+      audio.onError(() => {
+        audio.destroy()
+      })
+    } catch (e) {
+      console.error('播放音效失败:', e)
+    }
   },
   
   checkAllCompleted: function(members, completedBy) {
