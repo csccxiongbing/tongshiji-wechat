@@ -107,8 +107,6 @@ Page({
 
   getSchedulesForDate: function(schedules, targetDate) {
     const targetDateStr = this.formatDate(targetDate);
-    const targetWeekDay = targetDate.getDay();
-    const targetTime = targetDate.getTime();
     
     const result = [];
     
@@ -118,34 +116,10 @@ Page({
       if (schedule.startTime) {
         const scheduleDate = new Date(schedule.startTime.replace(/-/g, '/'));
         const scheduleDateStr = this.formatDate(scheduleDate);
-        const scheduleTime = scheduleDate.getTime();
         
-        // 检查是否是当天
+        // 只检查是否是当天，不考虑重复规则
         if (scheduleDateStr === targetDateStr) {
           shouldShow = true;
-        } else if (schedule.repeatRule && schedule.repeatRule !== 'never') {
-          // 只有日程开始日期在目标日期之前或相等时，才考虑重复规则
-          if (scheduleTime <= targetTime) {
-            if (schedule.repeatRule === 'daily') {
-              // 每日重复：只要开始日期在目标日期之前
-              shouldShow = true;
-            } else if (schedule.repeatRule === 'weekly') {
-              // 每周重复：检查目标日期是否是日程开始日期的同一天（星期几）
-              if (scheduleDate.getDay() === targetWeekDay) {
-                shouldShow = true;
-              }
-            } else if (schedule.repeatRule === 'weekday') {
-              // 工作日重复（周一到周五）
-              if (targetWeekDay >= 1 && targetWeekDay <= 5) {
-                shouldShow = true;
-              }
-            } else if (schedule.repeatRule === 'weekend') {
-              // 周末重复（周六和周日）
-              if (targetWeekDay === 0 || targetWeekDay === 6) {
-                shouldShow = true;
-              }
-            }
-          }
         }
       }
       
