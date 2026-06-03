@@ -548,16 +548,9 @@ Page({
   
   playPointsSound: function() {
     try {
-      // 星星闪烁音效 - 使用微信系统音效
-      const audio = wx.createInnerAudioContext()
-      // 使用一个短促清脆的音效
-      audio.src = 'https://downsc.chinaz.net/files/convert/18919/mp3/1.mp3'
-      audio.play()
-      audio.onEnded(() => {
-        audio.destroy()
-      })
-      audio.onError(() => {
-        audio.destroy()
+      // 星星闪烁音效 - 振动反馈
+      wx.vibrateShort({
+        type: 'light'
       })
     } catch (e) {
       console.error('播放音效失败:', e)
