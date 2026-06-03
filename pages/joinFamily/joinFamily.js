@@ -129,7 +129,7 @@ Page({
         const newMembers = [...(foundFamily.members || [])]
         newMembers.push({
           name: currentUser.nickname || '新成员',
-          role: 'parent', // 默认角色为家长，后续可以调整
+          role: currentUser.role || 'parent', // 使用用户注册时的角色
           phone: userPhone,
           joinedAt: Date.now(),
           isCurrentUser: true
