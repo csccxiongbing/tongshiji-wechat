@@ -9,9 +9,11 @@
               <text>{{item.role === 'parent' ? '👨' : '👧'}}</text>
             </view>
             <view class="member-details">
-              <text class="member-name">{{item.name}} <text wx:if="{{item.isCurrentUser}}" class="current-label">我</text></text>
-              <text class="member-role">{{item.role === 'parent' ? '家长' : '孩子'}}</text>
-              <text wx:if="{{item.phone}}" class="member-phone">📱 {{item.phone}}</text>
+              <view class="member-top-row">
+                <text class="member-name">{{item.name}} <text wx:if="{{item.isCurrentUser}}" class="current-label">我</text></text>
+                <text class="member-role">{{item.role === 'parent' ? '家长' : '孩子'}}</text>
+              </view>
+              <text wx:if="{{item.phone}}" class="member-phone">{{item.phone}}</text>
             </view>
           </view>
           <view class="member-actions">

@@ -327,6 +327,13 @@
 .member-details {
   display: flex;
   flex-direction: column;
+  flex: 1;
+}
+
+.member-top-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
 }
 
 .member-name {
@@ -337,6 +344,12 @@
 }
 
 .member-role {
+  font-size: 24rpx;
+  color: #999999;
+  display: block;
+}
+
+.member-phone {
   font-size: 24rpx;
   color: #999999;
   margin-top: 6rpx;
