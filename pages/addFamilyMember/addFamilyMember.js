@@ -159,6 +159,9 @@ Page({
       family.members = []
     }
     
+    console.log('添加前的家庭成员:', family.members)
+    console.log('添加的成员名:', memberName, '角色:', memberRole)
+    
     // 检查是否已有标记为当前用户的成员
     const hasCurrentUser = family.members.some(m => m.isCurrentUser)
     
@@ -170,6 +173,8 @@ Page({
       joinedAt: Date.now(),
       isCurrentUser: !hasCurrentUser // 只有第一个成员标记为当前用户
     })
+    
+    console.log('添加后的家庭成员:', family.members)
     
     app.saveFamilyMembers(family)
     

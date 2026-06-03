@@ -45,8 +45,10 @@ Page({
     const userInfo = app.globalData.userInfo || {}
     const userPhone = userInfo.phone || ''
     
+    console.log('=== 加载家庭成员 ===')
+    console.log('完整家庭数据:', family)
+    console.log('家庭成员数组:', members)
     console.log('用户信息:', userInfo)
-    console.log('家庭成员:', members)
     console.log('用户手机号:', userPhone)
     
     // 重置所有成员的 isCurrentUser 标记，然后根据手机号匹配
