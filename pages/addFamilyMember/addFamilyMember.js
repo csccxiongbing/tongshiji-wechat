@@ -140,6 +140,13 @@ Page({
         })
         return
       }
+      if (!this.data.babyBirthday) {
+        wx.showToast({
+          title: '请选择宝贝出生日期',
+          icon: 'none'
+        })
+        return
+      }
       memberName = this.data.babyName
     } else {
       const validMembers = this.data.members.filter(m => m.name.trim())

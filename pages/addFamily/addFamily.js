@@ -161,6 +161,13 @@ Page({
         })
         return
       }
+      if (!this.data.babyBirthday) {
+        wx.showToast({
+          title: '请选择宝贝出生日期',
+          icon: 'none'
+        })
+        return
+      }
       validMembers = [
         { 
           name: this.data.babyName, 
@@ -184,6 +191,13 @@ Page({
         return
       }
       if (this.data.babyName.trim()) {
+        if (!this.data.babyBirthday) {
+          wx.showToast({
+            title: '请选择宝贝出生日期',
+            icon: 'none'
+          })
+          return
+        }
         validMembers.push({
           name: this.data.babyName,
           role: 'child',
