@@ -52,7 +52,8 @@ Page({
       weekDays.push({
         name: weekdays[i],
         date: date.getDate(),
-        fullDate: `${date.getMonth() + 1}-${date.getDate()}`,
+        fullDate: this.formatDate(date),
+        dateObj: date,
         hasSchedule: false
       })
     }
@@ -68,30 +69,13 @@ Page({
   
   initSchedules: function() {
     const schedules = app.globalData.schedules || [];
+    const { weekDays } = this.data;
     
-    // 初始化本周日期
-    const now = new Date();
-    const today = now.getDate();
-    const dayOfWeek = now.getDay();
-    
-    const weekStart = new Date(now);
-    weekStart.setDate(today - dayOfWeek);
-    
-    const weekDaysList = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(weekStart);
-      date.setDate(weekStart.getDate() + i);
-      weekDaysList.push({
-        index: i,
-        date: date
-      });
-    }
-    
-    // 按星期几筛选日程
+    // 使用 weekDays 中已有的日期对象来查询日程
     const weekSchedules = {};
-    weekDaysList.forEach(day => {
-      const daySchedules = this.getSchedulesForDate(schedules, day.date);
-      weekSchedules[day.index] = daySchedules;
+    weekDays.forEach((day, i) => {
+      const daySchedules = this.getSchedulesForDate(schedules, day.dateObj);
+      weekSchedules[i] = daySchedules;
     });
     
     // 更新 weekDays 中的 hasSchedule 标志（考虑成员筛选）
