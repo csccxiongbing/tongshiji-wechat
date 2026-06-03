@@ -112,6 +112,7 @@ App({
       const newUser = {
         ...userInfo,
         id: Date.now(),
+        registrationComplete: false, // 标记注册流程是否完成
         familyMembers: {
           members: []
         },
@@ -138,6 +139,11 @@ App({
       const user = this.findUserByPhone(phone)
       if (!user) {
         return { success: false, message: '该手机号未注册' }
+      }
+      
+      // 兼容老用户：如果有家庭成员且成员数>0，默认标记为已完成注册
+      if (user.registrationComplete === undefined) {
+        user.registrationComplete = (user.familyMembers && user.familyMembers.members && user.familyMembers.members.length > 0)
       }
       
       this.globalData.userInfo = user

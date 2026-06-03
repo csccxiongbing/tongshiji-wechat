@@ -82,17 +82,10 @@ Page({
     const result = app.loginUser(this.data.phone)
     
     if (!result.success) {
-      // 如果手机号未注册，直接跳转到注册页面
-      if (result.message === '该手机号未注册') {
-        wx.navigateTo({
-          url: '/pages/register/register'
-        })
-      } else {
-        wx.showToast({
-          title: result.message,
-          icon: 'none'
-        })
-      }
+      wx.showToast({
+        title: result.message,
+        icon: 'none'
+      })
       return
     }
     
@@ -103,17 +96,20 @@ Page({
     const userInfo = app.globalData.userInfo
     const familyMembers = app.globalData.familyMembers
     
-    if (userInfo && userInfo.role && familyMembers && Object.keys(familyMembers).length > 0) {
+    // 检查注册流程是否完成（创建家庭或加入家庭成功）
+    if (userInfo && userInfo.registrationComplete) {
       wx.switchTab({
         url: '/pages/home/home'
       })
     } else if (userInfo && !userInfo.role) {
+      // 没有选择角色，跳转到选择角色
       wx.navigateTo({
         url: '/pages/role/role'
       })
     } else {
+      // 已选择角色但未完成家庭创建/加入，跳转到创建/加入家庭
       wx.navigateTo({
-        url: '/pages/family/family'
+        url: '/pages/family/family?role=' + (userInfo?.role || 'parent')
       })
     }
   }

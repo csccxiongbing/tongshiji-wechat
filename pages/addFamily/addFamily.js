@@ -218,6 +218,11 @@ Page({
     
     app.saveFamilyMembers(familyInfo)
     
+    // 标记注册流程完成
+    const userInfo = app.globalData.userInfo || {}
+    userInfo.registrationComplete = true
+    app.saveUserInfo(userInfo)
+    
     wx.showToast({
       title: '创建成功',
       icon: 'success'
