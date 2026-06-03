@@ -298,6 +298,14 @@
   background: #FFE4E1;
 }
 
+.clear-data-btn .menu-text {
+  color: #FF6B6B;
+}
+
+.clear-data-btn:active {
+  background: #FFE4E1;
+}
+
 .menu-icon {
   font-size: 40rpx;
   margin-right: 20rpx;
