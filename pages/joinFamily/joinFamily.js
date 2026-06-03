@@ -114,11 +114,6 @@ Page({
         app.globalData.familyMembers = foundFamily
         wx.setStorageSync('familyMembers', foundFamily)
         
-        // 标记注册流程完成
-        const userInfo = app.globalData.userInfo || {}
-        userInfo.registrationComplete = true
-        app.saveUserInfo(userInfo)
-        
         wx.showToast({
           title: '已在此家庭中',
           icon: 'success'
@@ -147,11 +142,6 @@ Page({
         
         // 同步到用户列表
         app.saveCurrentUserToUsersList()
-        
-        // 标记注册流程完成
-        const userInfo = app.globalData.userInfo || {}
-        userInfo.registrationComplete = true
-        app.saveUserInfo(userInfo)
         
         wx.showToast({
           title: '加入成功',

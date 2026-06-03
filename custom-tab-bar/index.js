@@ -47,25 +47,15 @@ Component({
   
   attached: function() {
     this.updateTabList()
+    this.setCurrentIndex()
   },
   
   methods: {
     updateTabList: function() {
       const userInfo = app.globalData.userInfo
-      let role = 'child'
-      
-      if (userInfo && userInfo.role) {
-        role = userInfo.role
-      } else if (userInfo && userInfo.phone) {
-        // 如果有用户信息但没有角色，默认显示孩子的 tab 列表（包含专注页）
-        role = 'child'
-      }
-      
+      const role = userInfo?.role || 'child'
       const tabList = role === 'parent' ? this.data.parentTabList : this.data.childTabList
-      this.setData({ tabList: tabList }, () => {
-        // 在 tabList 更新完成后再设置当前索引
-        this.setCurrentIndex()
-      })
+      this.setData({ tabList: tabList })
     },
     
     setCurrentIndex: function() {

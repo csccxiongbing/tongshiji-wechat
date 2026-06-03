@@ -96,20 +96,25 @@ Page({
     const userInfo = app.globalData.userInfo
     const familyMembers = app.globalData.familyMembers
     
-    // 检查注册流程是否完成（创建家庭或加入家庭成功）
-    if (userInfo && userInfo.registrationComplete && familyMembers && familyMembers.members && familyMembers.members.length > 0) {
+    // 检查是否完成完整注册流程：有角色且有家庭
+    const hasRole = userInfo && userInfo.role
+    const hasFamily = familyMembers && Object.keys(familyMembers).length > 0 && 
+                      familyMembers.members && familyMembers.members.length > 0
+    
+    if (hasRole && hasFamily) {
+      // 已完成完整注册流程，跳转到首页
       wx.switchTab({
         url: '/pages/home/home'
       })
-    } else if (userInfo && !userInfo.role) {
-      // 没有选择角色，跳转到选择角色
+    } else if (!hasRole) {
+      // 没有角色，跳转到角色选择
       wx.navigateTo({
         url: '/pages/role/role'
       })
     } else {
-      // 已选择角色但未完成家庭创建/加入，跳转到创建/加入家庭
+      // 有角色但没有家庭，跳转到家庭选择
       wx.navigateTo({
-        url: '/pages/family/family?role=' + (userInfo?.role || 'parent')
+        url: '/pages/family/family?role=' + userInfo.role
       })
     }
   }

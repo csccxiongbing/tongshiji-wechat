@@ -38,11 +38,17 @@ Page({
   checkAndNavigate: function() {
     const familyMembers = app.globalData.familyMembers
     
-    if (familyMembers && Object.keys(familyMembers).length > 0 && familyMembers.members && familyMembers.members.length > 0) {
+    // 检查是否已经有家庭
+    const hasFamily = familyMembers && Object.keys(familyMembers).length > 0 && 
+                      familyMembers.members && familyMembers.members.length > 0
+    
+    if (hasFamily) {
+      // 已有家庭，直接跳转到首页
       wx.switchTab({
         url: '/pages/home/home'
       })
     } else {
+      // 没有家庭，跳转到家庭选择页面
       wx.navigateTo({
         url: '/pages/family/family?role=' + this.data.selectedRole
       })
