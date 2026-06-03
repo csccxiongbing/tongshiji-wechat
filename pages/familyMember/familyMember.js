@@ -9,7 +9,8 @@ Page({
     editForm: {
       index: -1,
       name: '',
-      phone: ''
+      phone: '',
+      role: ''
     }
   },
   
@@ -124,7 +125,8 @@ Page({
       editForm: {
         index: index,
         name: member.name,
-        phone: member.phone || ''
+        phone: member.phone || '',
+        role: member.role || ''
       }
     })
   },
@@ -152,10 +154,11 @@ Page({
   
   saveMember: function() {
     const { editForm, familyMembers } = this.data
+    const isChild = editForm.role === 'child'
     
     if (!editForm.name.trim()) {
       wx.showToast({
-        title: '请输入角色名称',
+        title: isChild ? '请输入宝贝名字' : '请输入角色名称',
         icon: 'none'
       })
       return

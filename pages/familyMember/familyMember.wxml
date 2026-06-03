@@ -104,10 +104,10 @@
       </view>
       <view class="modal-body">
         <view class="form-item">
-          <text class="form-label">角色名称</text>
+          <text class="form-label">{{editForm.role === 'child' ? '宝贝名字' : '角色名称'}}</text>
           <input 
             class="form-input" 
-            placeholder="请输入角色名称" 
+            placeholder="{{editForm.role === 'child' ? '请输入宝贝名字' : '请输入角色名称'}}" 
             value="{{editForm.name}}"
             bindinput="onEditNameInput"
           />
