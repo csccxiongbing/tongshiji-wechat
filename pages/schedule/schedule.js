@@ -420,9 +420,10 @@ Page({
   
   playPointsSound: function() {
     try {
-      // 星星闪烁音效
+      // 星星闪烁音效 - 使用微信系统音效
       const audio = wx.createInnerAudioContext();
-      audio.src = 'data:audio/wav;base64,UklGRnQFAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZQFAAB/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/AwdLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8AAA==';
+      // 使用一个短促清脆的音效
+      audio.src = 'https://downsc.chinaz.net/files/convert/18919/mp3/1.mp3';
       audio.play();
       audio.onEnded(() => {
         audio.destroy();
