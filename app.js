@@ -2,13 +2,7 @@ App({
   globalData: {
     users: [],
     userInfo: null,
-    familyMembers: {
-      members: [
-        { name: '爸爸', role: 'parent' },
-        { name: '妈妈', role: 'parent' },
-        { name: '小明', role: 'child' }
-      ]
-    },
+    familyMembers: {},
     schedules: [],
     points: 150,
     memberPoints: {

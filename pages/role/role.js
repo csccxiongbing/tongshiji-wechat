@@ -38,11 +38,10 @@ Page({
   checkAndNavigate: function() {
     const familyMembers = app.globalData.familyMembers
     
-    // 检查是否已经有家庭
-    const hasFamily = familyMembers && Object.keys(familyMembers).length > 0 && 
-                      familyMembers.members && familyMembers.members.length > 0
+    // 检查是否已经有家庭（家庭中有真正的成员）
+    const hasFamilyMembers = familyMembers && familyMembers.members && familyMembers.members.length > 0
     
-    if (hasFamily) {
+    if (hasFamilyMembers) {
       // 已有家庭，直接跳转到首页
       wx.switchTab({
         url: '/pages/home/home'

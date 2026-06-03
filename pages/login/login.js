@@ -96,12 +96,11 @@ Page({
     const userInfo = app.globalData.userInfo
     const familyMembers = app.globalData.familyMembers
     
-    // 检查是否完成完整注册流程：有角色且有家庭
+    // 检查是否完成完整注册流程：有角色且有家庭（家庭中有真正的成员）
     const hasRole = userInfo && userInfo.role
-    const hasFamily = familyMembers && Object.keys(familyMembers).length > 0 && 
-                      familyMembers.members && familyMembers.members.length > 0
+    const hasFamilyMembers = familyMembers && familyMembers.members && familyMembers.members.length > 0
     
-    if (hasRole && hasFamily) {
+    if (hasRole && hasFamilyMembers) {
       // 已完成完整注册流程，跳转到首页
       wx.switchTab({
         url: '/pages/home/home'
