@@ -82,10 +82,17 @@ Page({
     const result = app.loginUser(this.data.phone)
     
     if (!result.success) {
-      wx.showToast({
-        title: result.message,
-        icon: 'none'
-      })
+      // 如果手机号未注册，直接跳转到注册页面
+      if (result.message === '该手机号未注册') {
+        wx.navigateTo({
+          url: '/pages/register/register'
+        })
+      } else {
+        wx.showToast({
+          title: result.message,
+          icon: 'none'
+        })
+      }
       return
     }
     
