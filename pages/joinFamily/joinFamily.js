@@ -102,19 +102,58 @@ Page({
     const foundFamily = this.findFamilyByCode(code)
     
     if (foundFamily) {
-      app.globalData.familyMembers = foundFamily
-      wx.setStorageSync('familyMembers', foundFamily)
+      const currentUser = app.globalData.userInfo || {}
+      const userPhone = currentUser.phone || ''
       
-      wx.showToast({
-        title: '加入成功',
-        icon: 'success'
-      })
+      // 检查是否已经在家庭成员中
+      const isAlreadyInFamily = foundFamily.members && 
+        foundFamily.members.some(member => member.phone === userPhone)
       
-      setTimeout(() => {
-        wx.switchTab({
-          url: '/pages/home/home'
+      if (isAlreadyInFamily) {
+        // 已经在家庭中
+        app.globalData.familyMembers = foundFamily
+        wx.setStorageSync('familyMembers', foundFamily)
+        
+        wx.showToast({
+          title: '已在此家庭中',
+          icon: 'success'
         })
-      }, 1500)
+        
+        setTimeout(() => {
+          wx.switchTab({
+            url: '/pages/home/home'
+          })
+        }, 1500)
+      } else {
+        // 不在家庭中，加入
+        const newMembers = [...(foundFamily.members || [])]
+        newMembers.push({
+          name: currentUser.nickname || '新成员',
+          role: 'parent', // 默认角色为家长，后续可以调整
+          phone: userPhone,
+          joinedAt: Date.now(),
+          isCurrentUser: true
+        })
+        
+        // 更新全局和本地存储
+        foundFamily.members = newMembers
+        app.globalData.familyMembers = foundFamily
+        wx.setStorageSync('familyMembers', foundFamily)
+        
+        // 同步到用户列表
+        app.saveCurrentUserToUsersList()
+        
+        wx.showToast({
+          title: '加入成功',
+          icon: 'success'
+        })
+        
+        setTimeout(() => {
+          wx.switchTab({
+            url: '/pages/home/home'
+          })
+        }, 1500)
+      }
     } else {
       wx.showToast({
         title: '邀请码不正确',
