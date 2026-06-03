@@ -159,13 +159,16 @@ Page({
       family.members = []
     }
     
+    // 检查是否已有标记为当前用户的成员
+    const hasCurrentUser = family.members.some(m => m.isCurrentUser)
+    
     family.members.push({
       name: memberName,
       role: memberRole,
       birthday: birthday,
       phone: userPhone,
       joinedAt: Date.now(),
-      isCurrentUser: true
+      isCurrentUser: !hasCurrentUser // 只有第一个成员标记为当前用户
     })
     
     app.saveFamilyMembers(family)
