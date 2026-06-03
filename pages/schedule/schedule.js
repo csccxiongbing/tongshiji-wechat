@@ -420,9 +420,17 @@ Page({
   
   playPointsSound: function() {
     try {
-      // 星星闪烁音效 - 振动反馈
-      wx.vibrateShort({
-        type: 'light'
+      // 清脆音效
+      const audio = wx.createInnerAudioContext();
+      // 简单清脆的叮声音效
+      audio.src = '/audio/point.mp3';
+      audio.play();
+      audio.onEnded(() => {
+        audio.destroy();
+      });
+      audio.onError((err) => {
+        console.error('播放音效失败:', err);
+        audio.destroy();
       });
     } catch (e) {
       console.error('播放音效失败:', e);
