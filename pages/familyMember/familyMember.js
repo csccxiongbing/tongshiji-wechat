@@ -45,12 +45,6 @@ Page({
     const userInfo = app.globalData.userInfo || {}
     const userPhone = userInfo.phone || ''
     
-    console.log('=== 加载家庭成员 ===')
-    console.log('完整家庭数据:', family)
-    console.log('家庭成员数组:', members)
-    console.log('用户信息:', userInfo)
-    console.log('用户手机号:', userPhone)
-    
     // 重置所有成员的 isCurrentUser 标记，然后根据手机号匹配
     members = members.map((member) => {
       let isCurrentUser = false
@@ -60,24 +54,15 @@ Page({
         isCurrentUser = true
       }
       
-      const updatedMember = {
+      return {
         ...member,
         isCurrentUser: isCurrentUser
       }
-      
-      // 如果是当前用户，确保有手机号
-      if (isCurrentUser && userPhone) {
-        updatedMember.phone = userPhone
-      }
-      
-      return updatedMember
     })
     
     // 保存更新后的家庭成员数据
     family.members = members
     app.saveFamilyMembers(family)
-    
-    console.log('处理后的家庭成员:', members)
     
     const currentUserMember = members.find(m => m.isCurrentUser)
     const otherMembers = members.filter(m => !m.isCurrentUser)

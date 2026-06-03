@@ -159,22 +159,16 @@ Page({
       family.members = []
     }
     
-    console.log('添加前的家庭成员:', family.members)
-    console.log('添加的成员名:', memberName, '角色:', memberRole)
-    
-    // 检查是否已有标记为当前用户的成员
-    const hasCurrentUser = family.members.some(m => m.isCurrentUser)
-    
+    // 新增的家庭成员不应该有手机号，也不应该是当前用户
+    // 只有通过家庭码加入时，才会有手机号和 isCurrentUser 标记
     family.members.push({
       name: memberName,
       role: memberRole,
       birthday: birthday,
-      phone: userPhone,
+      phone: '', // 新增成员手机号为空
       joinedAt: Date.now(),
-      isCurrentUser: !hasCurrentUser // 只有第一个成员标记为当前用户
+      isCurrentUser: false // 新增成员不是当前用户
     })
-    
-    console.log('添加后的家庭成员:', family.members)
     
     app.saveFamilyMembers(family)
     
