@@ -229,7 +229,6 @@
 .schedule-list {
   background: #FFFFFF;
   border-radius: 24rpx;
-  padding: 20rpx;
   box-shadow: 0 8rpx 30rpx rgba(255, 105, 180, 0.15);
 }
 
