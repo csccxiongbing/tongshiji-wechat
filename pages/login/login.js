@@ -97,7 +97,7 @@ Page({
     const familyMembers = app.globalData.familyMembers
     
     // 检查注册流程是否完成（创建家庭或加入家庭成功）
-    if (userInfo && userInfo.registrationComplete) {
+    if (userInfo && userInfo.registrationComplete && familyMembers && familyMembers.members && familyMembers.members.length > 0) {
       wx.switchTab({
         url: '/pages/home/home'
       })
