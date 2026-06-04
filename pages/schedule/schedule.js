@@ -23,11 +23,11 @@ Page({
     pointsPopupMember: ''
   },
   
-  onShow: function() {
+  onShow: async function() {
     this.initUserRole();
     this.initWeekDays();
-    this.loadFamilyMembers();
-    this.initSchedules();
+    await this.loadFamilyMembers();
+    await this.initSchedules();
     this.updateTabBar();
   },
   
@@ -119,8 +119,33 @@ Page({
     })
   },
   
-  initSchedules: function() {
-    const schedules = app.globalData.schedules || [];
+  initSchedules: async function() {
+    const userInfo = app.globalData.userInfo || {};
+    let schedules = [];
+    
+    // 优先从后端API获取数据
+    if (userInfo.familyId) {
+      try {
+        const result = await app.request({
+          url: '/schedules/family/' + userInfo.familyId,
+          method: 'GET'
+        });
+        
+        if (result.success) {
+          app.globalData.schedules = result.schedules;
+          wx.setStorageSync('schedules', result.schedules);
+          schedules = result.schedules || [];
+        }
+      } catch (error) {
+        console.error('加载日程错误:', error);
+      }
+    }
+    
+    // 如果后端API获取失败，使用本地缓存
+    if (schedules.length === 0) {
+      schedules = app.globalData.schedules || [];
+    }
+    
     const { weekDays } = this.data;
     
     const weekSchedules = {};
@@ -220,20 +245,35 @@ Page({
     })
   },
 
-  loadFamilyMembers: function() {
-    let family = app.globalData.familyMembers
+  loadFamilyMembers: async function() {
+    const userInfo = app.globalData.userInfo || {}
     let members = []
     
-    if (family && Array.isArray(family.members)) {
-      members = family.members
-    } else if (family && Array.isArray(family)) {
-      members = family
-    } else {
-      members = [
-        { name: '爸爸', role: 'parent' },
-        { name: '妈妈', role: 'parent' },
-        { name: '小明', role: 'child' }
-      ]
+    if (userInfo.familyId) {
+      try {
+        const result = await app.request({
+          url: '/families/' + userInfo.familyId,
+          method: 'GET'
+        })
+        
+        if (result.success) {
+          app.globalData.familyMembers = result.family
+          wx.setStorageSync('familyMembers', result.family)
+          members = result.family.members || []
+        }
+      } catch (error) {
+        console.error('加载家庭成员错误:', error)
+      }
+    }
+    
+    // 如果没有从后端获取到数据，使用本地缓存
+    if (members.length === 0) {
+      let family = app.globalData.familyMembers
+      if (family && Array.isArray(family.members)) {
+        members = family.members
+      } else if (family && Array.isArray(family)) {
+        members = family
+      }
     }
     
     const membersWithState = members.map(m => ({
@@ -339,79 +379,93 @@ Page({
     return members.every(member => completedBy.includes(member))
   },
 
-  toggleMemberComplete: function(e) {
-    const scheduleId = parseInt(e.currentTarget.dataset.id);
+  toggleMemberComplete: async function(e) {
+    const scheduleId = e.currentTarget.dataset.id;
     const memberName = e.currentTarget.dataset.member;
     const day = this.data.selectedDay;
 
+    console.log('toggleMemberComplete - scheduleId:', scheduleId, 'memberName:', memberName);
+
+    // 容错处理：如果 scheduleId 不存在或为空
+    if (!scheduleId) {
+      console.error('scheduleId 为空');
+      return;
+    }
+
     const daySchedules = [...this.data.weekSchedules[day]];
-    const scheduleIndex = daySchedules.findIndex(s => s.id === scheduleId);
+    const scheduleIndex = daySchedules.findIndex(s => s.id === scheduleId || s._id === scheduleId);
     const schedule = daySchedules[scheduleIndex];
     
-    let completedBy = schedule.completedBy || [];
-    const isCompleted = completedBy.includes(memberName);
-    let earnedPoints = 0;
+    if (!schedule) {
+      console.error('未找到对应的 schedule, scheduleId:', scheduleId);
+      return;
+    }
     
+    const isCompleted = (schedule.completedBy || []).includes(memberName);
+    
+    // 如果已完成，则取消完成
     if (isCompleted) {
-      completedBy = completedBy.filter(m => m !== memberName);
-      if (schedule.points && schedule.points > 0) {
-        app.addPoints(-schedule.points, `取消完成"${schedule.title}"任务`, memberName);
+      const result = await app.uncompleteSchedule(scheduleId, memberName);
+      
+      if (!result.success) {
+        wx.showToast({
+          title: result.message,
+          icon: 'none'
+        });
+        return;
       }
-    } else {
-      completedBy = [...completedBy, memberName];
+      
+      // 取消完成时扣除积分
       if (schedule.points && schedule.points > 0) {
-        app.addPoints(schedule.points, `完成"${schedule.title}"任务`, memberName);
-        earnedPoints = schedule.points;
+        await app.subtractPoints(memberName, schedule.points, `取消完成"${schedule.title}"任务`);
+        this.showMinusPointsEffect(schedule.points, memberName, scheduleId);
       }
+      
+      // 延迟刷新数据，让效果先展示
+      setTimeout(() => {
+        this.initSchedules();
+      }, 1000);
+      return;
     }
     
-    const allCompleted = this.checkAllCompleted(schedule.scheduleMembers, completedBy);
-    
-    const memberStatus = this.getMemberStatus({ ...schedule, completedBy });
-    
-    const updatedSchedule = { 
-      ...schedule, 
-      completedBy: completedBy,
-      completed: allCompleted,
-      memberStatus: memberStatus
-    };
-    
-    daySchedules[scheduleIndex] = updatedSchedule;
-    
-    const weekSchedules = {...this.data.weekSchedules};
-    weekSchedules[day] = daySchedules;
-    
-    const globalSchedules = app.globalData.schedules || [];
-    const globalScheduleIndex = globalSchedules.findIndex(s => s.id === scheduleId);
-    if (globalScheduleIndex !== -1) {
-      globalSchedules[globalScheduleIndex] = {
-        ...updatedSchedule,
-        memberStatus: undefined  // 不保存计算字段
-      };
-      app.saveSchedules(globalSchedules);
+    // 如果未完成，则标记完成
+    if (!isCompleted) {
+      const result = await app.completeSchedule(scheduleId, memberName);
+      
+      if (!result.success) {
+        wx.showToast({
+          title: result.message,
+          icon: 'none'
+        });
+        return;
+      }
+      
+      if (schedule.points && schedule.points > 0) {
+        await app.addPoints(memberName, schedule.points, `完成"${schedule.title}"任务`);
+        this.showPointsEffect(schedule.points, memberName, scheduleId);
+      }
+      
+      // 延迟刷新数据，让效果先展示
+      setTimeout(() => {
+        this.initSchedules();
+      }, 1000);
     }
-    
-    this.setData({
-      weekSchedules: weekSchedules
-    });
-    
-    if (earnedPoints > 0) {
-      this.showPointsEffect(earnedPoints, memberName, scheduleId);
-    }
-    
-    this.filterSchedules();
   },
   
   showPointsEffect: function(points, memberName, scheduleId) {
     this.triggerFireworks(scheduleId, memberName);
-    this.showMiniPointsPopup(scheduleId, memberName, points);
+    this.showMiniPointsPopup(scheduleId, memberName, points, true);
     this.playPointsSound();
   },
   
-  showMiniPointsPopup: function(scheduleId, memberName, points) {
+  showMinusPointsEffect: function(points, memberName, scheduleId) {
+    this.showMiniPointsPopup(scheduleId, memberName, points, false);
+  },
+  
+  showMiniPointsPopup: function(scheduleId, memberName, points, isAdd) {
     this.setData({
       showPointsPopup: true,
-      pointsPopupText: `⭐ +${points}`,
+      pointsPopupText: isAdd ? `⭐ +${points}` : `⭐ -${points}`,
       pointsScheduleId: scheduleId,
       pointsPopupMember: memberName
     });
@@ -429,7 +483,7 @@ Page({
   triggerFireworks: function(scheduleId, memberName) {
     const day = this.data.selectedDay;
     const weekSchedules = {...this.data.weekSchedules};
-    const daySchedules = [...weekSchedules[day]];
+    let daySchedules = [...weekSchedules[day]];
     const scheduleIndex = daySchedules.findIndex(s => s.id === scheduleId);
     
     if (scheduleIndex !== -1) {
@@ -441,8 +495,19 @@ Page({
       daySchedules[scheduleIndex].memberStatus = updatedMemberStatus;
       
       weekSchedules[day] = [...daySchedules];
+      
+      // 同时更新 daySchedules
+      const filteredDaySchedules = daySchedules.filter(schedule => {
+        const { selectedMembers } = this.data;
+        if (selectedMembers.length > 0) {
+          return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
+        }
+        return true;
+      });
+      
       this.setData({
-        weekSchedules: weekSchedules
+        weekSchedules: weekSchedules,
+        daySchedules: filteredDaySchedules
       });
       
       setTimeout(() => {
@@ -455,8 +520,18 @@ Page({
         resetDaySchedules[scheduleIndex].memberStatus = resetMemberStatus;
         resetWeekSchedules[day] = resetDaySchedules;
         
+        // 同时更新 daySchedules
+        const resetFilteredDaySchedules = resetDaySchedules.filter(schedule => {
+          const { selectedMembers } = this.data;
+          if (selectedMembers.length > 0) {
+            return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
+          }
+          return true;
+        });
+        
         this.setData({
-          weekSchedules: resetWeekSchedules
+          weekSchedules: resetWeekSchedules,
+          daySchedules: resetFilteredDaySchedules
         });
       }, 1000);
     }

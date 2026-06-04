@@ -41,12 +41,6 @@ Page({
       members = family.members
     } else if (family && Array.isArray(family)) {
       members = family
-    } else {
-      members = [
-        { name: '爸爸', role: 'parent' },
-        { name: '妈妈', role: 'parent' },
-        { name: '小明', role: 'child' }
-      ]
     }
     
     const membersWithState = members.map(m => ({
@@ -220,14 +214,17 @@ Page({
     })
   },
   
-  clearAllData: function() {
+  clearAllData: async function() {
     wx.showModal({
       title: '确认清空',
       content: '确定要清空所有用户数据和任务数据吗？此操作不可恢复。',
       confirmColor: '#FF6B6B',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm) {
-          const result = app.clearAllData()
+          wx.showLoading({ title: '清空中...' })
+          const result = await app.clearAllData()
+          wx.hideLoading()
+          
           if (result.success) {
             wx.showToast({
               title: '数据已清空',

@@ -204,7 +204,7 @@ Page({
     this.completeTimer()
   },
   
-  completeTimer: function() {
+  completeTimer: async function() {
     this.stopTimer()
     
     const modeConfig = this.modes[this.data.currentMode]
@@ -221,11 +221,11 @@ Page({
     if (this.data.currentMode === 'pomodoro') {
       // 如果有任务，完成番茄钟时也完成任务
       if (this.data.scheduleId && this.data.memberName) {
-        this.completeTask()
+        await this.completeTask()
       }
       
       // 添加番茄钟的基础积分
-      app.addPoints(10, '完成番茄专注')
+      await app.addPoints('', 10, '完成番茄专注')
       
       wx.showToast({
         title: '🎉 专注完成！+10心愿',
@@ -245,42 +245,30 @@ Page({
     this.autoSwitchMode()
   },
   
-  completeTask: function() {
+  completeTask: async function() {
     const scheduleId = this.data.scheduleId
     const memberName = this.data.memberName
     const taskPoints = this.data.taskPoints
     
     console.log('完成任务:', scheduleId, memberName, taskPoints)
     
-    // 更新任务的完成状态
-    const schedules = app.globalData.schedules || []
-    const updatedSchedules = schedules.map(s => {
-      if (s.id === scheduleId) {
-        let completedBy = s.completedBy || []
-        
-        // 如果该成员还没有完成，则添加
-        if (!completedBy.includes(memberName)) {
-          completedBy = [...completedBy, memberName]
-        }
-        
-        // 检查是否所有成员都完成了
-        const allCompleted = (s.scheduleMembers || []).every(m => completedBy.includes(m))
-        
-        return {
-          ...s,
-          completedBy: completedBy,
-          completed: allCompleted
-        }
-      }
-      return s
-    })
+    // 容错处理：如果 scheduleId 不存在或为空
+    if (!scheduleId) {
+      console.error('scheduleId 为空，无法完成任务')
+      return
+    }
     
-    // 保存更新后的日程
-    app.saveSchedules(updatedSchedules)
+    // 调用后端API完成任务
+    const result = await app.completeSchedule(scheduleId, memberName)
+    
+    if (!result.success) {
+      console.error('完成任务失败:', result.message)
+      return
+    }
     
     // 添加任务积分（如果任务有积分奖励）
     if (taskPoints > 0) {
-      app.addPoints(taskPoints, `完成"${this.data.taskInfo?.title || '任务'}"任务`, memberName)
+      await app.addPoints(memberName, taskPoints, `完成"${this.data.taskInfo?.title || '任务'}"任务`)
       
       wx.showToast({
         title: `任务完成！+${taskPoints}心愿`,

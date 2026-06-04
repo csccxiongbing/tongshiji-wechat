@@ -70,7 +70,7 @@ Page({
     })
   },
   
-  login: function() {
+  login: async function() {
     if (!this.data.phone || !this.data.code) {
       wx.showToast({
         title: '请填写完整信息',
@@ -79,7 +79,11 @@ Page({
       return
     }
     
-    const result = app.loginUser(this.data.phone)
+    wx.showLoading({ title: '登录中...' })
+    
+    const result = await app.loginUser(this.data.phone)
+    
+    wx.hideLoading()
     
     if (!result.success) {
       wx.showToast({

@@ -89,7 +89,7 @@ Page({
     return null
   },
   
-  joinFamily: function() {
+  joinFamily: async function() {
     const code = this.data.inviteCode.join('')
     if (code.length !== 6) {
       wx.showToast({
@@ -99,73 +99,52 @@ Page({
       return
     }
     
-    const foundFamily = this.findFamilyByCode(code)
+    wx.showLoading({ title: '加入中...' })
     
-    if (foundFamily) {
-      const currentUser = app.globalData.userInfo || {}
-      const userPhone = currentUser.phone || ''
-      
-      // 检查是否已经在家庭成员中
-      const isAlreadyInFamily = foundFamily.members && 
-        foundFamily.members.some(member => member.phone === userPhone)
-      
-      if (isAlreadyInFamily) {
-        // 已经在家庭中
-        app.globalData.familyMembers = foundFamily
-        wx.setStorageSync('familyMembers', foundFamily)
-        
-        wx.showToast({
-          title: '已在此家庭中',
-          icon: 'success'
-        })
-        
-        setTimeout(() => {
-          wx.switchTab({
-            url: '/pages/home/home'
-          })
-        }, 1500)
-      } else {
-        // 不在家庭中，加入
-        const newMemberName = currentUser.nickname || '新成员'
-        const newMembers = [...(foundFamily.members || [])]
-        newMembers.push({
-          name: newMemberName,
-          role: currentUser.role || 'parent', // 使用用户注册时的角色
-          phone: userPhone,
-          joinedAt: Date.now(),
-          isCurrentUser: true
-        })
-        
-        // 更新全局和本地存储
-        foundFamily.members = newMembers
-        app.globalData.familyMembers = foundFamily
-        wx.setStorageSync('familyMembers', foundFamily)
-        
-        // 为新成员初始化积分为0
-        if (!app.globalData.memberPoints[newMemberName]) {
-          app.globalData.memberPoints[newMemberName] = 0
-          wx.setStorageSync('memberPoints', app.globalData.memberPoints)
-        }
-        
-        // 同步到用户列表
-        app.saveCurrentUserToUsersList()
-        
-        wx.showToast({
-          title: '加入成功',
-          icon: 'success'
-        })
-        
-        setTimeout(() => {
-          wx.switchTab({
-            url: '/pages/home/home'
-          })
-        }, 1500)
-      }
-    } else {
+    const currentUser = app.globalData.userInfo || {}
+    const userPhone = currentUser.phone || ''
+    
+    const memberInfo = {
+      name: currentUser.nickname || '新成员',
+      role: currentUser.role || 'parent',
+      phone: userPhone,
+      isCurrentUser: true
+    }
+    
+    const result = await app.joinFamily(code, userPhone, memberInfo)
+    
+    wx.hideLoading()
+    
+    if (!result.success) {
       wx.showToast({
-        title: '邀请码不正确',
+        title: result.message || '加入失败',
         icon: 'none'
       })
+      return
     }
+    
+    // 更新用户的familyId
+    const userId = currentUser._id || currentUser.id
+    await app.updateUser(userId, { familyId: result.family._id })
+    
+    // 为新成员初始化积分为0
+    if (!app.globalData.memberPoints[memberInfo.name]) {
+      app.globalData.memberPoints[memberInfo.name] = 0
+      wx.setStorageSync('memberPoints', app.globalData.memberPoints)
+    }
+    
+    // 同步到用户列表
+    app.saveCurrentUserToUsersList()
+    
+    wx.showToast({
+      title: '加入成功',
+      icon: 'success'
+    })
+    
+    setTimeout(() => {
+      wx.switchTab({
+        url: '/pages/home/home'
+      })
+    }, 1500)
   }
 })

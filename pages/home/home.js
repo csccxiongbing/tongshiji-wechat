@@ -19,8 +19,8 @@ Page({
     currentMemberName: ''
   },
   
-  onShow: function() {
-    this.initData()
+  onShow: async function() {
+    await this.initData()
     this.updateTabBar()
   },
   
@@ -32,12 +32,15 @@ Page({
     }
   },
   
-  initData: function() {
+  initData: async function() {
     const now = new Date()
     const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
     
     const userInfo = app.globalData.userInfo || {}
     const isChild = userInfo.role === 'child'
+    
+    // 先加载家庭成员数据
+    await this.loadFamilyMembers()
     
     const currentMemberName = this.findCurrentMemberName(userInfo)
     console.log('当前用户在家庭中的角色名称:', currentMemberName)
@@ -51,8 +54,7 @@ Page({
       currentMemberName: currentMemberName
     })
     
-    this.loadFamilyMembers()
-    this.loadSchedules()
+    await this.loadSchedules()
   },
   
   findCurrentMemberName: function(userInfo) {
@@ -98,51 +100,32 @@ Page({
     return '晚上好'
   },
   
-  loadSchedules: function() {
-    const schedules = (app.globalData.schedules && app.globalData.schedules.length > 0) ? app.globalData.schedules : [
-      { 
-        id: 1, title: '早餐时间', time: '07:30', startTime: '2026-06-02 07:30', endTime: '2026-06-02 08:00',
-        icon: '🍞', color: '#FFE4B5', completed: true,
-        scheduleMembers: ['爸爸', '妈妈', '小明'], completedBy: ['爸爸', '妈妈', '小明'],
-        points: 10, repeatRule: 'daily', repeatRuleText: '每天',
-        remindEnabled: true, remindMembers: ['妈妈'], remindMembersText: '妈妈', note: '记得吃蔬菜哦！'
-      },
-      { 
-        id: 2, title: '上学', time: '08:30', startTime: '2026-06-02 08:30', endTime: '2026-06-02 16:00',
-        icon: '🎒', color: '#B5E3FF', completed: true,
-        scheduleMembers: ['小明'], completedBy: ['小明'],
-        points: 20, repeatRule: 'weekday', repeatRuleText: '工作日',
-        remindEnabled: true, remindMembers: ['妈妈'], remindMembersText: '妈妈', note: '带好课本和作业'
-      },
-      { 
-        id: 3, title: '午餐', time: '12:00', startTime: '2026-06-02 12:00', endTime: '2026-06-02 12:30',
-        icon: '🍱', color: '#FFB5B5', completed: false,
-        scheduleMembers: ['爸爸', '妈妈', '小明'], completedBy: [],
-        points: 10, repeatRule: 'daily', repeatRuleText: '每天',
-        remindEnabled: false, remindMembers: [], remindMembersText: '', note: ''
-      },
-      { 
-        id: 4, title: '做作业', time: '15:30', startTime: '2026-06-02 15:30', endTime: '2026-06-02 17:00',
-        icon: '📝', color: '#D4B5FF', completed: false,
-        scheduleMembers: ['小明'], completedBy: [],
-        points: 30, repeatRule: 'weekly', repeatRuleText: '每周',
-        remindEnabled: true, remindMembers: ['爸爸', '妈妈'], remindMembersText: '爸妈', note: '数学和语文作业'
-      },
-      { 
-        id: 5, title: '晚餐', time: '18:00', startTime: '2026-06-02 18:00', endTime: '2026-06-02 18:30',
-        icon: '🍲', color: '#B5FFD9', completed: false,
-        scheduleMembers: ['爸爸', '妈妈', '小明'], completedBy: [],
-        points: 10, repeatRule: 'daily', repeatRuleText: '每天',
-        remindEnabled: true, remindMembers: ['小明'], remindMembersText: '小明', note: ''
-      },
-      { 
-        id: 6, title: '睡前故事', time: '20:30', startTime: '2026-06-02 20:30', endTime: '2026-06-02 21:00',
-        icon: '📚', color: '#FFE4FF', completed: false,
-        scheduleMembers: ['妈妈', '小明'], completedBy: [],
-        points: 15, repeatRule: 'never', repeatRuleText: '',
-        remindEnabled: true, remindMembers: ['妈妈'], remindMembersText: '妈妈', note: '今天讲白雪公主'
+  loadSchedules: async function() {
+    const userInfo = app.globalData.userInfo || {}
+    let schedules = []
+    
+    // 优先从后端API获取数据
+    if (userInfo.familyId) {
+      try {
+        const result = await app.request({
+          url: '/schedules/family/' + userInfo.familyId,
+          method: 'GET'
+        })
+        
+        if (result.success) {
+          app.globalData.schedules = result.schedules
+          wx.setStorageSync('schedules', result.schedules)
+          schedules = result.schedules || []
+        }
+      } catch (error) {
+        console.error('加载日程错误:', error)
       }
-    ]
+    }
+    
+    // 如果后端API获取失败，使用本地缓存
+    if (schedules.length === 0) {
+      schedules = (app.globalData.schedules && app.globalData.schedules.length > 0) ? app.globalData.schedules : []
+    }
     
     const now = new Date()
     const todayWeekday = now.getDay()
@@ -240,20 +223,41 @@ Page({
     return `${year}-${month}-${day}`
   },
   
-  loadFamilyMembers: function() {
-    let family = app.globalData.familyMembers
+  loadFamilyMembers: async function() {
+    const userInfo = app.globalData.userInfo || {}
     let members = []
     
-    if (family && Array.isArray(family.members)) {
-      members = family.members
-    } else if (family && Array.isArray(family)) {
-      members = family
-    } else {
-      members = [
-        { name: '爸爸', role: 'parent' },
-        { name: '妈妈', role: 'parent' },
-        { name: '小明', role: 'child' }
-      ]
+    if (userInfo.familyId) {
+      try {
+        const result = await app.request({
+          url: '/families/' + userInfo.familyId,
+          method: 'GET'
+        })
+        
+        if (result.success) {
+          app.globalData.familyMembers = result.family
+          wx.setStorageSync('familyMembers', result.family)
+          members = result.family.members || []
+        }
+      } catch (error) {
+        console.error('加载家庭成员错误:', error)
+      }
+    }
+    
+    // 如果没有从后端获取到数据，使用本地缓存
+    if (members.length === 0) {
+      let family = app.globalData.familyMembers
+      if (family && Array.isArray(family.members)) {
+        members = family.members
+      } else if (family && Array.isArray(family)) {
+        members = family
+      } else {
+        members = [
+          { name: '爸爸', role: 'parent' },
+          { name: '妈妈', role: 'parent' },
+          { name: '小明', role: 'child' }
+        ]
+      }
     }
     
     // 默认全选，孩子角色也全选以支持筛选
@@ -357,69 +361,95 @@ Page({
     })
   },
   
-  toggleMemberComplete: function(e) {
-    const scheduleId = parseInt(e.currentTarget.dataset.id)
+  toggleMemberComplete: async function(e) {
+    const scheduleId = e.currentTarget.dataset.id
     const memberName = e.currentTarget.dataset.member
-
-    let earnedPoints = 0
     
-    const todaySchedules = this.data.todaySchedules.map(s => {
-      if (s.id === scheduleId) {
-        let completedBy = s.completedBy || []
-        const isCompleted = completedBy.includes(memberName)
-        
-        if (isCompleted) {
-          completedBy = completedBy.filter(m => m !== memberName)
-          if (s.points && s.points > 0) {
-            app.addPoints(-s.points, `取消完成"${s.title}"任务`, memberName)
-          }
-        } else {
-          completedBy = [...completedBy, memberName]
-          if (s.points && s.points > 0) {
-            app.addPoints(s.points, `完成"${s.title}"任务`, memberName)
-            earnedPoints = s.points
-          }
-        }
-        
-        const allCompleted = this.checkAllCompleted(s.scheduleMembers, completedBy)
-        
-        const memberStatus = (s.scheduleMembers || []).map(name => ({
-          name: name,
-          completed: completedBy.includes(name)
-        }))
-        
-        return { 
-          ...s, 
-          completedBy: completedBy,
-          completed: allCompleted,
-          memberStatus: memberStatus
-        }
+    console.log('toggleMemberComplete - scheduleId:', scheduleId, 'memberName:', memberName)
+    
+    // 容错处理：如果 scheduleId 不存在或为空
+    if (!scheduleId) {
+      console.error('scheduleId 为空，从 todaySchedules 中查找')
+      // 尝试从数据中找到对应的 schedule
+      const currentSchedules = this.data.todaySchedules || []
+      if (currentSchedules.length > 0) {
+        console.log('todaySchedules 样本:', currentSchedules[0])
       }
-      return s
-    })
-
-    this.setData({
-      todaySchedules: todaySchedules
-    })
-
-    if (earnedPoints > 0) {
-      this.showPointsEffect(earnedPoints, memberName, scheduleId)
+      return
     }
-
-    this.filterSchedules()
-    app.saveSchedules(todaySchedules)
+    
+    const schedule = this.data.todaySchedules.find(s => s.id === scheduleId || s._id === scheduleId)
+    if (!schedule) {
+      console.error('未找到对应的 schedule, scheduleId:', scheduleId)
+      return
+    }
+    
+    const isCompleted = (schedule.completedBy || []).includes(memberName)
+    
+    // 如果已完成，则取消完成
+    if (isCompleted) {
+      const result = await app.uncompleteSchedule(scheduleId, memberName)
+      
+      if (!result.success) {
+        wx.showToast({
+          title: result.message,
+          icon: 'none'
+        })
+        return
+      }
+      
+      // 取消完成时扣除积分
+      if (schedule.points && schedule.points > 0) {
+        await app.subtractPoints(memberName, schedule.points, `取消完成"${schedule.title}"任务`)
+        this.showMinusPointsEffect(schedule.points, memberName, scheduleId)
+      }
+      
+      // 延迟刷新数据，让效果先展示
+      setTimeout(() => {
+        this.loadSchedules()
+      }, 1000)
+      return
+    }
+    
+    // 如果未完成，则标记完成
+    if (!isCompleted) {
+      const result = await app.completeSchedule(scheduleId, memberName)
+      
+      if (!result.success) {
+        wx.showToast({
+          title: result.message,
+          icon: 'none'
+        })
+        return
+      }
+      
+      // 完成任务时添加积分，积分加到完成任务的成员角色
+      if (schedule.points && schedule.points > 0) {
+        await app.addPoints(memberName, schedule.points, `完成"${schedule.title}"任务`)
+        this.showPointsEffect(schedule.points, memberName, scheduleId)
+      }
+      
+      // 延迟刷新数据，让效果先展示
+      setTimeout(() => {
+        this.loadSchedules()
+      }, 1000)
+    }
   },
   
   showPointsEffect: function(points, memberName, scheduleId) {
     this.triggerFireworks(scheduleId, memberName)
-    this.showMiniPointsPopup(scheduleId, memberName, points)
+    this.showMiniPointsPopup(scheduleId, memberName, points, true)
     this.playPointsSound()
   },
   
-  showMiniPointsPopup: function(scheduleId, memberName, points) {
+  showMinusPointsEffect: function(points, memberName, scheduleId) {
+    this.showMiniPointsPopup(scheduleId, memberName, points, false)
+  },
+  
+  showMiniPointsPopup: function(scheduleId, memberName, points, isAdd) {
     this.setData({
       showPointsPopup: true,
-      pointsPopupText: `⭐ +${points}`,
+      pointsPopupText: isAdd ? `⭐ +${points}` : `⭐ -${points}`,
       pointsScheduleId: scheduleId,
       pointsPopupMember: memberName
     })
@@ -450,12 +480,36 @@ Page({
       return s
     })
     
+    const displaySchedules = this.data.displaySchedules.map(s => {
+      if (s.id === scheduleId) {
+        const memberStatus = (s.memberStatus || []).map(ms => ({
+          ...ms,
+          showFireworks: ms.name === memberName ? true : false
+        }))
+        
+        return {
+          ...s,
+          memberStatus: memberStatus
+        }
+      }
+      return s
+    })
+    
     this.setData({
-      todaySchedules: todaySchedules
+      todaySchedules: todaySchedules,
+      displaySchedules: displaySchedules
     })
     
     setTimeout(() => {
-      const resetSchedules = this.data.todaySchedules.map(s => ({
+      const resetTodaySchedules = this.data.todaySchedules.map(s => ({
+        ...s,
+        memberStatus: (s.memberStatus || []).map(ms => ({
+          ...ms,
+          showFireworks: false
+        }))
+      }))
+      
+      const resetDisplaySchedules = this.data.displaySchedules.map(s => ({
         ...s,
         memberStatus: (s.memberStatus || []).map(ms => ({
           ...ms,
@@ -464,7 +518,8 @@ Page({
       }))
       
       this.setData({
-        todaySchedules: resetSchedules
+        todaySchedules: resetTodaySchedules,
+        displaySchedules: resetDisplaySchedules
       })
     }, 1000)
   },

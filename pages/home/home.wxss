@@ -220,7 +220,7 @@
 .schedule-item {
   background: white;
   border-radius: 20rpx;
-  padding: 24rpx;
+  padding: 14rpx;
   margin-bottom: 20rpx;
   box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
   transition: transform 0.2s, box-shadow 0.2s;

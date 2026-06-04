@@ -7,147 +7,542 @@ App({
     points: 0,
     memberPoints: {},
     pointsHistory: [],
-    pomodoroHistory: []
+    pomodoroHistory: [],
+    pomodoroTaskInfo: null
   },
+  
+  API_BASE_URL: 'http://localhost:3000/api',
   
   onLaunch: function () {
     try {
       console.log('App初始化中...')
-      const users = wx.getStorageSync('users')
-      if (users && Array.isArray(users)) {
-        this.globalData.users = users
-        console.log('加载用户列表成功:', users)
-      } else {
-        console.log('没有找到用户列表')
-      }
-      
       const userInfo = wx.getStorageSync('userInfo')
       if (userInfo && typeof userInfo === 'object') {
         this.globalData.userInfo = userInfo
         console.log('加载用户信息成功:', userInfo)
-      } else {
-        console.log('没有找到用户信息')
-      }
-      
-      const schedules = wx.getStorageSync('schedules')
-      if (schedules && Array.isArray(schedules)) {
-        this.globalData.schedules = schedules
-      }
-      
-      const familyMembers = wx.getStorageSync('familyMembers')
-      if (familyMembers && typeof familyMembers === 'object') {
-        this.globalData.familyMembers = familyMembers
-        console.log('加载家庭信息成功:', familyMembers)
-      } else {
-        console.log('没有找到家庭信息')
-      }
-      
-      const points = wx.getStorageSync('points')
-      if (points !== undefined && points !== null && typeof points === 'number') {
-        this.globalData.points = points
-      }
-      
-      const pointsHistory = wx.getStorageSync('pointsHistory')
-      if (pointsHistory && Array.isArray(pointsHistory)) {
-        this.globalData.pointsHistory = pointsHistory
-      }
-      
-      const pomodoroHistory = wx.getStorageSync('pomodoroHistory')
-      if (pomodoroHistory && Array.isArray(pomodoroHistory)) {
-        this.globalData.pomodoroHistory = pomodoroHistory
-      }
-      
-      const memberPoints = wx.getStorageSync('memberPoints')
-      if (memberPoints && typeof memberPoints === 'object') {
-        this.globalData.memberPoints = memberPoints
+        this.loadFamilyMembers()
+        this.loadSchedules()
       }
     } catch (e) {
       console.error('数据加载错误:', e)
     }
   },
   
-  getUsers: function() {
-    return this.globalData.users
+  request: function(options) {
+    return new Promise((resolve, reject) => {
+      wx.request({
+        url: this.API_BASE_URL + options.url,
+        method: options.method || 'GET',
+        data: options.data || {},
+        header: {
+          'Content-Type': 'application/json'
+        },
+        success: function(res) {
+          if (res.data && res.data.success) {
+            resolve(res.data)
+          } else {
+            reject(res.data ? res.data.message : '请求失败')
+          }
+        },
+        fail: function(err) {
+          reject(err.errMsg || '网络错误')
+        }
+      })
+    })
   },
   
-  saveUsers: function(users) {
+  registerUser: async function(userInfo) {
     try {
+      const result = await this.request({
+        url: '/users/register',
+        method: 'POST',
+        data: userInfo
+      })
+      
+      if (result.success) {
+        this.globalData.userInfo = result.user
+        wx.setStorageSync('userInfo', result.user)
+      }
+      
+      return result
+    } catch (error) {
+      console.error('注册用户错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  loginUser: async function(phone) {
+    try {
+      const result = await this.request({
+        url: '/users/login',
+        method: 'POST',
+        data: { phone }
+      })
+      
+      if (result.success) {
+        this.globalData.userInfo = result.user
+        wx.setStorageSync('userInfo', result.user)
+        
+        if (result.user.familyId) {
+          await this.loadFamilyMembers()
+          await this.loadSchedules()
+        }
+      }
+      
+      return result
+    } catch (error) {
+      console.error('登录用户错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  loadFamilyMembers: async function() {
+    try {
+      const userInfo = this.globalData.userInfo
+      if (!userInfo || !userInfo.familyId) {
+        this.globalData.familyMembers = { members: [] }
+        return
+      }
+      
+      const result = await this.request({
+        url: '/families/' + userInfo.familyId,
+        method: 'GET'
+      })
+      
+      if (result.success) {
+        this.globalData.familyMembers = result.family
+        wx.setStorageSync('familyMembers', result.family)
+      }
+    } catch (error) {
+      console.error('加载家庭成员错误:', error)
+    }
+  },
+  
+  loadSchedules: async function() {
+    try {
+      const userInfo = this.globalData.userInfo
+      if (!userInfo || !userInfo.familyId) {
+        this.globalData.schedules = []
+        return
+      }
+      
+      const result = await this.request({
+        url: '/schedules/family/' + userInfo.familyId,
+        method: 'GET'
+      })
+      
+      if (result.success) {
+        this.globalData.schedules = result.schedules
+        wx.setStorageSync('schedules', result.schedules)
+      }
+    } catch (error) {
+      console.error('加载日程错误:', error)
+    }
+  },
+  
+  createFamily: async function(familyData) {
+    try {
+      const result = await this.request({
+        url: '/families/create',
+        method: 'POST',
+        data: familyData
+      })
+      
+      if (result.success) {
+        this.globalData.familyMembers = result.family
+        wx.setStorageSync('familyMembers', result.family)
+        
+        if (this.globalData.userInfo) {
+          this.globalData.userInfo.familyId = result.family._id
+          wx.setStorageSync('userInfo', this.globalData.userInfo)
+        }
+      }
+      
+      return result
+    } catch (error) {
+      console.error('创建家庭错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  joinFamily: async function(inviteCode, phone, memberInfo) {
+    try {
+      const result = await this.request({
+        url: '/families/join',
+        method: 'POST',
+        data: { inviteCode, phone, memberInfo }
+      })
+      
+      if (result.success) {
+        this.globalData.familyMembers = result.family
+        wx.setStorageSync('familyMembers', result.family)
+        
+        if (this.globalData.userInfo) {
+          this.globalData.userInfo.familyId = result.family._id
+          wx.setStorageSync('userInfo', this.globalData.userInfo)
+        }
+      }
+      
+      return result
+    } catch (error) {
+      console.error('加入家庭错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  addFamilyMember: async function(familyId, member) {
+    try {
+      const result = await this.request({
+        url: '/families/' + familyId + '/members',
+        method: 'POST',
+        data: { member }
+      })
+      
+      if (result.success) {
+        this.globalData.familyMembers = result.family
+        wx.setStorageSync('familyMembers', result.family)
+      }
+      
+      return result
+    } catch (error) {
+      console.error('添加家庭成员错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  updateFamilyMember: async function(familyId, index, memberData) {
+    try {
+      const result = await this.request({
+        url: '/families/' + familyId + '/members/' + index,
+        method: 'PUT',
+        data: memberData
+      })
+      
+      if (result.success) {
+        this.globalData.familyMembers = result.family
+        wx.setStorageSync('familyMembers', result.family)
+      }
+      
+      return result
+    } catch (error) {
+      console.error('更新家庭成员错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  deleteFamilyMember: async function(familyId, index) {
+    try {
+      const result = await this.request({
+        url: '/families/' + familyId + '/members/' + index,
+        method: 'DELETE'
+      })
+      
+      if (result.success) {
+        this.globalData.familyMembers = result.family
+        wx.setStorageSync('familyMembers', result.family)
+      }
+      
+      return result
+    } catch (error) {
+      console.error('删除家庭成员错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  addSchedule: async function(scheduleData) {
+    try {
+      const userInfo = this.globalData.userInfo
+      if (!userInfo || !userInfo.familyId) {
+        return { success: false, message: '用户未登录或未加入家庭' }
+      }
+      
+      const result = await this.request({
+        url: '/schedules',
+        method: 'POST',
+        data: { familyId: userInfo.familyId, ...scheduleData }
+      })
+      
+      if (result.success) {
+        await this.loadSchedules()
+      }
+      
+      return result
+    } catch (error) {
+      console.error('添加日程错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  updateSchedule: async function(scheduleId, scheduleData) {
+    try {
+      const result = await this.request({
+        url: '/schedules/' + scheduleId,
+        method: 'PUT',
+        data: scheduleData
+      })
+      
+      if (result.success) {
+        await this.loadSchedules()
+      }
+      
+      return result
+    } catch (error) {
+      console.error('更新日程错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  deleteSchedule: async function(scheduleId) {
+    try {
+      const result = await this.request({
+        url: '/schedules/' + scheduleId,
+        method: 'DELETE'
+      })
+      
+      if (result.success) {
+        await this.loadSchedules()
+      }
+      
+      return result
+    } catch (error) {
+      console.error('删除日程错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  completeSchedule: async function(scheduleId, memberName) {
+    try {
+      const result = await this.request({
+        url: '/schedules/' + scheduleId + '/complete',
+        method: 'PUT',
+        data: { memberName }
+      })
+      
+      if (result.success) {
+        await this.loadSchedules()
+      }
+      
+      return result
+    } catch (error) {
+      console.error('完成日程错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  uncompleteSchedule: async function(scheduleId, memberName) {
+    try {
+      const result = await this.request({
+        url: '/schedules/' + scheduleId + '/uncomplete',
+        method: 'PUT',
+        data: { memberName }
+      })
+      
+      if (result.success) {
+        await this.loadSchedules()
+      }
+      
+      return result
+    } catch (error) {
+      console.error('取消完成日程错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  addPoints: async function(memberName, amount, reason) {
+    try {
+      const userInfo = this.globalData.userInfo
+      if (!userInfo || !userInfo.familyId) {
+        return { success: false, message: '用户未登录或未加入家庭' }
+      }
+      
+      const currentPoints = this.globalData.points || 0
+      const newBalance = currentPoints + amount
+      
+      const result = await this.request({
+        url: '/points/add',
+        method: 'POST',
+        data: {
+          familyId: userInfo.familyId,
+          userId: userInfo._id || userInfo.id,
+          memberName,
+          amount,
+          reason,
+          balance: newBalance
+        }
+      })
+      
+      if (result.success) {
+        this.globalData.points = newBalance
+        wx.setStorageSync('points', newBalance)
+        
+        if (memberName) {
+          this.globalData.memberPoints[memberName] = (this.globalData.memberPoints[memberName] || 0) + amount
+          wx.setStorageSync('memberPoints', this.globalData.memberPoints)
+        }
+      }
+      
+      return result
+    } catch (error) {
+      console.error('添加积分错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  subtractPoints: async function(memberName, amount, reason) {
+    try {
+      const userInfo = this.globalData.userInfo
+      if (!userInfo || !userInfo.familyId) {
+        return { success: false, message: '用户未登录或未加入家庭' }
+      }
+      
+      const currentPoints = this.globalData.points || 0
+      const newBalance = Math.max(0, currentPoints - amount)
+      
+      const result = await this.request({
+        url: '/points/subtract',
+        method: 'POST',
+        data: {
+          familyId: userInfo.familyId,
+          userId: userInfo._id || userInfo.id,
+          memberName,
+          amount,
+          reason,
+          balance: newBalance
+        }
+      })
+      
+      if (result.success) {
+        this.globalData.points = newBalance
+        wx.setStorageSync('points', newBalance)
+        
+        if (memberName) {
+          this.globalData.memberPoints[memberName] = Math.max(0, (this.globalData.memberPoints[memberName] || 0) - amount)
+          wx.setStorageSync('memberPoints', this.globalData.memberPoints)
+        }
+      }
+      
+      return result
+    } catch (error) {
+      console.error('扣除积分错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  getPointsHistory: async function() {
+    try {
+      const userInfo = this.globalData.userInfo
+      if (!userInfo || !userInfo.familyId) {
+        return { success: false, message: '用户未登录或未加入家庭' }
+      }
+      
+      const result = await this.request({
+        url: '/points/history/' + userInfo.familyId,
+        method: 'GET'
+      })
+      
+      if (result.success) {
+        this.globalData.pointsHistory = result.history
+        wx.setStorageSync('pointsHistory', result.history)
+      }
+      
+      return result
+    } catch (error) {
+      console.error('获取积分历史错误:', error)
+      return { success: false, message: error }
+    }
+  },
+  
+  saveUserInfo: function(userInfo) {
+    try {
+      this.globalData.userInfo = userInfo
+      wx.setStorageSync('userInfo', userInfo)
+      return { success: true }
+    } catch (e) {
+      console.error('保存用户信息错误:', e)
+      return { success: false, message: '保存失败' }
+    }
+  },
+  
+  saveFamilyMembers: function(family) {
+    try {
+      this.globalData.familyMembers = family
+      wx.setStorageSync('familyMembers', family)
+      return { success: true }
+    } catch (e) {
+      console.error('保存家庭成员错误:', e)
+      return { success: false, message: '保存失败' }
+    }
+  },
+  
+  saveSchedules: function(schedules) {
+    try {
+      this.globalData.schedules = schedules
+      wx.setStorageSync('schedules', schedules)
+      return { success: true }
+    } catch (e) {
+      console.error('保存日程错误:', e)
+      return { success: false, message: '保存失败' }
+    }
+  },
+  
+  savePomodoroHistory: function(historyItem) {
+    try {
+      const history = this.globalData.pomodoroHistory || []
+      history.unshift(historyItem)
+      this.globalData.pomodoroHistory = history
+      wx.setStorageSync('pomodoroHistory', history)
+      return { success: true }
+    } catch (e) {
+      console.error('保存番茄钟历史错误:', e)
+      return { success: false, message: '保存失败' }
+    }
+  },
+  
+  saveCurrentUserToUsersList: function() {
+    try {
+      const userInfo = this.globalData.userInfo
+      if (!userInfo) return { success: false, message: '无用户信息' }
+      
+      const users = this.globalData.users || []
+      const existingIndex = users.findIndex(u => u.phone === userInfo.phone)
+      
+      if (existingIndex !== -1) {
+        users[existingIndex] = userInfo
+      } else {
+        users.push(userInfo)
+      }
+      
       this.globalData.users = users
       wx.setStorageSync('users', users)
+      return { success: true }
     } catch (e) {
       console.error('保存用户列表错误:', e)
+      return { success: false, message: '保存失败' }
     }
   },
   
-  findUserByPhone: function(phone) {
-    return this.globalData.users.find(u => u.phone === phone)
-  },
-  
-  registerUser: function(userInfo) {
+  updateUser: async function(userId, userData) {
     try {
-      const existingUser = this.findUserByPhone(userInfo.phone)
-      if (existingUser) {
-        return { success: false, message: '该手机号已注册' }
+      const result = await this.request({
+        url: '/users/' + userId,
+        method: 'PUT',
+        data: userData
+      })
+      
+      if (result.success) {
+        this.globalData.userInfo = result.user
+        wx.setStorageSync('userInfo', result.user)
       }
       
-      const newUser = {
-        ...userInfo,
-        id: Date.now(),
-        familyMembers: {
-          members: []
-        },
-        schedules: [],
-        points: 0,
-        memberPoints: {},
-        pointsHistory: [],
-        pomodoroHistory: []
-      }
-      
-      const updatedUsers = [...this.globalData.users, newUser]
-      this.saveUsers(updatedUsers)
-      this.saveUserInfo(newUser)
-      
-      return { success: true, user: newUser }
-    } catch (e) {
-      console.error('注册用户错误:', e)
-      return { success: false, message: '注册失败' }
-    }
-  },
-  
-  loginUser: function(phone) {
-    try {
-      const user = this.findUserByPhone(phone)
-      if (!user) {
-        return { success: false, message: '该手机号未注册' }
-      }
-      
-      this.globalData.userInfo = user
-      this.globalData.familyMembers = user.familyMembers || { members: [] }
-      this.globalData.schedules = user.schedules || []
-      this.globalData.points = user.points || 0
-      this.globalData.memberPoints = user.memberPoints || {}
-      this.globalData.pointsHistory = user.pointsHistory || []
-      this.globalData.pomodoroHistory = user.pomodoroHistory || []
-      
-      wx.setStorageSync('userInfo', user)
-      wx.setStorageSync('familyMembers', user.familyMembers || { members: [] })
-      wx.setStorageSync('schedules', user.schedules || [])
-      wx.setStorageSync('points', user.points || 0)
-      wx.setStorageSync('memberPoints', user.memberPoints || {})
-      wx.setStorageSync('pointsHistory', user.pointsHistory || [])
-      wx.setStorageSync('pomodoroHistory', user.pomodoroHistory || [])
-      
-      return { success: true, user: user }
-    } catch (e) {
-      console.error('登录用户错误:', e)
-      return { success: false, message: '登录失败' }
+      return result
+    } catch (error) {
+      console.error('更新用户错误:', error)
+      return { success: false, message: error }
     }
   },
   
   logout: function() {
     try {
-      this.saveCurrentUserToUsersList()
-      
       this.globalData.userInfo = null
       this.globalData.familyMembers = { members: [] }
       this.globalData.schedules = []
@@ -155,6 +550,7 @@ App({
       this.globalData.memberPoints = {}
       this.globalData.pointsHistory = []
       this.globalData.pomodoroHistory = []
+      this.globalData.pomodoroTaskInfo = null
       
       wx.removeStorageSync('userInfo')
       wx.removeStorageSync('familyMembers')
@@ -168,8 +564,13 @@ App({
     }
   },
   
-  clearAllData: function() {
+  clearAllData: async function() {
     try {
+      const result = await this.request({
+        url: '/admin/clear-all',
+        method: 'POST'
+      })
+      
       this.globalData.users = []
       this.globalData.userInfo = null
       this.globalData.familyMembers = {}
@@ -178,6 +579,7 @@ App({
       this.globalData.memberPoints = {}
       this.globalData.pointsHistory = []
       this.globalData.pomodoroHistory = []
+      this.globalData.pomodoroTaskInfo = null
       
       wx.removeStorageSync('users')
       wx.removeStorageSync('userInfo')
@@ -189,118 +591,10 @@ App({
       wx.removeStorageSync('pomodoroHistory')
       
       console.log('所有数据已清空')
-      return { success: true, message: '所有数据已清空' }
+      return result
     } catch (e) {
       console.error('清空数据错误:', e)
       return { success: false, message: '清空数据失败' }
-    }
-  },
-  
-  saveCurrentUserToUsersList: function() {
-    if (!this.globalData.userInfo) return
-    
-    const userIndex = this.globalData.users.findIndex(u => u.phone === this.globalData.userInfo.phone)
-    if (userIndex !== -1) {
-      const updatedUser = {
-        ...this.globalData.userInfo,
-        familyMembers: this.globalData.familyMembers,
-        schedules: this.globalData.schedules,
-        points: this.globalData.points,
-        memberPoints: this.globalData.memberPoints,
-        pointsHistory: this.globalData.pointsHistory,
-        pomodoroHistory: this.globalData.pomodoroHistory
-      }
-      this.globalData.users[userIndex] = updatedUser
-      this.saveUsers(this.globalData.users)
-    }
-  },
-  
-  saveUserInfo: function(userInfo) {
-    try {
-      this.globalData.userInfo = userInfo
-      wx.setStorageSync('userInfo', userInfo)
-      this.saveCurrentUserToUsersList()
-    } catch (e) {
-      console.error('保存用户信息错误:', e)
-    }
-  },
-  
-  saveSchedules: function(schedules) {
-    try {
-      this.globalData.schedules = schedules
-      wx.setStorageSync('schedules', schedules)
-      this.saveCurrentUserToUsersList()
-    } catch (e) {
-      console.error('保存日程错误:', e)
-    }
-  },
-  
-  clearSchedules: function() {
-    try {
-      this.globalData.schedules = []
-      wx.setStorageSync('schedules', [])
-      this.saveCurrentUserToUsersList()
-    } catch (e) {
-      console.error('清空日程错误:', e)
-    }
-  },
-  
-  saveFamilyMembers: function(members) {
-    try {
-      this.globalData.familyMembers = members
-      wx.setStorageSync('familyMembers', members)
-      this.saveCurrentUserToUsersList()
-    } catch (e) {
-      console.error('保存家庭成员错误:', e)
-    }
-  },
-  
-  savePoints: function(points) {
-    try {
-      this.globalData.points = points
-      wx.setStorageSync('points', points)
-      this.saveCurrentUserToUsersList()
-    } catch (e) {
-      console.error('保存积分错误:', e)
-    }
-  },
-  
-  addPoints: function(amount, reason, member) {
-    try {
-      const newPoints = this.globalData.points + amount
-      this.globalData.points = newPoints
-      
-      if (member) {
-        const memberCurrentPoints = this.globalData.memberPoints[member] || 0
-        this.globalData.memberPoints[member] = memberCurrentPoints + amount
-        wx.setStorageSync('memberPoints', this.globalData.memberPoints)
-      }
-      
-      const history = {
-        id: Date.now(),
-        amount: amount,
-        reason: reason,
-        time: new Date().toLocaleString(),
-        balance: newPoints,
-        member: member
-      }
-      this.globalData.pointsHistory.unshift(history)
-      
-      wx.setStorageSync('points', newPoints)
-      wx.setStorageSync('pointsHistory', this.globalData.pointsHistory)
-      this.saveCurrentUserToUsersList()
-    } catch (e) {
-      console.error('添加积分错误:', e)
-    }
-  },
-  
-  savePomodoroHistory: function(history) {
-    try {
-      this.globalData.pomodoroHistory.unshift(history)
-      wx.setStorageSync('pomodoroHistory', this.globalData.pomodoroHistory)
-      this.saveCurrentUserToUsersList()
-    } catch (e) {
-      console.error('保存番茄钟记录错误:', e)
     }
   }
 })

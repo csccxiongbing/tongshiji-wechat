@@ -86,7 +86,7 @@ Page({
     })
   },
   
-  register: function() {
+  register: async function() {
     if (!this.data.phone || !this.data.code) {
       wx.showToast({
         title: '请填写完整信息',
@@ -95,13 +95,17 @@ Page({
       return
     }
     
+    wx.showLoading({ title: '注册中...' })
+    
     const userInfo = {
       phone: this.data.phone,
       nickname: this.data.nickname || 'TSJ' + Math.floor(1000 + Math.random() * 9000),
       role: null
     }
     
-    const result = app.registerUser(userInfo)
+    const result = await app.registerUser(userInfo)
+    
+    wx.hideLoading()
     
     if (!result.success) {
       wx.showToast({

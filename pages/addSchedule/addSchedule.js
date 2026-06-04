@@ -294,7 +294,7 @@ Page({
     })
   },
   
-  saveSchedule: function() {
+  saveSchedule: async function() {
     if (!this.data.title) {
       wx.showToast({
         title: '请输入日程名称',
@@ -335,10 +335,11 @@ Page({
       return
     }
     
-    const newSchedule = {
-      id: Date.now(),
+    wx.showLoading({ title: '保存中...' })
+    
+    const scheduleData = {
       title: this.data.title,
-      date: this.data.date,
+      time: this.data.startTime,
       startTime: `${this.data.date} ${this.data.startTime}`,
       endTime: `${this.data.endDate} ${this.data.endTime}`,
       icon: this.data.selectedIcon,
@@ -346,17 +347,31 @@ Page({
       note: this.data.note,
       points: parseInt(this.data.points) || 0,
       completed: false,
+      completedBy: [],
       repeatRule: this.data.repeatRule,
+      repeatRuleText: this.data.repeatRule === 'daily' ? '每天' : 
+                     this.data.repeatRule === 'weekly' ? '每周' :
+                     this.data.repeatRule === 'weekday' ? '工作日' : '',
       endRepeat: this.data.endRepeat,
       endRepeatDate: this.data.endRepeatDate,
       remindEnabled: this.data.remindEnabled,
       remindMembers: this.data.remindMembers,
+      remindMembersText: this.data.remindMembers.join('、'),
       remindTime: parseInt(this.data.remindTime) || 0,
       scheduleMembers: this.data.scheduleMembers
     }
     
-    const schedules = [...(app.globalData.schedules || []), newSchedule]
-    app.saveSchedules(schedules)
+    const result = await app.addSchedule(scheduleData)
+    
+    wx.hideLoading()
+    
+    if (!result.success) {
+      wx.showToast({
+        title: result.message,
+        icon: 'none'
+      })
+      return
+    }
     
     wx.showToast({
       title: '添加成功',

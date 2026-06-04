@@ -12,7 +12,7 @@ Page({
     })
   },
   
-  confirmRole: function() {
+  confirmRole: async function() {
     if (!this.data.selectedRole) {
       wx.showToast({
         title: '请选择角色',
@@ -21,9 +21,22 @@ Page({
       return
     }
     
+    wx.showLoading({ title: '保存中...' })
+    
     const userInfo = app.globalData.userInfo
-    userInfo.role = this.data.selectedRole
-    app.saveUserInfo(userInfo)
+    const userId = userInfo._id || userInfo.id
+    
+    const result = await app.updateUser(userId, { role: this.data.selectedRole })
+    
+    wx.hideLoading()
+    
+    if (!result.success) {
+      wx.showToast({
+        title: result.message || '保存失败',
+        icon: 'none'
+      })
+      return
+    }
     
     wx.showToast({
       title: '选择成功',

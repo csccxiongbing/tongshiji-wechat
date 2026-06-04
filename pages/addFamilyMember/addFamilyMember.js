@@ -117,7 +117,7 @@ Page({
     })
   },
   
-  addMember: function() {
+  addMember: async function() {
     if (!this.data.selectedRole) {
       wx.showToast({
         title: '请选择角色',
@@ -126,11 +126,18 @@ Page({
       return
     }
     
+    const userInfo = app.globalData.userInfo || {}
+    if (!userInfo.familyId) {
+      wx.showToast({
+        title: '请先创建或加入家庭',
+        icon: 'none'
+      })
+      return
+    }
+    
     let memberName = ''
     let memberRole = this.data.selectedRole
     let birthday = this.data.babyBirthday
-    const userInfo = app.globalData.userInfo || {}
-    const userPhone = userInfo.phone || ''
     
     if (this.data.selectedRole === 'child') {
       if (!this.data.babyName.trim()) {
@@ -160,38 +167,40 @@ Page({
       memberName = validMembers[0].name
     }
     
-    let family = app.globalData.familyMembers || { members: [] }
+    wx.showLoading({ title: '添加中...' })
     
-    if (!family.members) {
-      family.members = []
-    }
-    
-    // 新增的家庭成员不应该有手机号，也不应该是当前用户
-    // 只有通过家庭码加入时，才会有手机号和 isCurrentUser 标记
-    family.members.push({
+    const member = {
       name: memberName,
       role: memberRole,
       birthday: birthday,
-      phone: '', // 新增成员手机号为空
-      joinedAt: Date.now(),
-      isCurrentUser: false // 新增成员不是当前用户
-    })
-    
-    // 为新成员初始化积分为0
-    if (!app.globalData.memberPoints[memberName]) {
-      app.globalData.memberPoints[memberName] = 0
-      wx.setStorageSync('memberPoints', app.globalData.memberPoints)
+      phone: '',
+      isCurrentUser: false
     }
     
-    app.saveFamilyMembers(family)
+    const result = await app.addFamilyMember(userInfo.familyId, member)
     
-    wx.showToast({
-      title: '添加成功',
-      icon: 'success'
-    })
+    wx.hideLoading()
     
-    setTimeout(() => {
-      wx.navigateBack()
-    }, 1500)
+    if (result.success) {
+      // 为新成员初始化积分为0
+      if (!app.globalData.memberPoints[memberName]) {
+        app.globalData.memberPoints[memberName] = 0
+        wx.setStorageSync('memberPoints', app.globalData.memberPoints)
+      }
+      
+      wx.showToast({
+        title: '添加成功',
+        icon: 'success'
+      })
+      
+      setTimeout(() => {
+        wx.navigateBack()
+      }, 1500)
+    } else {
+      wx.showToast({
+        title: result.message || '添加失败',
+        icon: 'none'
+      })
+    }
   }
 })

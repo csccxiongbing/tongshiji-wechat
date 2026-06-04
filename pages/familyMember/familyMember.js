@@ -14,63 +14,87 @@ Page({
     }
   },
   
-  onLoad: function(options) {
-    this.loadFamilyCode()
-    this.loadFamilyMembers()
+  onLoad: async function(options) {
+    await this.loadFamilyMembers()
+    await this.loadFamilyCode()
     this.loadCurrentUserInfo()
   },
   
-  onShow: function() {
-    this.loadFamilyMembers()
+  onShow: async function() {
+    await this.loadFamilyMembers()
   },
   
-  loadFamilyCode: function() {
-    const family = app.globalData.familyMembers || {}
-    const code = family.familyCode || this.generateFamilyCode()
+  loadFamilyCode: async function() {
+    const userInfo = app.globalData.userInfo || {}
+    if (!userInfo.familyId) {
+      return
+    }
     
-    this.setData({
-      familyCode: code
-    })
-    
-    if (!family.familyCode) {
-      family.familyCode = code
-      app.saveFamilyMembers(family)
+    try {
+      const result = await app.request({
+        url: '/families/' + userInfo.familyId,
+        method: 'GET'
+      })
+      
+      if (result.success) {
+        this.setData({
+          familyCode: result.family.inviteCode
+        })
+      }
+    } catch (error) {
+      console.error('加载家庭码错误:', error)
     }
   },
   
-  loadFamilyMembers: function() {
-    const family = app.globalData.familyMembers || {}
-    let members = family.members || []
-    
+  loadFamilyMembers: async function() {
     const userInfo = app.globalData.userInfo || {}
-    const userPhone = userInfo.phone || ''
+    if (!userInfo.familyId) {
+      this.setData({
+        familyMembers: []
+      })
+      return
+    }
     
-    // 重置所有成员的 isCurrentUser 标记，然后根据手机号匹配
-    members = members.map((member) => {
-      let isCurrentUser = false
+    try {
+      const result = await app.request({
+        url: '/families/' + userInfo.familyId,
+        method: 'GET'
+      })
       
-      // 通过手机号匹配当前用户
-      if (userPhone && member.phone === userPhone) {
-        isCurrentUser = true
+      if (result.success) {
+        app.globalData.familyMembers = result.family
+        wx.setStorageSync('familyMembers', result.family)
+        
+        let members = result.family.members || []
+        const userPhone = userInfo.phone || ''
+        
+        // 保存原始索引，因为前端会重新排序
+        members = members.map((member, idx) => {
+          let isCurrentUser = false
+          
+          // 通过手机号匹配当前用户
+          if (userPhone && member.phone === userPhone) {
+            isCurrentUser = true
+          }
+          
+          return {
+            ...member,
+            isCurrentUser: isCurrentUser,
+            originalIndex: idx  // 保存数据库中的原始索引
+          }
+        })
+        
+        const currentUserMember = members.find(m => m.isCurrentUser)
+        const otherMembers = members.filter(m => !m.isCurrentUser)
+        const sortedMembers = currentUserMember ? [currentUserMember, ...otherMembers] : members
+        
+        this.setData({
+          familyMembers: sortedMembers
+        })
       }
-      
-      return {
-        ...member,
-        isCurrentUser: isCurrentUser
-      }
-    })
-    
-    // 保存更新后的家庭成员数据
-    family.members = members
-    app.saveFamilyMembers(family)
-    
-    const currentUserMember = members.find(m => m.isCurrentUser)
-    const otherMembers = members.filter(m => !m.isCurrentUser)
-    const sortedMembers = currentUserMember ? [currentUserMember, ...otherMembers] : members
-    
-    this.setData({
-      familyMembers: sortedMembers
-    })
+    } catch (error) {
+      console.error('加载家庭成员错误:', error)
+    }
   },
   
   loadCurrentUserInfo: function() {
@@ -127,7 +151,7 @@ Page({
     })
   },
   
-  saveMember: function() {
+  saveMember: async function() {
     const { editForm, familyMembers } = this.data
     const isChild = editForm.role === 'child'
     
@@ -139,33 +163,179 @@ Page({
       return
     }
     
-    const newMembers = [...familyMembers]
-    const editedMember = newMembers[editForm.index]
-    
-    // 只修改角色名称和手机号，不影响用户昵称
-    editedMember.name = editForm.name.trim()
-    editedMember.phone = editForm.phone.trim()
-    
-    // 如果是当前用户，只同步更新手机号，不同步角色名称到用户昵称
-    if (editedMember.isCurrentUser) {
-      const userInfo = app.globalData.userInfo || {}
-      userInfo.phone = editForm.phone.trim()
-      app.saveUserInfo(userInfo)
+    const userInfo = app.globalData.userInfo || {}
+    if (!userInfo.familyId) {
+      wx.showToast({
+        title: '请先创建或加入家庭',
+        icon: 'none'
+      })
+      return
     }
     
-    const family = app.globalData.familyMembers || {}
-    family.members = newMembers
-    app.saveFamilyMembers(family)
+    const newName = editForm.name.trim()
+    const newPhone = editForm.phone.trim()
     
-    this.setData({
-      familyMembers: newMembers,
-      showEditModal: false
+    // 获取正在编辑的成员的原始索引（数据库中的索引）和原始名字
+    const currentMember = familyMembers[editForm.index]
+    const currentOriginalIndex = currentMember.originalIndex
+    const oldName = currentMember.name
+    
+    // 检查是否有其他成员的名字和角色都相同（排除正在编辑的成员）
+    const existingMember = familyMembers.find((m, idx) => {
+      return idx !== editForm.index && m.name === newName && m.role === editForm.role
     })
     
-    wx.showToast({
-      title: '保存成功',
-      icon: 'success'
+    if (existingMember) {
+      // 名字和角色都相同：保留正在编辑的这个成员，删除其他重复的
+      wx.showLoading({ title: '合并中...' })
+      
+      try {
+        // 确定最终手机号：优先使用新手机号，如果没有则保留已存在成员的手机号
+        let finalPhone = newPhone || existingMember.phone
+        
+        // 更新正在编辑的成员的信息（使用原始索引）
+        await app.updateFamilyMember(userInfo.familyId, currentOriginalIndex, {
+          name: newName,
+          phone: finalPhone
+        })
+        
+        // 删除已存在的那个重复成员（使用它的原始索引）
+        await app.deleteFamilyMember(userInfo.familyId, existingMember.originalIndex)
+        
+        wx.hideLoading()
+        
+        wx.showToast({
+          title: '已合并到 ' + newName,
+          icon: 'success'
+        })
+        
+        this.setData({
+          showEditModal: false
+        })
+        
+        await this.loadFamilyMembers()
+        
+        if (oldName !== newName) {
+          await this.updateMemberNameInSchedules(oldName, newName)
+        }
+      } catch (error) {
+        wx.hideLoading()
+        wx.showToast({
+          title: '合并失败',
+          icon: 'none'
+        })
+      }
+      return
+    }
+    
+    wx.showLoading({ title: '保存中...' })
+    
+    const memberData = {
+      name: newName,
+      phone: newPhone
+    }
+    
+    // 使用原始索引更新
+    const result = await app.updateFamilyMember(userInfo.familyId, currentOriginalIndex, memberData)
+    
+    wx.hideLoading()
+    
+    if (result.success) {
+      // 如果是当前用户，只同步更新手机号，不同步角色名称到用户昵称
+      if (currentMember.isCurrentUser) {
+        const userInfo = app.globalData.userInfo || {}
+        userInfo.phone = newPhone
+        app.saveUserInfo(userInfo)
+      }
+      
+      this.setData({
+        showEditModal: false
+      })
+      
+      wx.showToast({
+        title: '保存成功',
+        icon: 'success'
+      })
+      
+      // 刷新家庭成员列表
+      await this.loadFamilyMembers()
+      
+      // 如果名字发生变化，更新任务中对应的角色名字
+      if (oldName !== newName) {
+        await this.updateMemberNameInSchedules(oldName, newName)
+      }
+    } else {
+      wx.showToast({
+        title: result.message || '保存失败',
+        icon: 'none'
+      })
+    }
+  },
+  
+  updateMemberNameInSchedules: async function(oldName, newName) {
+    const schedules = app.globalData.schedules || []
+    const schedulesToUpdate = []
+    
+    // 获取当天0点的时间
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    schedules.forEach(schedule => {
+      let needsUpdate = false
+      
+      // 检查任务是否在今天0点后
+      let isAfterToday = true
+      if (schedule.startTime) {
+        const scheduleDate = new Date(schedule.startTime.replace(/-/g, '/'))
+        isAfterToday = scheduleDate >= today
+      }
+      
+      // 只有当天0点后的任务才更新
+      if (isAfterToday) {
+        if (schedule.scheduleMembers && schedule.scheduleMembers.includes(oldName)) {
+          schedule.scheduleMembers = schedule.scheduleMembers.map(name => 
+            name === oldName ? newName : name
+          )
+          needsUpdate = true
+        }
+        
+        if (schedule.completedBy && schedule.completedBy.includes(oldName)) {
+          schedule.completedBy = schedule.completedBy.map(name => 
+            name === oldName ? newName : name
+          )
+          needsUpdate = true
+        }
+        
+        if (schedule.remindMembers && schedule.remindMembers.includes(oldName)) {
+          schedule.remindMembers = schedule.remindMembers.map(name => 
+            name === oldName ? newName : name
+          )
+          needsUpdate = true
+        }
+        
+        if (schedule.remindMembersText && schedule.remindMembersText.includes(oldName)) {
+          schedule.remindMembersText = schedule.remindMembersText.replace(new RegExp(oldName, 'g'), newName)
+          needsUpdate = true
+        }
+        
+        if (needsUpdate) {
+          schedulesToUpdate.push(schedule)
+        }
+      }
     })
+    
+    for (const schedule of schedulesToUpdate) {
+      try {
+        await app.updateSchedule(schedule.id || schedule._id, {
+          scheduleMembers: schedule.scheduleMembers,
+          completedBy: schedule.completedBy,
+          remindMembers: schedule.remindMembers,
+          remindMembersText: schedule.remindMembersText
+        })
+      } catch (error) {
+        console.error('更新日程成员名字失败:', error)
+      }
+    }
   },
   
   goToAddMember: function() {

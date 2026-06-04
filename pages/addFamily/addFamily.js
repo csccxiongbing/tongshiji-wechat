@@ -139,7 +139,7 @@ Page({
     return code
   },
   
-  createFamily: function() {
+  createFamily: async function() {
     if (!this.data.selectedRole) {
       wx.showToast({
         title: '请选择角色',
@@ -206,8 +206,6 @@ Page({
       }
     }
     
-    const inviteCode = this.generateInviteCode()
-    
     let familyName = ''
     if (this.data.selectedRole === 'parent') {
       if (this.data.parentRole === 'dad') {
@@ -221,14 +219,28 @@ Page({
       familyName = this.data.babyName + '的家庭'
     }
     
-    const familyInfo = {
+    wx.showLoading({ title: '创建中...' })
+    
+    const familyData = {
       name: familyName,
-      familyCode: inviteCode,
       members: validMembers,
-      creatorRole: this.data.selectedRole,
-      parentRole: this.data.selectedRole === 'parent' ? this.data.parentRole : null,
-      customParentName: this.data.customParentName
     }
+    
+    const result = await app.createFamily(familyData)
+    
+    wx.hideLoading()
+    
+    if (!result.success) {
+      wx.showToast({
+        title: result.message || '创建失败',
+        icon: 'none'
+      })
+      return
+    }
+    
+    // 更新用户的familyId
+    const userId = userInfo._id || userInfo.id
+    await app.updateUser(userId, { familyId: result.family._id })
     
     // 为新成员初始化积分为0
     validMembers.forEach(member => {
@@ -237,8 +249,6 @@ Page({
       }
     })
     wx.setStorageSync('memberPoints', app.globalData.memberPoints)
-    
-    app.saveFamilyMembers(familyInfo)
     
     wx.showToast({
       title: '创建成功',
