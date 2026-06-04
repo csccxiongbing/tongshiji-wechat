@@ -394,6 +394,79 @@
   flex-shrink: 0;
 }
 
+/* 孩子模式下的成员按钮容器 */
+.member-buttons.child-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 儿童开始按钮样式 */
+.start-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 36rpx;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+  border-radius: 50rpx;
+  min-width: 160rpx;
+  box-shadow: 0 8rpx 24rpx rgba(255, 107, 107, 0.4);
+  position: relative;
+  transition: all 0.3s ease;
+  border: 3rpx solid rgba(255, 255, 255, 0.3);
+}
+
+/* 点击时的动画效果 */
+.start-button:active {
+  transform: scale(0.95);
+  box-shadow: 0 4rpx 12rpx rgba(255, 107, 107, 0.3);
+}
+
+/* 已完成状态的开始按钮 */
+.start-button.started {
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  box-shadow: 0 8rpx 24rpx rgba(76, 175, 80, 0.4);
+}
+
+.start-icon {
+  font-size: 32rpx;
+  margin-right: 8rpx;
+  color: white;
+  font-weight: bold;
+}
+
+.start-text {
+  font-size: 28rpx;
+  color: white;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+}
+
+/* 积分标签 */
+.points-tag {
+  position: absolute;
+  top: -12rpx;
+  right: -12rpx;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  padding: 6rpx 12rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4rpx 12rpx rgba(255, 165, 0, 0.4);
+  border: 2rpx solid rgba(255, 255, 255, 0.5);
+}
+
+.points-star {
+  font-size: 18rpx;
+  margin-right: 4rpx;
+}
+
+.points-num {
+  font-size: 20rpx;
+  font-weight: bold;
+  color: #8B4513;
+}
+
 .member-button {
   display: flex;
   align-items: center;
@@ -543,6 +616,11 @@
 
 /* 烟花特效 */
 .member-button.fireworks {
+  position: relative;
+  animation: buttonPulse 0.5s ease-out;
+}
+
+.start-button.fireworks {
   position: relative;
   animation: buttonPulse 0.5s ease-out;
 }

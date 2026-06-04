@@ -424,7 +424,7 @@
 }
 
 .member-name {
-  font-size: 22rpx;
+  /* font-size: 22rpx; */
   color: #FF69B4;
   font-weight: 500;
 }
@@ -659,5 +659,86 @@
 .firework-8 {
   --tx: -42rpx;
   --ty: -42rpx;
+}
+
+/* 孩子角色：开始按钮 */
+.start-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16rpx 36rpx;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+  border-radius: 50rpx;
+  min-width: 160rpx;
+  box-shadow: 0 8rpx 24rpx rgba(255, 107, 107, 0.4);
+  position: relative;
+  transition: all 0.3s ease;
+  border: 3rpx solid rgba(255, 255, 255, 0.3);
+}
+
+.start-button:active {
+  transform: scale(0.95);
+  box-shadow: 0 4rpx 12rpx rgba(255, 107, 107, 0.3);
+}
+
+.start-button.started {
+  background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%);
+  box-shadow: 0 8rpx 24rpx rgba(76, 175, 80, 0.4);
+}
+
+.start-icon {
+  font-size: 32rpx;
+  margin-right: 8rpx;
+  color: white;
+  font-weight: bold;
+}
+
+.start-text {
+  font-size: 28rpx;
+  color: white;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+}
+
+.points-tag {
+  position: absolute;
+  top: -12rpx;
+  right: -12rpx;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  padding: 6rpx 12rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4rpx 12rpx rgba(255, 165, 0, 0.4);
+  border: 2rpx solid rgba(255, 255, 255, 0.5);
+}
+
+.points-star {
+  font-size: 18rpx;
+  margin-right: 4rpx;
+}
+
+.points-num {
+  font-size: 20rpx;
+  font-weight: bold;
+  color: #8B4513;
+}
+
+/* 禁用按钮 */
+.member-button.member-disabled {
+  opacity: 0.75;
+  pointer-events: none;
+  background: #F5F5F5;
+  /* border-color: #E8E8E8; */
+}
+
+.member-button.member-disabled .member-name {
+  color: #C0C0C0;
+}
+
+/* 孩子模式的烟花 */
+.start-button.fireworks {
+  position: relative;
+  animation: buttonPulse 0.5s ease-out;
 }
 

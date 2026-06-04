@@ -91,7 +91,7 @@
               
               <view class="top-right" wx:if="{{item.remindEnabled && item.remindMembers && item.remindMembers.length > 0}}">
                 <text class="remind-badge">🔔</text>
-                <text class="remind-name" wx:for="{{item.remindMembers}}" wx:for-item="remindMember">{{remindMember}}</text>
+                <text class="remind-name" wx:for="{{item.remindMembers}}" wx:for-item="remindMember" wx:key="*this">{{remindMember}}</text>
               </view>
             </view>
             
@@ -113,23 +113,22 @@
                 </view>
               </view>
               
-              <view class="member-buttons">
+              <!-- 家长角色：显示成员完成按钮 -->
+              <view class="member-buttons" wx:if="{{!isChildRole}}">
                 <view
                   wx:for="{{item.memberStatus}}"
                   wx:for-item="ms"
-                  wx:key="ms.name"
+                  wx:key="name"
                   class="member-button {{ms.completed ? 'completed' : ''}} {{ms.showFireworks ? 'fireworks' : ''}}"
                   catchtap="toggleMemberComplete"
                   data-id="{{item.id}}"
                   data-member="{{ms.name}}"
                 >
-                  <!-- 小型积分弹出提示 -->
                   <view wx:if="{{showPointsPopup && pointsScheduleId === item.id && pointsPopupMember === ms.name}}" class="points-popup">
                     <text class="points-popup-text">{{pointsPopupText}}</text>
                   </view>
                   <text class="member-name">{{ms.name}}</text>
                   <text wx:if="{{ms.completed}}" class="check-icon">✓</text>
-                  <!-- 烟花特效 -->
                   <view wx:if="{{ms.showFireworks}}" class="fireworks-container">
                     <view class="firework firework-1"></view>
                     <view class="firework firework-2"></view>
@@ -141,6 +140,63 @@
                     <view class="firework firework-8"></view>
                   </view>
                 </view>
+              </view>
+              
+              <!-- 孩子角色：显示开始/已完成按钮 + 禁用其他成员按钮 -->
+              <view class="member-buttons child-mode" wx:if="{{isChildRole}}">
+                <block wx:for="{{item.memberStatus}}" wx:for-item="ms" wx:key="name">
+                  <!-- 自己的按钮：显示开始/已完成 -->
+                  <view
+                    wx:if="{{ms.isMe && !ms.completed}}"
+                    class="start-button"
+                    catchtap="startPomodoro"
+                    data-id="{{item.id}}"
+                    data-member="{{ms.name}}"
+                    data-points="{{item.points}}"
+                  >
+                    <view wx:if="{{showPointsPopup && pointsScheduleId === item.id}}" class="points-popup">
+                      <text class="points-popup-text">{{pointsPopupText}}</text>
+                    </view>
+                    <text class="start-icon">▶</text>
+                    <text class="start-text">开始</text>
+                    <view class="points-tag" wx:if="{{item.points && item.points > 0}}">
+                      <text class="points-star">⭐</text>
+                      <text class="points-num">+{{item.points}}</text>
+                    </view>
+                  </view>
+                  
+                  <!-- 自己已完成：显示已完成 -->
+                  <view
+                    wx:if="{{ms.isMe && ms.completed}}"
+                    class="start-button started {{ms.showFireworks ? 'fireworks' : ''}}"
+                    catchtap="startPomodoro"
+                    data-id="{{item.id}}"
+                    data-member="{{ms.name}}"
+                    data-points="{{item.points}}"
+                  >
+                    <text class="start-icon">✓</text>
+                    <text class="start-text">已完成</text>
+                    <view wx:if="{{ms.showFireworks}}" class="fireworks-container">
+                      <view class="firework firework-1"></view>
+                      <view class="firework firework-2"></view>
+                      <view class="firework firework-3"></view>
+                      <view class="firework firework-4"></view>
+                      <view class="firework firework-5"></view>
+                      <view class="firework firework-6"></view>
+                      <view class="firework firework-7"></view>
+                      <view class="firework firework-8"></view>
+                    </view>
+                  </view>
+                  
+                  <!-- 其他成员：禁用按钮 -->
+                  <view
+                    wx:if="{{!ms.isMe}}"
+                    class="member-button member-disabled {{ms.completed ? 'completed' : ''}}"
+                  >
+                    <text class="member-name">{{ms.name}}</text>
+                    <text wx:if="{{ms.completed}}" class="check-icon">✓</text>
+                  </view>
+                </block>
               </view>
             </view>
           </view>

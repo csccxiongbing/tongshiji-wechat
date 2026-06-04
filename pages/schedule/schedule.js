@@ -14,10 +14,17 @@ Page({
     avgCompletion: 21,
     familyMembers: [],
     selectedMembers: [],
-    showMemberPicker: false
+    showMemberPicker: false,
+    isChildRole: false,
+    currentMemberName: '',
+    showPointsPopup: false,
+    pointsPopupText: '',
+    pointsScheduleId: null,
+    pointsPopupMember: ''
   },
   
   onShow: function() {
+    this.initUserRole();
     this.initWeekDays();
     this.loadFamilyMembers();
     this.initSchedules();
@@ -33,6 +40,51 @@ Page({
         currentIndex: currentIndex
       })
     }
+  },
+  
+  initUserRole: function() {
+    const userInfo = app.globalData.userInfo || {}
+    const isChild = userInfo.role === 'child'
+    const currentMemberName = this.findCurrentMemberName(userInfo)
+    
+    this.setData({
+      isChildRole: isChild,
+      currentMemberName: currentMemberName
+    })
+  },
+  
+  findCurrentMemberName: function(userInfo) {
+    if (!userInfo) return ''
+    
+    let family = app.globalData.familyMembers
+    if (!family || (!family.members && !Array.isArray(family))) {
+      try {
+        family = wx.getStorageSync('familyMembers')
+      } catch (e) {}
+    }
+    
+    let members = []
+    if (family && Array.isArray(family.members)) {
+      members = family.members
+    } else if (family && Array.isArray(family)) {
+      members = family
+    }
+    
+    const currentMember = members.find(m => m.isCurrentUser)
+    if (currentMember) return currentMember.name
+    
+    const phone = userInfo.phone
+    if (phone) {
+      const phoneMatch = members.find(m => m.phone === phone)
+      if (phoneMatch) return phoneMatch.name
+    }
+    
+    if (userInfo.role === 'child') {
+      const childMember = members.find(m => m.role === 'child')
+      if (childMember) return childMember.name
+    }
+    
+    return userInfo.role === 'child' ? '小明' : ''
   },
   
   initWeekDays: function() {
@@ -71,19 +123,16 @@ Page({
     const schedules = app.globalData.schedules || [];
     const { weekDays } = this.data;
     
-    // 使用 weekDays 中已有的日期对象来查询日程
     const weekSchedules = {};
     weekDays.forEach((day, i) => {
       const daySchedules = this.getSchedulesForDate(schedules, day.dateObj);
       weekSchedules[i] = daySchedules;
     });
     
-    // 更新 weekDays 中的 hasSchedule 标志（考虑成员筛选）
     const { selectedMembers } = this.data;
     const updatedWeekDays = this.data.weekDays.map((day, i) => {
       let daySchedules = weekSchedules[i] || [];
       
-      // 如果有成员筛选，过滤出选中成员的日程
       if (selectedMembers.length > 0) {
         daySchedules = daySchedules.filter(schedule => {
           return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
@@ -117,7 +166,6 @@ Page({
         const scheduleDate = new Date(schedule.startTime.replace(/-/g, '/'));
         const scheduleDateStr = this.formatDate(scheduleDate);
         
-        // 只检查是否是当天，不考虑重复规则
         if (scheduleDateStr === targetDateStr) {
           shouldShow = true;
         }
@@ -133,7 +181,6 @@ Page({
       }
     });
     
-    // 排序：未完成的在前，已完成的在后
     return result.sort((a, b) => {
       if (a.completed !== b.completed) {
         return a.completed ? 1 : -1;
@@ -166,8 +213,6 @@ Page({
     
     this.filterSchedules();
   },
-  
-  
   
   goToAddSchedule: function() {
     wx.navigateTo({
@@ -274,10 +319,18 @@ Page({
   getMemberStatus: function(schedule) {
     const members = schedule.scheduleMembers || []
     const completedBy = schedule.completedBy || []
-    return members.map(name => ({
-      name: name,
-      completed: completedBy.includes(name)
-    }))
+    const currentMemberName = this.data.currentMemberName
+    const isChild = this.data.isChildRole
+    
+    return members.map(name => {
+      const isMe = isChild && name === currentMemberName
+      return {
+        name: name,
+        completed: completedBy.includes(name),
+        isMe: isMe,
+        isClickable: !isChild || isMe  // 孩子角色：只有自己能点击
+      }
+    })
   },
 
   checkAllCompleted: function(members, completedBy) {
@@ -314,10 +367,7 @@ Page({
     
     const allCompleted = this.checkAllCompleted(schedule.scheduleMembers, completedBy);
     
-    const memberStatus = (schedule.scheduleMembers || []).map(name => ({
-      name: name,
-      completed: completedBy.includes(name)
-    }));
+    const memberStatus = this.getMemberStatus({ ...schedule, completedBy });
     
     const updatedSchedule = { 
       ...schedule, 
@@ -331,12 +381,12 @@ Page({
     const weekSchedules = {...this.data.weekSchedules};
     weekSchedules[day] = daySchedules;
     
-    // 更新 app.globalData.schedules
     const globalSchedules = app.globalData.schedules || [];
     const globalScheduleIndex = globalSchedules.findIndex(s => s.id === scheduleId);
     if (globalScheduleIndex !== -1) {
       globalSchedules[globalScheduleIndex] = {
-        ...updatedSchedule
+        ...updatedSchedule,
+        memberStatus: undefined  // 不保存计算字段
       };
       app.saveSchedules(globalSchedules);
     }
@@ -345,7 +395,6 @@ Page({
       weekSchedules: weekSchedules
     });
     
-    // 如果获得积分，显示特效和音效
     if (earnedPoints > 0) {
       this.showPointsEffect(earnedPoints, memberName, scheduleId);
     }
@@ -354,13 +403,8 @@ Page({
   },
   
   showPointsEffect: function(points, memberName, scheduleId) {
-    // 触发按钮烟花特效
     this.triggerFireworks(scheduleId, memberName);
-    
-    // 显示小型积分提示在按钮上方
     this.showMiniPointsPopup(scheduleId, memberName, points);
-    
-    // 播放清脆愉悦的水晶音效
     this.playPointsSound();
   },
   
@@ -420,9 +464,7 @@ Page({
   
   playPointsSound: function() {
     try {
-      // 清脆音效
       const audio = wx.createInnerAudioContext();
-      // 简单清脆的叮声音效
       audio.src = '/audio/point.mp3';
       audio.play();
       audio.onEnded(() => {
@@ -442,13 +484,25 @@ Page({
     const { weekSchedules, selectedMembers } = this.data;
     let schedules = weekSchedules[day] || [];
     
+    // 使用原始的 scheduleMembers 来做筛选，而不是 memberStatus
     if (selectedMembers.length > 0) {
       schedules = schedules.filter(schedule => {
         return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
       });
     }
     
-    // 计算本周统计（考虑成员筛选）
+    // 重新计算 memberStatus（因为全局数据可能变了）
+    schedules = schedules.map(s => {
+      if (!s._memberStatusCached) {
+        return {
+          ...s,
+          memberStatus: this.getMemberStatus(s),
+          _memberStatusCached: true
+        }
+      }
+      return s
+    })
+    
     let totalSchedules = 0;
     let totalCompleted = 0;
     Object.values(weekSchedules).forEach(daySchedules => {
@@ -480,7 +534,6 @@ Page({
     const updatedWeekDays = weekDays.map((day, i) => {
       let daySchedules = weekSchedules[i] || [];
       
-      // 如果有成员筛选，过滤出选中成员的日程
       if (selectedMembers.length > 0) {
         daySchedules = daySchedules.filter(schedule => {
           return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
@@ -498,10 +551,56 @@ Page({
     });
   },
 
+  watchScheduleDetail: function(e) {
+    const scheduleId = parseInt(e.currentTarget.dataset.id)
+    wx.navigateTo({
+      url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}`
+    })
+  },
+  
+  startPomodoro: function(e) {
+    const scheduleId = parseInt(e.currentTarget.dataset.id)
+    const memberName = e.currentTarget.dataset.member
+    const points = parseInt(e.currentTarget.dataset.points) || 0
+    
+    const schedules = app.globalData.schedules || []
+    const schedule = schedules.find(s => s.id === scheduleId)
+    
+    app.globalData.pomodoroTaskInfo = {
+      scheduleId: scheduleId,
+      memberName: memberName,
+      points: points,
+      taskInfo: schedule
+    }
+    
+    wx.switchTab({
+      url: '/pages/pomodoro/pomodoro'
+    })
+  },
+
   viewScheduleDetail: function(e) {
     const scheduleId = parseInt(e.currentTarget.dataset.id)
     wx.navigateTo({
       url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}`
     })
+  },
+  
+  // 防止误触其他成员按钮
+  onMemberButtonTap: function(e) {
+    const isClickable = e.currentTarget.dataset.clickable
+    if (isClickable === false || isClickable === 'false') {
+      wx.showToast({
+        title: '只可以操作自己的任务哦',
+        icon: 'none',
+        duration: 1500
+      })
+      return
+    }
+    this.toggleMemberComplete(e)
+  },
+
+  // 防止 startPomodoro 被冒泡影响  
+  onStartButtonTap: function(e) {
+    this.startPomodoro(e)
   }
 })

@@ -17,7 +17,13 @@ Page({
       { id: 2, type: 'shortBreak', time: '10:00', duration: 5 },
       { id: 3, type: 'pomodoro', time: '10:15', duration: 25 }
     ],
-    timer: null
+    timer: null,
+    // 新增：来自任务的参数
+    taskInfo: null,
+    scheduleId: null,
+    memberName: '',
+    taskPoints: 0,
+    hasTask: false
   },
   
   modes: {
@@ -26,7 +32,56 @@ Page({
     longBreak: { duration: 15 * 60, label: '长休息', color: '#45B7D1' }
   },
   
+  onLoad: function(options) {
+    console.log('番茄钟页面加载')
+    console.log('options:', options)
+    
+    // 尝试从全局变量获取任务信息（通过 switchTab 跳转）
+    const pomodoroTaskInfo = app.globalData.pomodoroTaskInfo
+    console.log('全局变量任务信息:', pomodoroTaskInfo)
+    
+    if (pomodoroTaskInfo) {
+      this.setData({
+        taskInfo: pomodoroTaskInfo.taskInfo,
+        scheduleId: pomodoroTaskInfo.scheduleId,
+        memberName: pomodoroTaskInfo.memberName,
+        taskPoints: pomodoroTaskInfo.points,
+        hasTask: true,
+        timerLabel: pomodoroTaskInfo.taskInfo?.title || '专注时间'
+      })
+      
+      wx.showToast({
+        title: `任务：${pomodoroTaskInfo.taskInfo?.title || '任务'}`,
+        icon: 'none',
+        duration: 2000
+      })
+      
+      // 清除全局变量，避免下次进入时重复使用
+      app.globalData.pomodoroTaskInfo = null
+    }
+    
+    this.updateTabBar()
+    this.loadStats()
+  },
+  
   onShow: function() {
+    // 在 onShow 中再次检查全局变量（因为 switchTab 可能不会触发 onLoad）
+    if (!this.data.hasTask) {
+      const pomodoroTaskInfo = app.globalData.pomodoroTaskInfo
+      if (pomodoroTaskInfo) {
+        this.setData({
+          taskInfo: pomodoroTaskInfo.taskInfo,
+          scheduleId: pomodoroTaskInfo.scheduleId,
+          memberName: pomodoroTaskInfo.memberName,
+          taskPoints: pomodoroTaskInfo.points,
+          hasTask: true,
+          timerLabel: pomodoroTaskInfo.taskInfo?.title || '专注时间'
+        })
+        
+        app.globalData.pomodoroTaskInfo = null
+      }
+    }
+    
     this.loadStats()
     this.updateTabBar()
   },
@@ -164,6 +219,12 @@ Page({
     }
     
     if (this.data.currentMode === 'pomodoro') {
+      // 如果有任务，完成番茄钟时也完成任务
+      if (this.data.scheduleId && this.data.memberName) {
+        this.completeTask()
+      }
+      
+      // 添加番茄钟的基础积分
       app.addPoints(10, '完成番茄专注')
       
       wx.showToast({
@@ -182,6 +243,61 @@ Page({
     this.loadStats()
     
     this.autoSwitchMode()
+  },
+  
+  completeTask: function() {
+    const scheduleId = this.data.scheduleId
+    const memberName = this.data.memberName
+    const taskPoints = this.data.taskPoints
+    
+    console.log('完成任务:', scheduleId, memberName, taskPoints)
+    
+    // 更新任务的完成状态
+    const schedules = app.globalData.schedules || []
+    const updatedSchedules = schedules.map(s => {
+      if (s.id === scheduleId) {
+        let completedBy = s.completedBy || []
+        
+        // 如果该成员还没有完成，则添加
+        if (!completedBy.includes(memberName)) {
+          completedBy = [...completedBy, memberName]
+        }
+        
+        // 检查是否所有成员都完成了
+        const allCompleted = (s.scheduleMembers || []).every(m => completedBy.includes(m))
+        
+        return {
+          ...s,
+          completedBy: completedBy,
+          completed: allCompleted
+        }
+      }
+      return s
+    })
+    
+    // 保存更新后的日程
+    app.saveSchedules(updatedSchedules)
+    
+    // 添加任务积分（如果任务有积分奖励）
+    if (taskPoints > 0) {
+      app.addPoints(taskPoints, `完成"${this.data.taskInfo?.title || '任务'}"任务`, memberName)
+      
+      wx.showToast({
+        title: `任务完成！+${taskPoints}心愿`,
+        icon: 'success',
+        duration: 2000
+      })
+    }
+    
+    // 重置任务状态
+    this.setData({
+      hasTask: false,
+      scheduleId: null,
+      memberName: '',
+      taskPoints: 0,
+      taskInfo: null,
+      timerLabel: '专注时间'
+    })
   },
   
   autoSwitchMode: function() {
