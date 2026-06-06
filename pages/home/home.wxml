@@ -147,8 +147,10 @@
               
               <!-- 孩子角色：显示开始按钮 -->
               <view class="member-buttons child-mode" wx:if="{{isChildRole}}">
+                <!-- 未完成：跳转到番茄钟 -->
                 <view
-                  class="start-button {{item.memberStatus[0].completed ? 'started' : ''}}"
+                  wx:if="{{!item.memberStatus[0].completed}}"
+                  class="start-button"
                   catchtap="startPomodoro"
                   data-id="{{item.id}}"
                   data-member="{{item.memberStatus[0].name}}"
@@ -158,6 +160,22 @@
                     <text class="points-popup-text">{{pointsPopupText}}</text>
                   </view>
                   
+                  <text class="start-icon">▶</text>
+                  <text class="start-text">开始</text>
+                  
+                  <view class="points-tag" wx:if="{{item.points && item.points > 0}}">
+                    <text class="points-star">⭐</text>
+                    <text class="points-num">+{{item.points}}</text>
+                  </view>
+                </view>
+                
+                <!-- 已完成：跳转到详情页 -->
+                <view
+                  wx:if="{{item.memberStatus[0].completed}}"
+                  class="start-button started {{item.memberStatus[0].showFireworks ? 'fireworks' : ''}}"
+                  catchtap="viewScheduleDetail"
+                  data-id="{{item.id}}"
+                >
                   <view wx:if="{{item.memberStatus[0].showFireworks}}" class="fireworks-container">
                     <view class="firework firework-1"></view>
                     <view class="firework firework-2"></view>
@@ -169,13 +187,8 @@
                     <view class="firework firework-8"></view>
                   </view>
                   
-                  <text class="start-icon">{{item.memberStatus[0].completed ? '✓' : '▶'}}</text>
-                  <text class="start-text">{{item.memberStatus[0].completed ? '已完成' : '开始'}}</text>
-                  
-                  <view class="points-tag" wx:if="{{item.points && item.points > 0}}">
-                    <text class="points-star">⭐</text>
-                    <text class="points-num">+{{item.points}}</text>
-                  </view>
+                  <text class="start-icon">✓</text>
+                  <text class="start-text">已完成</text>
                 </view>
               </view>
             </view>

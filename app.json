@@ -1,23 +1,25 @@
 {
   "pages": [
+    "pages/home/home",
+    "pages/schedule/schedule",
+    "pages/achievement/achievement",
+    "pages/my/my",
     "pages/index/index",
     "pages/login/login",
     "pages/register/register",
     "pages/role/role",
-    "pages/home/home",
     "pages/family/family",
     "pages/addFamily/addFamily",
     "pages/joinFamily/joinFamily",
     "pages/familyMember/familyMember",
     "pages/addFamilyMember/addFamilyMember",
-    "pages/schedule/schedule",
     "pages/addSchedule/addSchedule",
     "pages/scheduleDetail/scheduleDetail",
-    "pages/my/my",
     "pages/points/points",
     "pages/pomodoro/pomodoro",
     "pages/monthly-schedule/monthly-schedule",
-    "pages/wish/wish"
+    "pages/wish/wish",
+    "pages/rules/rules"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -38,12 +40,12 @@
         "text": "今日"
       },
       {
-        "pagePath": "pages/pomodoro/pomodoro",
-        "text": "专注"
-      },
-      {
         "pagePath": "pages/schedule/schedule",
         "text": "周计划"
+      },
+      {
+        "pagePath": "pages/achievement/achievement",
+        "text": "成就"
       },
       {
         "pagePath": "pages/my/my",

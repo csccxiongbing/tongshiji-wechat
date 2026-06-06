@@ -10,14 +10,14 @@ Component({
         icon: '📅'
       },
       {
-        pagePath: '/pages/pomodoro/pomodoro',
-        text: '专注',
-        icon: '🍅'
-      },
-      {
         pagePath: '/pages/schedule/schedule',
         text: '周计划',
         icon: '📋'
+      },
+      {
+        pagePath: '/pages/achievement/achievement',
+        text: '成就',
+        icon: '🏆'
       },
       {
         pagePath: '/pages/my/my',
@@ -48,6 +48,13 @@ Component({
   attached: function() {
     this.updateTabList()
     this.setCurrentIndex()
+  },
+  
+  show: function() {
+    this.setCurrentIndex()
+  },
+  
+  hide: function() {
   },
   
   methods: {

@@ -33,11 +33,8 @@ Page({
   
   updateTabBar: function() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      const userInfo = app.globalData.userInfo
-      const role = userInfo?.role || 'child'
-      const currentIndex = role === 'parent' ? 1 : 2
       this.getTabBar().setData({
-        currentIndex: currentIndex
+        currentIndex: 1
       })
     }
   },
@@ -70,19 +67,22 @@ Page({
       members = family
     }
     
-    const currentMember = members.find(m => m.isCurrentUser)
-    if (currentMember) return currentMember.name
-    
+    // 1. 优先通过手机号匹配
     const phone = userInfo.phone
     if (phone) {
       const phoneMatch = members.find(m => m.phone === phone)
       if (phoneMatch) return phoneMatch.name
     }
     
-    if (userInfo.role === 'child') {
-      const childMember = members.find(m => m.role === 'child')
-      if (childMember) return childMember.name
+    // 2. 通过角色类型匹配
+    if (userInfo.role) {
+      const roleMatch = members.find(m => m.role === userInfo.role)
+      if (roleMatch) return roleMatch.name
     }
+    
+    // 3. 最后才通过 isCurrentUser 标记查找
+    const currentMember = members.find(m => m.isCurrentUser)
+    if (currentMember) return currentMember.name
     
     return userInfo.role === 'child' ? '小明' : ''
   },
@@ -146,7 +146,7 @@ Page({
       schedules = app.globalData.schedules || [];
     }
     
-    const { weekDays } = this.data;
+    const { weekDays, isChildRole, currentMemberName, selectedMembers } = this.data;
     
     const weekSchedules = {};
     weekDays.forEach((day, i) => {
@@ -154,11 +154,14 @@ Page({
       weekSchedules[i] = daySchedules;
     });
     
-    const { selectedMembers } = this.data;
     const updatedWeekDays = this.data.weekDays.map((day, i) => {
       let daySchedules = weekSchedules[i] || [];
       
-      if (selectedMembers.length > 0) {
+      if (isChildRole) {
+        daySchedules = daySchedules.filter(schedule => {
+          return schedule.scheduleMembers && schedule.scheduleMembers.includes(currentMemberName);
+        });
+      } else if (selectedMembers.length > 0) {
         daySchedules = daySchedules.filter(schedule => {
           return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
         });
@@ -362,13 +365,26 @@ Page({
     const currentMemberName = this.data.currentMemberName
     const isChild = this.data.isChildRole
     
+    if (isChild) {
+      // 孩子角色：只显示自己
+      return [{
+        name: currentMemberName,
+        completed: completedBy.includes(currentMemberName),
+        isMe: true,
+        isClickable: true,
+        showFireworks: false
+      }]
+    }
+    
+    // 家长角色：显示所有成员
     return members.map(name => {
       const isMe = isChild && name === currentMemberName
       return {
         name: name,
         completed: completedBy.includes(name),
         isMe: isMe,
-        isClickable: !isChild || isMe  // 孩子角色：只有自己能点击
+        isClickable: !isChild || isMe,
+        showFireworks: false
       }
     })
   },
@@ -556,11 +572,16 @@ Page({
 
   filterSchedules: function() {
     const day = this.data.selectedDay;
-    const { weekSchedules, selectedMembers } = this.data;
+    const { weekSchedules, selectedMembers, isChildRole, currentMemberName } = this.data;
     let schedules = weekSchedules[day] || [];
     
-    // 使用原始的 scheduleMembers 来做筛选，而不是 memberStatus
-    if (selectedMembers.length > 0) {
+    // 孩子角色：只显示包含自己的任务
+    if (isChildRole) {
+      schedules = schedules.filter(schedule => {
+        return schedule.scheduleMembers && schedule.scheduleMembers.includes(currentMemberName);
+      });
+    } else if (selectedMembers.length > 0) {
+      // 家长角色：使用选中成员过滤
       schedules = schedules.filter(schedule => {
         return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
       });
@@ -568,25 +589,29 @@ Page({
     
     // 重新计算 memberStatus（因为全局数据可能变了）
     schedules = schedules.map(s => {
-      if (!s._memberStatusCached) {
-        return {
-          ...s,
-          memberStatus: this.getMemberStatus(s),
-          _memberStatusCached: true
-        }
+      // 总是重新计算 memberStatus，确保孩子角色时只显示自己
+      return {
+        ...s,
+        memberStatus: this.getMemberStatus(s),
+        _memberStatusCached: true
       }
-      return s
     })
     
     let totalSchedules = 0;
     let totalCompleted = 0;
     Object.values(weekSchedules).forEach(daySchedules => {
       let filteredDaySchedules = daySchedules;
-      if (selectedMembers.length > 0) {
+      
+      if (isChildRole) {
+        filteredDaySchedules = daySchedules.filter(schedule => {
+          return schedule.scheduleMembers && schedule.scheduleMembers.includes(currentMemberName);
+        });
+      } else if (selectedMembers.length > 0) {
         filteredDaySchedules = daySchedules.filter(schedule => {
           return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
         });
       }
+      
       totalSchedules += filteredDaySchedules.length;
       filteredDaySchedules.forEach(s => {
         if (s.completed) totalCompleted++;
@@ -604,12 +629,16 @@ Page({
   },
 
   updateWeekDaysWithMemberFilter: function() {
-    const { weekDays, weekSchedules, selectedMembers } = this.data;
+    const { weekDays, weekSchedules, selectedMembers, isChildRole, currentMemberName } = this.data;
     
     const updatedWeekDays = weekDays.map((day, i) => {
       let daySchedules = weekSchedules[i] || [];
       
-      if (selectedMembers.length > 0) {
+      if (isChildRole) {
+        daySchedules = daySchedules.filter(schedule => {
+          return schedule.scheduleMembers && schedule.scheduleMembers.includes(currentMemberName);
+        });
+      } else if (selectedMembers.length > 0) {
         daySchedules = daySchedules.filter(schedule => {
           return schedule.scheduleMembers && schedule.scheduleMembers.some(m => selectedMembers.includes(m));
         });
@@ -634,12 +663,12 @@ Page({
   },
   
   startPomodoro: function(e) {
-    const scheduleId = parseInt(e.currentTarget.dataset.id)
+    const scheduleId = e.currentTarget.dataset.id  // 保持原始字符串格式
     const memberName = e.currentTarget.dataset.member
     const points = parseInt(e.currentTarget.dataset.points) || 0
     
     const schedules = app.globalData.schedules || []
-    const schedule = schedules.find(s => s.id === scheduleId)
+    const schedule = schedules.find(s => s.id === scheduleId || s._id === scheduleId)
     
     app.globalData.pomodoroTaskInfo = {
       scheduleId: scheduleId,
@@ -648,16 +677,27 @@ Page({
       taskInfo: schedule
     }
     
-    wx.switchTab({
+    wx.navigateTo({
       url: '/pages/pomodoro/pomodoro'
     })
   },
 
   viewScheduleDetail: function(e) {
-    const scheduleId = parseInt(e.currentTarget.dataset.id)
-    wx.navigateTo({
-      url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}`
-    })
+    const scheduleId = e.currentTarget.dataset.id
+    const userInfo = app.globalData.userInfo || {}
+    const isChildRole = userInfo.role === 'child'
+    
+    if (isChildRole) {
+      // 孩子角色跳转到详情页
+      wx.navigateTo({
+        url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}`
+      })
+    } else {
+      // 家长角色跳转到编辑页面
+      wx.navigateTo({
+        url: `/pages/addSchedule/addSchedule?id=${scheduleId}`
+      })
+    }
   },
   
   // 防止误触其他成员按钮

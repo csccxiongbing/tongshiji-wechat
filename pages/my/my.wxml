@@ -15,75 +15,27 @@
           <text class="user-role">{{roleText}}</text>
         </view>
       </view>
-      <view class="member-selector" bindtap="toggleMemberPicker">
-        <text class="member-text">家庭成员</text>
-        <text class="arrow">{{showMemberPicker ? '▲' : '▼'}}</text>
-      </view>
-    </view>
-    
-    <view class="wish-card" bindtap="goToWish">
-      <view class="wish-icon">🌟</view>
-      <view class="wish-info">
-        <text class="wish-text">我的心愿</text>
-        <text class="wish-value">{{wishPoints}}</text>
-      </view>
-      <view class="wish-arrow">→</view>
-    </view>
-    
-    <view class="member-picker-overlay" wx:if="{{showMemberPicker}}" bindtap="toggleMemberPicker"></view>
-    <view class="member-picker" wx:if="{{showMemberPicker}}">
-      <view class="picker-arrow"></view>
-      <view 
-        class="picker-item picker-item-first {{selectedMembers.length === familyMembers.length ? 'active' : ''}}" 
-        bindtap="toggleSelectAll"
-      >
-        <view class="member-checkbox-wrapper">
-          <view class="member-checkbox {{selectedMembers.length === familyMembers.length ? 'member-checked' : ''}}">
-            <text wx:if="{{selectedMembers.length === familyMembers.length}}">✓</text>
-          </view>
-        </view>
-        <text>我的家庭</text>
-      </view>
-      <view class="divider"></view>
-      <block wx:for="{{familyMembers}}" wx:key="name">
-        <view 
-          class="picker-item picker-item-child {{item.isSelected ? 'active' : ''}}" 
-          bindtap="toggleMember"
-          data-member="{{item.name}}"
-          data-index="{{index}}"
-        >
-          <view class="member-checkbox-wrapper">
-            <view class="member-checkbox {{item.isSelected ? 'member-checked' : ''}}">
-              <text wx:if="{{item.isSelected}}">✓</text>
-            </view>
-          </view>
-          <text>{{item.name}}</text>
-        </view>
-      </block>
+      <view class="user-level">Lv.{{level}}</view>
     </view>
   </view>
   
-  <view class="section">
-    <view class="section-title">
-      <text class="title-icon">📊</text>
-      <text>我的成就</text>
-    </view>
+  <view class="section" wx:if="{{role === 'child'}}">
     
     <view class="achievements-grid">
-      <view class="achievement-item">
+      <view class="achievement-item" bindtap="goToAchievement">
+        <view class="achievement-icon">⭐</view>
+        <text class="achievement-num">{{wishPoints}}</text>
+        <text class="achievement-label">积分</text>
+      </view>
+      <view class="achievement-item" bindtap="goToAchievement">
         <view class="achievement-icon">🏆</view>
         <text class="achievement-num">{{achievements.totalDays}}</text>
         <text class="achievement-label">连续打卡天数</text>
       </view>
-      <view class="achievement-item">
-        <view class="achievement-icon">⭐</view>
+      <view class="achievement-item" bindtap="goToAchievement">
+        <view class="achievement-icon">✅</view>
         <text class="achievement-num">{{achievements.completedTasks}}</text>
         <text class="achievement-label">完成任务数</text>
-      </view>
-      <view class="achievement-item">
-        <view class="achievement-icon">🎁</view>
-        <text class="achievement-num">{{achievements.badges}}</text>
-        <text class="achievement-label">获得徽章</text>
       </view>
     </view>
   </view>
@@ -95,9 +47,14 @@
         <text class="menu-text">家庭管理</text>
         <text class="menu-arrow">→</text>
       </view>
-      <view class="menu-item" bindtap="goToWish">
+      <view class="menu-item" wx:if="{{role === 'parent'}}" bindtap="goToWish">
         <view class="menu-icon">🌟</view>
         <text class="menu-text">心愿中心</text>
+        <text class="menu-arrow">→</text>
+      </view>
+      <view class="menu-item" bindtap="goToRules">
+        <view class="menu-icon">📜</view>
+        <text class="menu-text">积分规则</text>
         <text class="menu-arrow">→</text>
       </view>
       <view class="menu-item" bindtap="goToSettings">
@@ -115,7 +72,7 @@
         <text class="menu-text">查看本地存储</text>
         <text class="menu-arrow">→</text>
       </view>
-      <view class="menu-item clear-data-btn" bindtap="clearAllData">
+      <view class="menu-item clear-data-btn" wx:if="{{role === 'parent'}}" bindtap="clearAllData">
         <view class="menu-icon">🗑️</view>
         <text class="menu-text">清空所有数据</text>
         <text class="menu-arrow">→</text>

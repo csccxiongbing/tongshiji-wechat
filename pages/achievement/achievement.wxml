@@ -1,0 +1,86 @@
+<view class="container">
+  <view class="achieve-header">
+    <view class="achieve-title">我的成就</view>
+    <view class="level-badge">
+      <text class="crown-icon">👑</text>
+      <text class="level-name">{{levelName}}</text>
+    </view>
+    <view class="level-progress">
+      <view class="level-bar">
+        <view class="level-fill" style="width:{{levelProgress}}%;"></view>
+      </view>
+      <text class="level-text">距离下一等级还需 {{pointsToNext}} 积分</text>
+    </view>
+  </view>
+
+  <view class="streak-card">
+    <view class="streak-icon">🔥</view>
+    <view class="streak-info">
+      <text class="streak-val">{{currentStreak}}</text>
+      <text class="streak-lbl">连续打卡</text>
+    </view>
+    <view class="streak-best">
+      <text class="streak-best-val">{{bestStreak}}</text>
+      <text class="streak-best-lbl">历史最长</text>
+    </view>
+  </view>
+
+  <view class="badge-section" wx:if="{{unlockedBadges.length > 0}}">
+    <view class="badge-section-title">
+      <text class="title-icon">🏅</text>
+      <text>已获得徽章</text>
+    </view>
+    <view class="badge-grid">
+      <view class="badge-item" wx:for="{{unlockedBadges}}" wx:key="id">
+        <view class="badge-icon unlocked" style="background: linear-gradient(135deg, {{item.color}} 0%, {{item.colorEnd}} 100%);">
+          <text>{{item.icon}}</text>
+        </view>
+        <text class="badge-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="badge-section" wx:if="{{lockedBadges.length > 0}}">
+    <view class="badge-section-title">
+      <text class="title-icon">🔒</text>
+      <text>待解锁</text>
+    </view>
+    <view class="badge-grid">
+      <view class="badge-item locked" wx:for="{{lockedBadges}}" wx:key="id">
+        <view class="badge-icon locked">
+          <text>{{item.icon}}</text>
+        </view>
+        <text class="badge-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="wish-section">
+    <view class="wish-section-title">
+      <text class="title-icon">🎁</text>
+      <text>我的心愿</text>
+    </view>
+    <view wx:if="{{wishes.length === 0}}" class="empty-wishes">
+      <text class="empty-icon">🎁</text>
+      <text class="empty-text">暂无可兑换的心愿</text>
+    </view>
+    <view class="wish-grid" wx:else>
+      <view class="wish-card {{item.cost > currentPoints ? 'locked' : ''}}" 
+            wx:for="{{wishes}}" 
+            wx:key="id"
+            bindtap="exchangeWish"
+            data-item="{{item}}">
+        <view class="wish-icon" style="background: linear-gradient(135deg, {{item.color}} 0%, {{item.colorEnd}} 100%);">
+          <text>{{item.icon}}</text>
+        </view>
+        <text class="wish-name">{{item.name}}</text>
+        <view class="wish-cost">
+          <text>⭐ {{item.cost}}</text>
+        </view>
+        <view class="wish-limit" wx:if="{{item.weeklyLimitEnabled}}">
+          <text>每周限 {{item.weeklyLimitCount}} 次</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

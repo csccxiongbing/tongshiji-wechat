@@ -16,6 +16,7 @@ app.use('/api/families', require('./routes/families'));
 app.use('/api/schedules', require('./routes/schedules'));
 app.use('/api/points', require('./routes/points'));
 app.use('/api/pomodoro', require('./routes/pomodoro'));
+app.use('/api/wishes', require('./routes/wishes'));
 app.use('/api/admin', require('./routes/admin'));
 
 app.get('/', (req, res) => {

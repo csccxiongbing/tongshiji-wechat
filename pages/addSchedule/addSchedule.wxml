@@ -95,21 +95,6 @@
     </view>
     
     <view class="form-section">
-      <view class="icon-grid">
-        <view 
-          wx:for="{{icons}}" 
-          wx:key="icon"
-          class="icon-item {{selectedIcon === item.icon ? 'active' : ''}}" 
-          bindtap="selectIcon"
-          data-icon="{{item.icon}}"
-          data-color="{{item.color}}"
-        >
-          <text class="icon-emoji">{{item.icon}}</text>
-        </view>
-      </view>
-    </view>
-    
-    <view class="form-section">
       <view class="form-item-row-right">
         <text class="label">积分奖励</text>
         <view wx:if="{{pointsEditable}}" class="wish-input">

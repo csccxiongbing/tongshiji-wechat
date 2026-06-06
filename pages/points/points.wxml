@@ -1,79 +1,97 @@
 <view class="container">
-  <view class="header-section">
-    <view class="points-card">
-      <view class="points-icon">🎁</view>
-      <view class="points-info">
-        <text class="points-value">{{points}}</text>
-        <text class="points-label">积分</text>
+  <view class="filter-section">
+    <view class="filter-row">
+      <view class="filter-item">
+        <text class="filter-icon">📅</text>
+        <picker mode="selector" range="{{timeOptions}}" range-key="label" value="{{selectedTimeIndex}}" bindchange="onTimeChange">
+          <view class="picker-box">
+            <text class="picker-text">{{timeOptions[selectedTimeIndex].label}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
       </view>
-      <view class="points-level">Lv.{{level}}</view>
+      
+      <view class="filter-item">
+        <text class="filter-icon">📊</text>
+        <picker mode="selector" range="{{typeOptions}}" range-key="label" value="{{selectedTypeIndex}}" bindchange="onTypeChange">
+          <view class="picker-box">
+            <text class="picker-text">{{typeOptions[selectedTypeIndex].label}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+      
+      <view class="filter-item">
+        <text class="filter-icon">👶</text>
+        <picker mode="selector" range="{{memberOptions}}" range-key="label" value="{{selectedMemberIndex}}" bindchange="onMemberChange">
+          <view class="picker-box">
+            <text class="picker-text">{{memberOptions[selectedMemberIndex].label}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
     </view>
   </view>
   
-  <view class="section">
-    <view class="section-header">
-      <text class="section-title">获取积分</text>
-    </view>
-    
-    <view class="tasks-grid">
-      <view class="task-card" wx:for="{{tasks}}" wx:key="index">
-        <view class="task-icon" style="background: {{item.bgColor}}">
-          <text>{{item.icon}}</text>
-        </view>
-        <view class="task-info">
-          <text class="task-name">{{item.name}}</text>
-          <text class="task-desc">{{item.desc}}</text>
-        </view>
-        <view class="task-points">+{{item.points}}</view>
-      </view>
-    </view>
-  </view>
-  
-  <view class="section">
+  <view class="section" wx:if="{{selectedType === 'all' || selectedType === 'points'}}">
     <view class="section-header">
       <text class="section-title">积分记录</text>
+      <text class="section-count">共{{filteredPointsHistory.length}}条</text>
     </view>
     
     <view class="history-list">
-      <block wx:for="{{pointsHistory}}" wx:key="id">
+      <block wx:for="{{displayedPointsHistory}}" wx:key="id">
         <view class="history-item">
-          <view class="history-icon">
+          <view class="history-icon-points {{item.amount > 0 ? 'add' : 'subtract'}}">
             <text>{{item.amount > 0 ? '+' : ''}}{{item.amount}}</text>
           </view>
           <view class="history-info">
             <text class="history-reason">{{item.reason}}</text>
+            <text class="history-member">{{item.memberName}}</text>
             <text class="history-time">{{item.time}}</text>
           </view>
           <view class="history-balance">余额: {{item.balance}}</view>
         </view>
       </block>
       
-      <view wx:if="{{pointsHistory.length === 0}}" class="empty-state">
+      <view wx:if="{{displayedPointsHistory.length === 0}}" class="empty-state">
         <text class="empty-icon">📝</text>
         <text class="empty-text">暂无积分记录</text>
       </view>
-    </view>
-  </view>
-  
-  <view class="section">
-    <view class="section-header">
-      <text class="section-title">积分兑换</text>
-    </view>
-    
-    <view class="rewards-grid">
-      <view class="reward-card" wx:for="{{rewards}}" wx:key="index">
-        <view class="reward-icon">{{item.icon}}</view>
-        <text class="reward-name">{{item.name}}</text>
-        <text class="reward-cost">{{item.cost}}积分</text>
-        <view 
-          class="reward-btn {{points >= item.cost ? '' : 'disabled'}}" 
-          bindtap="exchangeReward"
-          data-index="{{index}}"
-        >
-          <text>{{points >= item.cost ? '兑换' : '积分不足'}}</text>
-        </view>
+      
+      <view class="load-more" wx:if="{{displayedPointsHistory.length < filteredPointsHistory.length}}" bindtap="loadMorePoints">
+        <text class="load-more-text">加载更多</text>
       </view>
     </view>
   </view>
   
+  <view class="section" wx:if="{{selectedType === 'all' || selectedType === 'wish'}}">
+    <view class="section-header">
+      <text class="section-title">心愿兑换记录</text>
+      <text class="section-count">共{{filteredWishHistory.length}}条</text>
+    </view>
+    
+    <view class="history-list">
+      <block wx:for="{{displayedWishHistory}}" wx:key="_id">
+        <view class="history-item">
+          <view class="history-icon-wish">🎁</view>
+          <view class="history-info">
+            <text class="history-reason">兑换"{{item.wishName}}"</text>
+            <text class="history-member">{{item.memberName}}</text>
+            <text class="history-time">{{formatDate(item.exchangeTime)}}</text>
+          </view>
+          <view class="history-balance-wish">-{{item.points}}</view>
+        </view>
+      </block>
+      
+      <view wx:if="{{displayedWishHistory.length === 0}}" class="empty-state">
+        <text class="empty-icon">🎁</text>
+        <text class="empty-text">暂无兑换记录</text>
+      </view>
+      
+      <view class="load-more" wx:if="{{displayedWishHistory.length < filteredWishHistory.length}}" bindtap="loadMoreWishes">
+        <text class="load-more-text">加载更多</text>
+      </view>
+    </view>
+  </view>
 </view>

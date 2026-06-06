@@ -43,7 +43,6 @@ Page({
     await this.loadFamilyMembers()
     
     const currentMemberName = this.findCurrentMemberName(userInfo)
-    console.log('当前用户在家庭中的角色名称:', currentMemberName)
     
     this.setData({
       weekday: weekdays[now.getDay()],
@@ -74,19 +73,22 @@ Page({
       members = family
     }
     
-    const currentMember = members.find(m => m.isCurrentUser)
-    if (currentMember) return currentMember.name
-    
+    // 1. 优先通过手机号匹配
     const phone = userInfo.phone
     if (phone) {
       const phoneMatch = members.find(m => m.phone === phone)
       if (phoneMatch) return phoneMatch.name
     }
     
-    if (userInfo.role === 'child') {
-      const childMember = members.find(m => m.role === 'child')
-      if (childMember) return childMember.name
+    // 2. 通过角色类型匹配
+    if (userInfo.role) {
+      const roleMatch = members.find(m => m.role === userInfo.role)
+      if (roleMatch) return roleMatch.name
     }
+    
+    // 3. 最后才通过 isCurrentUser 标记查找
+    const currentMember = members.find(m => m.isCurrentUser)
+    if (currentMember) return currentMember.name
     
     return userInfo.role === 'child' ? '小明' : ''
   },
@@ -548,19 +550,30 @@ Page({
   },
   
   viewScheduleDetail: function(e) {
-    const scheduleId = parseInt(e.currentTarget.dataset.id)
-    wx.navigateTo({
-      url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}`
-    })
+    const scheduleId = e.currentTarget.dataset.id
+    const userInfo = app.globalData.userInfo || {}
+    const isChildRole = userInfo.role === 'child'
+    
+    if (isChildRole) {
+      // 孩子角色跳转到详情页
+      wx.navigateTo({
+        url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}`
+      })
+    } else {
+      // 家长角色跳转到编辑页面
+      wx.navigateTo({
+        url: `/pages/addSchedule/addSchedule?id=${scheduleId}`
+      })
+    }
   },
   
   startPomodoro: function(e) {
-    const scheduleId = parseInt(e.currentTarget.dataset.id)
+    const scheduleId = e.currentTarget.dataset.id  // 保持原始字符串格式
     const memberName = e.currentTarget.dataset.member
     const points = parseInt(e.currentTarget.dataset.points) || 0
     
     const schedules = app.globalData.schedules || []
-    const schedule = schedules.find(s => s.id === scheduleId)
+    const schedule = schedules.find(s => s.id === scheduleId || s._id === scheduleId)
     
     app.globalData.pomodoroTaskInfo = {
       scheduleId: scheduleId,
@@ -569,7 +582,7 @@ Page({
       taskInfo: schedule
     }
     
-    wx.switchTab({
+    wx.navigateTo({
       url: '/pages/pomodoro/pomodoro'
     })
   },

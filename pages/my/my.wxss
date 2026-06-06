@@ -78,6 +78,15 @@
   display: block;
 }
 
+.user-level {
+  background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
+  padding: 12rpx 24rpx;
+  border-radius: 20rpx;
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: bold;
+}
+
 .member-selector {
   display: flex;
   align-items: center;

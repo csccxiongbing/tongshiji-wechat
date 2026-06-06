@@ -18,6 +18,10 @@ const memberSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  points: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const familySchema = new mongoose.Schema({
@@ -31,6 +35,10 @@ const familySchema = new mongoose.Schema({
     unique: true,
   },
   members: [memberSchema],
+  totalPoints: {
+    type: Number,
+    default: 0,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

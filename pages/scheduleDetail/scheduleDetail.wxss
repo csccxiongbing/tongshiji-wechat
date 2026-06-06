@@ -123,6 +123,10 @@
   gap: 12rpx;
 }
 
+.member-item {
+  display: inline-flex;
+}
+
 .member-tag {
   background: linear-gradient(135deg, #FFF0F5 0%, #FFE4E1 100%);
   padding: 8rpx 20rpx;
@@ -130,6 +134,17 @@
   font-size: 24rpx;
   color: #FF69B4;
   border: 2rpx solid #FFB6C1;
+}
+
+.member-tag.completed {
+  background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+  color: #4CAF50;
+  border-color: #81C784;
+}
+
+.check-icon {
+  color: #4CAF50;
+  font-weight: bold;
 }
 
 .remind-section {

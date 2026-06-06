@@ -1,79 +1,213 @@
 <view class="container">
-  <view class="header-section">
-    <view class="wish-card">
-      <view class="wish-icon">🌟</view>
-      <view class="wish-info">
-        <text class="wish-value">{{wishPoints}}</text>
-        <text class="wish-label">心愿值</text>
+  <view class="points-card">
+    <view class="points-bg"></view>
+    <view class="points-bg-small"></view>
+    <view class="points-content">
+      <view class="points-header">
+        <text class="points-label">{{selectedMember || '请选择成员'}}的积分余额</text>
+        <view class="history-btn" bindtap="goToPointsHistory">
+          <text>记录明细</text>
+        </view>
       </view>
-      <view class="wish-level">Lv.{{level}}</view>
-    </view>
-  </view>
-  
-  <view class="section">
-    <view class="section-header">
-      <text class="section-title">获得心愿</text>
-    </view>
-    
-    <view class="tasks-grid">
-      <view class="task-item" wx:for="{{tasks}}" wx:key="index">
-        <view class="task-icon" style="background: {{item.bgColor}}">
-          <text>{{item.icon}}</text>
+      <view class="points-value">
+        <text class="points-star">⭐</text>
+        <text class="points-num">{{memberPoints[selectedMember] || 0}}</text>
+      </view>
+      <view class="points-buttons">
+        <view class="points-btn add" bindtap="showAddPointsModal">
+          <text class="btn-icon">🎁</text>
+          <text>发积分</text>
         </view>
-        <view class="task-content">
-          <text class="task-name">{{item.name}}</text>
-          <text class="task-desc">{{item.desc}}</text>
+        <view class="points-btn subtract" bindtap="showSubtractPointsModal">
+          <text class="btn-icon">➖</text>
+          <text>扣积分</text>
         </view>
-        <view class="task-points">+{{item.points}}</view>
       </view>
     </view>
   </view>
-  
+
+  <view class="member-tabs">
+    <view 
+      class="member-tab {{selectedMember === item.name ? 'active' : ''}}" 
+      wx:for="{{childMembers}}" 
+      wx:key="name"
+      bindtap="selectMember"
+      data-name="{{item.name}}"
+    >
+      <text class="tab-avatar">{{item.name.charAt(0)}}</text>
+      <text class="tab-name">{{item.name}}</text>
+      <text class="tab-points">· {{memberPoints[item.name] || 0}}</text>
+    </view>
+  </view>
+
   <view class="section">
     <view class="section-header">
-      <text class="section-title">心愿记录</text>
+      <text class="section-title">心愿池</text>
+      <view class="add-btn" bindtap="showAddModal">
+        <text class="add-icon">+</text>
+        <text class="add-text">添加</text>
+      </view>
     </view>
     
-    <view class="history-list">
-      <block wx:for="{{history}}" wx:key="id">
-        <view class="history-item">
-          <view class="history-icon">
-            <text>{{item.amount > 0 ? '+' : ''}}{{item.amount}}</text>
+    <view class="wishes-list">
+      <view 
+        class="wish-item" 
+        wx:for="{{filteredWishes}}" 
+        wx:key="id"
+        bindtap="onWishItemTap"
+        bindlongpress="onWishLongPress"
+        data-id="{{item.id}}"
+        data-name="{{item.name}}"
+        data-points="{{item.points}}"
+        data-icon="{{item.icon}}"
+        data-background="{{item.background}}"
+        data-weeklyLimitEnabled="{{item.weeklyLimitEnabled}}"
+        data-weeklyLimitCount="{{item.weeklyLimitCount}}"
+        data-assignedTo="{{item.assignedTo ? item.assignedTo.join(',') : ''}}"
+      >
+        <view class="wish-icon" style="background: {{item.background || 'linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%)'}}">{{item.icon}}</view>
+        <view class="wish-info">
+          <text class="wish-name">{{item.name}}</text>
+          <view class="wish-meta">
+            <text class="wish-points">{{item.points}}积分</text>
+            <text class="wish-limit" wx:if="{{item.weeklyLimitEnabled}}">每周限{{item.weeklyLimitCount}}次</text>
           </view>
-          <view class="history-content">
-            <text class="history-reason">{{item.reason}}</text>
-            <text class="history-time">{{item.time}}</text>
-          </view>
-          <view class="history-balance">余额: {{item.balance}}</view>
         </view>
-      </block>
+      </view>
       
-      <view wx:if="{{history.length === 0}}" class="empty-state">
-        <text class="empty-icon">📝</text>
-        <text class="empty-text">还没有心愿记录</text>
+      <view wx:if="{{filteredWishes.length === 0}}" class="empty-state">
+        <text class="empty-icon">🎁</text>
+        <text class="empty-text">暂无心愿，点击上方添加</text>
       </view>
     </view>
   </view>
-  
-  <view class="section">
-    <view class="section-header">
-      <text class="section-title">心愿兑换</text>
+</view>
+
+<view class="modal-mask" wx:if="{{showAddModal}}" bindtap="hideAddModal">
+  <view class="modal-content" catchtap="stopPropagation">
+    <view class="modal-header">
+      <text class="modal-title">{{newWish.id ? '修改心愿' : '添加心愿'}}</text>
+      <text class="modal-close" bindtap="hideAddModal">×</text>
     </view>
     
-    <view class="rewards-grid">
-      <view class="reward-item" wx:for="{{rewards}}" wx:key="index">
-        <view class="reward-icon">{{item.icon}}</view>
-        <text class="reward-name">{{item.name}}</text>
-        <text class="reward-cost">{{item.cost}}个心愿</text>
-        <view 
-          class="reward-btn {{wishPoints >= item.cost ? '' : 'disabled'}}" 
-          bindtap="exchangeReward"
-          data-index="{{index}}"
-        >
-          <text>{{wishPoints >= item.cost ? '兑换' : '心愿不足'}}</text>
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">心愿名称</text>
+        <input 
+          class="form-input" 
+          placeholder="请输入心愿名称" 
+          value="{{newWish.name}}"
+          bindinput="onWishNameInput"
+        />
+      </view>
+      
+      <view class="form-item">
+        <text class="form-label">所需积分</text>
+        <input 
+          class="form-input" 
+          type="number"
+          placeholder="请输入积分" 
+          value="{{newWish.points}}"
+          bindinput="onWishPointsInput"
+        />
+      </view>
+      
+      <view class="form-item">
+        <view class="form-row">
+          <text class="form-label">每周限制</text>
+          <switch 
+            checked="{{newWish.weeklyLimitEnabled}}" 
+            bindchange="onWeeklyLimitToggle"
+          />
+        </view>
+        <input 
+          class="form-input" 
+          wx:if="{{newWish.weeklyLimitEnabled}}"
+          type="number"
+          placeholder="每周最多兑换次数" 
+          value="{{newWish.weeklyLimitCount}}"
+          bindinput="onWeeklyLimitCountInput"
+        />
+      </view>
+      
+      <view class="form-item">
+        <text class="form-label">分配给（不选则所有人可用）</text>
+        <view class="member-checklist">
+          <view 
+            class="check-item {{item.isSelected ? 'active' : ''}}" 
+            wx:for="{{childMembers}}" 
+            wx:key="name"
+            bindtap="toggleAssignedMember"
+            data-name="{{item.name}}"
+            data-index="{{index}}"
+          >
+            <text>{{item.name}}</text>
+          </view>
         </view>
       </view>
     </view>
+    
+    <view class="modal-footer">
+      <view class="modal-btn cancel" wx:if="{{!newWish.id}}" bindtap="hideAddModal">
+        <text>取消</text>
+      </view>
+      <view class="modal-btn delete" wx:if="{{newWish.id}}" bindtap="deleteWishFromModal" data-id="{{newWish.id}}" data-name="{{newWish.name}}">
+        <text>删除</text>
+      </view>
+      <view class="modal-btn confirm" bindtap="saveWish">
+        <text>{{newWish.id ? '保存' : '添加'}}</text>
+      </view>
+    </view>
   </view>
-  
+</view>
+
+<view class="modal-mask" wx:if="{{showPointsModal}}" bindtap="hidePointsModal">
+  <view class="modal-content" catchtap="stopPropagation">
+    <view class="modal-header">
+      <text class="modal-title">{{pointsModalType === 'add' ? '发放积分' : '扣除积分'}}</text>
+      <text class="modal-close" bindtap="hidePointsModal">×</text>
+    </view>
+    
+    <view class="modal-body">
+      <view class="form-item">
+        <text class="form-label">选择孩子</text>
+        <picker mode="selector" range="{{childMemberNames}}" bindchange="onPointsMemberChange" value="{{selectedMemberIndex}}">
+          <view class="picker-content">
+            <text>{{pointsForm.memberName || '请选择'}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+      
+      <view class="form-item">
+        <text class="form-label">积分数量</text>
+        <input 
+          class="form-input" 
+          type="number"
+          placeholder="请输入积分" 
+          value="{{pointsForm.amount}}"
+          bindinput="onPointsAmountInput"
+        />
+      </view>
+      
+      <view class="form-item">
+        <text class="form-label">原因</text>
+        <input 
+          class="form-input" 
+          placeholder="例如: 表现优秀" 
+          value="{{pointsForm.reason}}"
+          bindinput="onPointsReasonInput"
+        />
+      </view>
+    </view>
+    
+    <view class="modal-footer">
+      <view class="modal-btn cancel" bindtap="hidePointsModal">
+        <text>取消</text>
+      </view>
+      <view class="modal-btn confirm points" bindtap="submitPoints">
+        <text>{{pointsModalType === 'add' ? '发放' : '扣除'}}</text>
+      </view>
+    </view>
+  </view>
 </view>

@@ -3,7 +3,8 @@ const app = getApp()
 Page({
   data: {
     scheduleId: null,
-    schedule: null
+    schedule: null,
+    memberStatusList: []
   },
 
   onLoad: function(options) {
@@ -11,7 +12,7 @@ Page({
     
     if (options.id) {
       this.setData({
-        scheduleId: parseInt(options.id)
+        scheduleId: options.id
       })
       this.loadScheduleDetail()
     }
@@ -24,16 +25,76 @@ Page({
     console.log('所有日程:', schedules)
     console.log('查找日程 ID:', scheduleId)
     
-    const schedule = schedules.find(s => s.id === scheduleId)
+    // 支持多种 id 匹配方式：数字 id、字符串 id、_id
+    const schedule = schedules.find(s => 
+      s.id === scheduleId || 
+      s.id === String(scheduleId) || 
+      s._id === scheduleId || 
+      s._id === String(scheduleId)
+    )
     
     if (schedule) {
       console.log('找到日程:', schedule)
       const formattedSchedule = this.formatScheduleTime(schedule)
+      const memberStatusList = this.getMemberStatusList(formattedSchedule)
       this.setData({
-        schedule: formattedSchedule
+        schedule: formattedSchedule,
+        memberStatusList: memberStatusList
       })
     } else {
-      console.log('未找到日程，使用默认数据')
+      console.log('未找到日程，尝试从数据库加载')
+      this.loadScheduleFromServer()
+    }
+  },
+  
+  getMemberStatusList: function(schedule) {
+    const members = schedule.scheduleMembers || []
+    const completedBy = schedule.completedBy || []
+    
+    return members.map(name => ({
+      name: name,
+      completed: completedBy.includes(name)
+    }))
+  },
+
+  loadScheduleFromServer: async function() {
+    const { scheduleId } = this.data
+    
+    try {
+      const result = await app.request({
+        url: '/schedules/' + scheduleId,
+        method: 'GET'
+      })
+      
+      if (result.success && result.schedule) {
+        console.log('从服务器获取日程:', result.schedule)
+        const formattedSchedule = this.formatScheduleTime(result.schedule)
+        const memberStatusList = this.getMemberStatusList(formattedSchedule)
+        this.setData({
+          schedule: formattedSchedule,
+          memberStatusList: memberStatusList
+        })
+      } else {
+        console.log('服务器也未找到日程，使用默认数据')
+        const defaultSchedule = {
+          id: scheduleId,
+          title: '日程详情',
+          time: '00:00',
+          startTime: '',
+          endTime: '',
+          icon: '📝',
+          color: '#FFE4E1',
+          completed: false,
+          scheduleMembers: [],
+          points: 0
+        }
+        this.setData({
+          schedule: this.formatScheduleTime(defaultSchedule),
+          memberStatusList: []
+        })
+      }
+    } catch (error) {
+      console.error('从服务器加载日程失败:', error)
       const defaultSchedule = {
         id: scheduleId,
         title: '日程详情',
@@ -47,7 +108,8 @@ Page({
         points: 0
       }
       this.setData({
-        schedule: this.formatScheduleTime(defaultSchedule)
+        schedule: this.formatScheduleTime(defaultSchedule),
+        memberStatusList: []
       })
     }
   },
@@ -72,25 +134,6 @@ Page({
     }
     
     return result
-  },
-
-  toggleComplete: function() {
-    const { schedule, scheduleId } = this.data
-    if (!schedule) return
-    
-    const schedules = app.globalData.schedules || []
-    const updatedSchedules = schedules.map(s => {
-      if (s.id === scheduleId) {
-        return { ...s, completed: !s.completed }
-      }
-      return s
-    })
-    
-    app.saveSchedules(updatedSchedules)
-    
-    this.setData({
-      'schedule.completed': !schedule.completed
-    })
   },
 
   goBack: function() {

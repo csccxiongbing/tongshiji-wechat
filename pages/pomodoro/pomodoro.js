@@ -32,7 +32,7 @@ Page({
     longBreak: { duration: 15 * 60, label: '长休息', color: '#45B7D1' }
   },
   
-  onLoad: function(options) {
+  onLoad: async function(options) {
     console.log('番茄钟页面加载')
     console.log('options:', options)
     
@@ -61,10 +61,12 @@ Page({
     }
     
     this.updateTabBar()
+    // 加载最新的番茄钟历史
+    await app.loadPomodoroHistory()
     this.loadStats()
   },
   
-  onShow: function() {
+  onShow: async function() {
     // 在 onShow 中再次检查全局变量（因为 switchTab 可能不会触发 onLoad）
     if (!this.data.hasTask) {
       const pomodoroTaskInfo = app.globalData.pomodoroTaskInfo
@@ -82,6 +84,8 @@ Page({
       }
     }
     
+    // 加载最新的番茄钟历史
+    await app.loadPomodoroHistory()
     this.loadStats()
     this.updateTabBar()
   },
@@ -99,15 +103,16 @@ Page({
   },
   
   loadStats: function() {
-    const history = app.globalData.pomodoroHistory || this.data.todayHistory
+    const history = app.globalData.pomodoroHistory || []
     let completedPomodoros = 0
     let totalMinutes = 0
     
     history.forEach(item => {
-      if (item.type === 'pomodoro') {
+      // 数据库中的 completed 字段或者旧数据的 type 字段
+      if (item.completed === true || item.type === 'pomodoro') {
         completedPomodoros++
       }
-      totalMinutes += item.duration
+      totalMinutes += item.duration || 25
     })
     
     this.setData({
@@ -212,10 +217,13 @@ Page({
     const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
     
     const historyItem = {
-      id: Date.now(),
-      type: this.data.currentMode,
-      time: timeStr,
-      duration: Math.round(modeConfig.duration / 60)
+      scheduleId: this.data.scheduleId,
+      taskName: this.data.taskInfo?.title || '专注时间',
+      duration: Math.round(modeConfig.duration / 60),
+      completed: this.data.currentMode === 'pomodoro',
+      points: this.data.currentMode === 'pomodoro' ? 10 : 0,
+      startTime: timeStr,
+      endTime: timeStr
     }
     
     if (this.data.currentMode === 'pomodoro') {
@@ -224,8 +232,11 @@ Page({
         await this.completeTask()
       }
       
-      // 添加番茄钟的基础积分
-      await app.addPoints('', 10, '完成番茄专注')
+      // 添加番茄钟的基础积分（如果有成员名称）
+      const memberName = this.data.memberName || this.getCurrentMemberName()
+      if (memberName) {
+        await app.addPoints(memberName, 10, '完成番茄专注')
+      }
       
       wx.showToast({
         title: '🎉 专注完成！+10心愿',
@@ -239,10 +250,48 @@ Page({
       })
     }
     
-    app.savePomodoroHistory(historyItem)
+    // 保存到数据库
+    await app.savePomodoroHistory(historyItem)
     this.loadStats()
     
     this.autoSwitchMode()
+  },
+  
+  getCurrentMemberName: function() {
+    // 获取当前用户的成员名称
+    const userInfo = app.globalData.userInfo || {}
+    let family = app.globalData.familyMembers
+    if (!family || (!family.members && !Array.isArray(family))) {
+      try {
+        family = wx.getStorageSync('familyMembers')
+      } catch (e) {}
+    }
+    
+    let members = []
+    if (family && Array.isArray(family.members)) {
+      members = family.members
+    } else if (family && Array.isArray(family)) {
+      members = family
+    }
+    
+    // 1. 优先通过手机号匹配
+    const phone = userInfo.phone
+    if (phone) {
+      const phoneMatch = members.find(m => m.phone === phone)
+      if (phoneMatch) return phoneMatch.name
+    }
+    
+    // 2. 通过角色类型匹配
+    if (userInfo.role) {
+      const roleMatch = members.find(m => m.role === userInfo.role)
+      if (roleMatch) return roleMatch.name
+    }
+    
+    // 3. 最后才通过 isCurrentUser 标记查找
+    const currentMember = members.find(m => m.isCurrentUser)
+    if (currentMember) return currentMember.name
+    
+    return ''
   },
   
   completeTask: async function() {
@@ -267,7 +316,7 @@ Page({
     }
     
     // 添加任务积分（如果任务有积分奖励）
-    if (taskPoints > 0) {
+    if (taskPoints > 0 && memberName) {
       await app.addPoints(memberName, taskPoints, `完成"${this.data.taskInfo?.title || '任务'}"任务`)
       
       wx.showToast({

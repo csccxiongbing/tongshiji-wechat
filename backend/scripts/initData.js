@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const Family = require('../models/Family');
 const Schedule = require('../models/Schedule');
+const Wish = require('../models/Wish');
 
 const generateInviteCode = () => {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -178,6 +179,66 @@ const initData = async () => {
 
     await Schedule.insertMany(schedules);
     console.log('日程数据已创建:', schedules.length, '条');
+
+    const wishes = [
+      {
+        familyId: family._id,
+        name: '看电影',
+        icon: '🎬',
+        points: 50,
+        assignedTo: ['小明'],
+        weeklyLimitEnabled: false,
+        weeklyLimitCount: 0,
+      },
+      {
+        familyId: family._id,
+        name: '玩游戏1小时',
+        icon: '🎮',
+        points: 100,
+        assignedTo: ['小明'],
+        weeklyLimitEnabled: true,
+        weeklyLimitCount: 3,
+      },
+      {
+        familyId: family._id,
+        name: '冰淇淋',
+        icon: '🍦',
+        points: 30,
+        assignedTo: ['小明'],
+        weeklyLimitEnabled: true,
+        weeklyLimitCount: 2,
+      },
+      {
+        familyId: family._id,
+        name: '去游乐园',
+        icon: '🎢',
+        points: 300,
+        assignedTo: ['小明'],
+        weeklyLimitEnabled: false,
+        weeklyLimitCount: 0,
+      },
+      {
+        familyId: family._id,
+        name: '买玩具',
+        icon: '🎁',
+        points: 200,
+        assignedTo: ['小明'],
+        weeklyLimitEnabled: false,
+        weeklyLimitCount: 0,
+      },
+      {
+        familyId: family._id,
+        name: '吃大餐',
+        icon: '🍔',
+        points: 80,
+        assignedTo: ['小明'],
+        weeklyLimitEnabled: false,
+        weeklyLimitCount: 0,
+      },
+    ];
+
+    await Wish.insertMany(wishes);
+    console.log('心愿数据已创建:', wishes.length, '条');
 
     console.log('数据初始化完成！');
     process.exit(0);

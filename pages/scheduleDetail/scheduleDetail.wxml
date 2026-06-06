@@ -36,12 +36,15 @@
         </view>
       </view>
 
-      <view class="detail-row" wx:if="{{schedule.scheduleMembers && schedule.scheduleMembers.length > 0}}">
+      <view class="detail-row" wx:if="{{memberStatusList.length > 0}}">
         <text class="detail-label">参与成员</text>
         <view class="detail-members">
-          <text wx:for="{{schedule.scheduleMembers}}" wx:key="index" class="member-tag">
-            {{item}}
-          </text>
+          <view wx:for="{{memberStatusList}}" wx:key="index" class="member-item">
+            <text class="member-tag {{item.completed ? 'completed' : ''}}">
+              {{item.name}}
+              <text wx:if="{{item.completed}}" class="check-icon"> ✓</text>
+            </text>
+          </view>
         </view>
       </view>
 
@@ -74,12 +77,6 @@
         <text class="detail-label">备注</text>
         <text class="detail-value note-text">{{schedule.note}}</text>
       </view>
-    </view>
-  </view>
-
-  <view class="action-section" wx:if="{{schedule}}">
-    <view class="action-btn {{schedule.completed ? 'btn-cancel' : 'btn-complete'}}" bindtap="toggleComplete">
-      <text>{{schedule.completed ? '取消完成' : '标记完成'}}</text>
     </view>
   </view>
 
