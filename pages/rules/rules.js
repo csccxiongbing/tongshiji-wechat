@@ -231,10 +231,7 @@ Page({
     // 处理积分获取规则
     let pointsRules = []
     if (rules.points && rules.points.length > 0) {
-      pointsRules = rules.points.filter(r => {
-        const conditions = this.parseConditions(r.conditions)
-        return conditions.type !== 'consecutive'
-      }).map(rule => {
+      pointsRules = rules.points.map(rule => {
         const conditions = this.parseConditions(rule.conditions)
         let icon = rule.icon
         let title = rule.ruleName
@@ -244,6 +241,10 @@ Page({
           icon = '📅'
           title = '每日签到'
           desc = '每天首次打开应用'
+        } else if (conditions.type === 'consecutive') {
+          icon = '🔥'
+          title = rule.ruleName
+          desc = rule.description || `连续签到${conditions.days}天额外奖励`
         } else if (conditions.type === 'pomodoro') {
           icon = '🍅'
           title = '完成番茄钟'
@@ -260,14 +261,21 @@ Page({
           desc: desc,
           points: rule.points
         }
+      }).sort((a, b) => {
+        const rulesArray = rules.points
+        const indexA = rulesArray.findIndex(r => r.ruleName === a.title)
+        const indexB = rulesArray.findIndex(r => r.ruleName === b.title)
+        return indexA - indexB
       })
     }
     
     if (pointsRules.length === 0) {
       pointsRules = [
-        { icon: '📝', title: '完成任务', desc: '完成家长布置的任务', points: 0 },
+        { icon: '📅', title: '每日签到', desc: '每天首次打开应用', points: 5 },
+        { icon: '🔥', title: '连续签到3天', desc: '连续签到3天额外奖励', points: 20 },
+        { icon: '🌟', title: '连续签到7天', desc: '连续签到7天额外奖励', points: 50 },
         { icon: '🍅', title: '完成番茄钟', desc: '完成一次专注计时', points: 10 },
-        { icon: '📅', title: '每日签到', desc: '每天首次打开应用', points: 5 }
+        { icon: '📝', title: '完成任务', desc: '完成家长布置的任务', points: 0 }
       ]
     }
     
