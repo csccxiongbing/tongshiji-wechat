@@ -10,7 +10,12 @@ App({
     pomodoroHistory: [],
     pomodoroTaskInfo: null,
     wishes: [],
-    wishExchangeHistory: []
+    wishExchangeHistory: [],
+    rules: {
+      points: [],
+      badge: [],
+      level: []
+    }
   },
   
   API_BASE_URL: 'http://localhost:3000/api',
@@ -25,6 +30,7 @@ App({
         this.loadFamilyMembers()
         this.loadSchedules()
         this.loadPomodoroHistory()
+        this.loadRules()
       }
       
       // 加载缓存中的其他数据
@@ -102,6 +108,7 @@ App({
           await this.loadFamilyMembers()
           await this.loadSchedules()
           await this.loadPomodoroHistory()
+          await this.loadRules()
         }
       }
       
@@ -192,6 +199,59 @@ App({
       }
     } catch (error) {
       console.error('加载番茄钟历史错误:', error)
+    }
+  },
+  
+  loadRules: async function() {
+    try {
+      const result = await this.request({
+        url: '/rules/family',
+        method: 'GET'
+      })
+      
+      if (result.success) {
+        const parseConditions = function(conditions) {
+          if (!conditions) return {};
+          if (typeof conditions === 'object') return conditions;
+          try {
+            if (typeof conditions === 'string') {
+              let str = conditions;
+              if (str.startsWith('@{') && str.endsWith('}')) {
+                str = '{' + str.slice(2, -1) + '}';
+                str = str.replace(/=/g, ':').replace(/True/g, 'true').replace(/False/g, 'false');
+              }
+              return JSON.parse(str);
+            }
+          } catch (e) {}
+          return {};
+        };
+        
+        const rules = result.rules;
+        if (rules.points) {
+          rules.points = rules.points.map(rule => ({
+            ...rule,
+            conditions: parseConditions(rule.conditions)
+          }));
+        }
+        if (rules.badge) {
+          rules.badge = rules.badge.map(rule => ({
+            ...rule,
+            conditions: parseConditions(rule.conditions)
+          }));
+        }
+        if (rules.level) {
+          rules.level = rules.level.map(rule => ({
+            ...rule,
+            conditions: parseConditions(rule.conditions)
+          }));
+        }
+        
+        this.globalData.rules = rules;
+        wx.setStorageSync('rules', rules);
+        console.log('加载规则成功:', rules);
+      }
+    } catch (error) {
+      console.error('加载规则错误:', error);
     }
   },
   
@@ -768,6 +828,11 @@ App({
       this.globalData.pomodoroTaskInfo = null
       this.globalData.wishes = []
       this.globalData.wishExchangeHistory = []
+      this.globalData.rules = {
+        points: [],
+        badge: [],
+        level: []
+      }
       
       wx.removeStorageSync('userInfo')
       wx.removeStorageSync('familyMembers')
@@ -778,6 +843,7 @@ App({
       wx.removeStorageSync('pomodoroHistory')
       wx.removeStorageSync('wishes')
       wx.removeStorageSync('wishExchangeHistory')
+      wx.removeStorageSync('rules')
     } catch (e) {
       console.error('退出登录错误:', e)
     }
@@ -801,6 +867,11 @@ App({
       this.globalData.pomodoroTaskInfo = null
       this.globalData.wishes = []
       this.globalData.wishExchangeHistory = []
+      this.globalData.rules = {
+        points: [],
+        badge: [],
+        level: []
+      }
       
       wx.removeStorageSync('users')
       wx.removeStorageSync('userInfo')
@@ -812,6 +883,7 @@ App({
       wx.removeStorageSync('pomodoroHistory')
       wx.removeStorageSync('wishes')
       wx.removeStorageSync('wishExchangeHistory')
+      wx.removeStorageSync('rules')
       
       console.log('所有数据已清空')
       return result

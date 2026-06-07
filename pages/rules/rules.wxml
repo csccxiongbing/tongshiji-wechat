@@ -15,40 +15,13 @@
       </view>
       
       <view class="rule-card">
-        <view class="rule-item">
-          <view class="rule-icon">📝</view>
+        <view class="rule-item" wx:for="{{pointsRules}}" wx:key="title">
+          <view class="rule-icon">{{item.icon}}</view>
           <view class="rule-info">
-            <text class="rule-title">完成任务</text>
-            <text class="rule-desc">完成家长布置的任务</text>
+            <text class="rule-title">{{item.title}}</text>
+            <text class="rule-desc">{{item.desc}}</text>
           </view>
-          <view class="rule-points">+积分</view>
-        </view>
-        
-        <view class="rule-item">
-          <view class="rule-icon">🍅</view>
-          <view class="rule-info">
-            <text class="rule-title">完成番茄钟</text>
-            <text class="rule-desc">完成一次专注计时</text>
-          </view>
-          <view class="rule-points">+2分</view>
-        </view>
-        
-        <view class="rule-item">
-          <view class="rule-icon">📅</view>
-          <view class="rule-info">
-            <text class="rule-title">每日签到</text>
-            <text class="rule-desc">每天首次打开应用</text>
-          </view>
-          <view class="rule-points">+1分</view>
-        </view>
-        
-        <view class="rule-item">
-          <view class="rule-icon">🔥</view>
-          <view class="rule-info">
-            <text class="rule-title">连续签到</text>
-            <text class="rule-desc">连续签到额外奖励</text>
-          </view>
-          <view class="rule-points">+2~10分</view>
+          <view class="rule-points">+{{item.points > 0 ? item.points : '积分'}}</view>
         </view>
       </view>
     </view>

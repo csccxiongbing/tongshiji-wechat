@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Family = require('../models/Family');
 const Schedule = require('../models/Schedule');
 const Wish = require('../models/Wish');
+const Rule = require('../models/Rule');
 
 const generateInviteCode = () => {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -27,9 +28,9 @@ const initData = async () => {
       name: '测试家庭',
       inviteCode: generateInviteCode(),
       members: [
-        { name: '爸爸', role: 'parent', phone: '13800138001', isCurrentUser: false },
-        { name: '妈妈', role: 'parent', phone: '13800138002', isCurrentUser: false },
-        { name: '小明', role: 'child', phone: '13800138003', isCurrentUser: false },
+        { name: '爸爸', role: 'parent', phone: '13800138001', isCurrentUser: false, points: 0 },
+        { name: '妈妈', role: 'parent', phone: '13800138002', isCurrentUser: false, points: 0 },
+        { name: '小明', role: 'child', phone: '13800138003', isCurrentUser: false, points: 0 },
       ],
     });
 
@@ -239,6 +240,188 @@ const initData = async () => {
 
     await Wish.insertMany(wishes);
     console.log('心愿数据已创建:', wishes.length, '条');
+
+    const rules = [
+      {
+        ruleType: 'points',
+        ruleKey: 'daily_checkin',
+        ruleName: '每日签到',
+        description: '每日签到奖励',
+        icon: '📅',
+        points: 5,
+        order: 1,
+        conditions: { type: 'daily' }
+      },
+      {
+        ruleType: 'points',
+        ruleKey: 'consecutive_checkin_3',
+        ruleName: '连续签到3天',
+        description: '连续签到3天额外奖励',
+        icon: '🔥',
+        points: 20,
+        order: 2,
+        conditions: { type: 'consecutive', days: 3 }
+      },
+      {
+        ruleType: 'points',
+        ruleKey: 'consecutive_checkin_7',
+        ruleName: '连续签到7天',
+        description: '连续签到7天额外奖励',
+        icon: '🌟',
+        points: 50,
+        order: 3,
+        conditions: { type: 'consecutive', days: 7 }
+      },
+      {
+        ruleType: 'points',
+        ruleKey: 'complete_pomodoro',
+        ruleName: '完成番茄钟',
+        description: '完成一个番茄钟奖励',
+        icon: '🍅',
+        points: 10,
+        order: 4,
+        conditions: { type: 'pomodoro' }
+      },
+      {
+        ruleType: 'points',
+        ruleKey: 'complete_task',
+        ruleName: '完成任务',
+        description: '完成一个任务奖励',
+        icon: '✅',
+        points: 0,
+        order: 5,
+        conditions: { type: 'task', variablePoints: true }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_beginner',
+        ruleName: '时间小萌新',
+        description: '注册成功即可获得',
+        icon: '⭐',
+        order: 1,
+        conditions: { type: 'register' }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_consecutive_3',
+        ruleName: '连续3天',
+        description: '连续签到3天',
+        icon: '🔥',
+        order: 2,
+        conditions: { type: 'consecutive', days: 3 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_consecutive_7',
+        ruleName: '连续7天',
+        description: '连续签到7天',
+        icon: '🌟',
+        order: 3,
+        conditions: { type: 'consecutive', days: 7 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_reader',
+        ruleName: '阅读达人',
+        description: '累计获得100积分',
+        icon: '📚',
+        order: 4,
+        conditions: { type: 'points', minPoints: 100 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_efficient',
+        ruleName: '效率之星',
+        description: '累计获得200积分',
+        icon: '⚡',
+        order: 5,
+        conditions: { type: 'points', minPoints: 200 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_consecutive_30',
+        ruleName: '连续30天',
+        description: '连续签到30天',
+        icon: '🏆',
+        order: 6,
+        conditions: { type: 'consecutive', days: 30 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_master',
+        ruleName: '时间大师',
+        description: '累计获得500积分',
+        icon: '💎',
+        order: 7,
+        conditions: { type: 'points', minPoints: 500 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_super',
+        ruleName: '超级学霸',
+        description: '累计获得1000积分',
+        icon: '🚀',
+        order: 8,
+        conditions: { type: 'points', minPoints: 1000 }
+      },
+      {
+        ruleType: 'level',
+        ruleKey: 'level_1',
+        ruleName: '时间小萌新',
+        description: 'Lv.1',
+        icon: '🌱',
+        order: 1,
+        conditions: { minPoints: 0, maxPoints: 99 }
+      },
+      {
+        ruleType: 'level',
+        ruleKey: 'level_2',
+        ruleName: '时间小达人',
+        description: 'Lv.2',
+        icon: '🌿',
+        order: 2,
+        conditions: { minPoints: 100, maxPoints: 199 }
+      },
+      {
+        ruleType: 'level',
+        ruleKey: 'level_3',
+        ruleName: '时间小标兵',
+        description: 'Lv.3',
+        icon: '🌳',
+        order: 3,
+        conditions: { minPoints: 200, maxPoints: 299 }
+      },
+      {
+        ruleType: 'level',
+        ruleKey: 'level_4',
+        ruleName: '时间管理师',
+        description: 'Lv.4',
+        icon: '🌲',
+        order: 4,
+        conditions: { minPoints: 300, maxPoints: 499 }
+      },
+      {
+        ruleType: 'level',
+        ruleKey: 'level_5',
+        ruleName: '时间大师',
+        description: 'Lv.5',
+        icon: '🌴',
+        order: 5,
+        conditions: { minPoints: 500, maxPoints: 999 }
+      },
+      {
+        ruleType: 'level',
+        ruleKey: 'level_6',
+        ruleName: '超级时间王者',
+        description: 'Lv.6',
+        icon: '🎋',
+        order: 6,
+        conditions: { minPoints: 1000, maxPoints: Infinity }
+      }
+    ];
+
+    await Rule.insertMany(rules);
+    console.log('规则数据已创建:', rules.length, '条');
 
     console.log('数据初始化完成！');
     process.exit(0);

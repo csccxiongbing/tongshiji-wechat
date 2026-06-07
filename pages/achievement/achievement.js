@@ -162,35 +162,63 @@ Page({
   },
 
   calculateLevelInfo: function(points) {
-    const levels = [
-      { min: 0, max: 99, name: '时间小萌新', nextMin: 100 },
-      { min: 100, max: 199, name: '时间小达人', nextMin: 200 },
-      { min: 200, max: 299, name: '时间小标兵', nextMin: 300 },
-      { min: 300, max: 499, name: '时间管理师', nextMin: 500 },
-      { min: 500, max: 999, name: '时间大师', nextMin: 1000 },
-      { min: 1000, max: Infinity, name: '超级时间王者', nextMin: 1000 }
-    ]
+    const levelRules = app.globalData.rules?.level || [];
+    let levels = [];
     
-    let currentLevel = levels[0]
+    const parseConditions = function(conditions) {
+      if (!conditions) return {};
+      if (typeof conditions === 'object') return conditions;
+      try {
+        if (typeof conditions === 'string') {
+          return JSON.parse(conditions.replace(/@{/g, '{').replace(/}/g, '}').replace(/=/g, ':'));
+        }
+      } catch (e) {}
+      return {};
+    };
+    
+    if (levelRules.length > 0) {
+      levels = levelRules.map(rule => {
+        const conditions = parseConditions(rule.conditions);
+        return {
+          min: conditions.minPoints || 0,
+          max: conditions.maxPoints === Infinity || conditions.maxPoints === 'Infinity' || !conditions.maxPoints ? Infinity : (conditions.maxPoints || 0),
+          name: rule.ruleName,
+          icon: rule.icon
+        };
+      }).sort((a, b) => a.min - b.min);
+    } else {
+      levels = [
+        { min: 0, max: 99, name: '时间小萌新', nextMin: 100, icon: '🌱' },
+        { min: 100, max: 199, name: '时间小达人', nextMin: 200, icon: '🌿' },
+        { min: 200, max: 299, name: '时间小标兵', nextMin: 300, icon: '🌳' },
+        { min: 300, max: 499, name: '时间管理师', nextMin: 500, icon: '🌲' },
+        { min: 500, max: 999, name: '时间大师', nextMin: 1000, icon: '🌴' },
+        { min: 1000, max: Infinity, name: '超级时间王者', nextMin: 1000, icon: '🎋' }
+      ];
+    }
+    
+    let currentLevel = levels[0];
     for (let i = levels.length - 1; i >= 0; i--) {
       if (points >= levels[i].min) {
-        currentLevel = levels[i]
-        break
+        currentLevel = levels[i];
+        break;
       }
     }
     
-    const levelIndex = levels.indexOf(currentLevel)
-    const levelNum = levelIndex + 1
-    const range = currentLevel.max - currentLevel.min
-    const progress = range === Infinity ? 100 : Math.min(100, Math.round(((points - currentLevel.min) / range) * 100))
-    const pointsToNext = currentLevel.max === Infinity ? 0 : currentLevel.nextMin - points
+    const levelIndex = levels.indexOf(currentLevel);
+    const levelNum = levelIndex + 1;
+    const range = currentLevel.max - currentLevel.min;
+    const progress = range === Infinity ? 100 : Math.min(100, Math.round(((points - currentLevel.min) / range) * 100));
+    const nextLevel = levels[levelIndex + 1];
+    const pointsToNext = !nextLevel ? 0 : nextLevel.min - points;
     
     return {
       level: levelNum,
       levelName: currentLevel.name,
       progress: progress,
-      pointsToNext: pointsToNext
-    }
+      pointsToNext: pointsToNext,
+      icon: currentLevel.icon
+    };
   },
 
   calculateStreak: function() {
@@ -203,30 +231,78 @@ Page({
   },
 
   getBadges: function(points, streak) {
-    const allBadges = [
-      { id: 'beginner', name: '初学者', icon: '⭐', minPoints: 0, minStreak: 0, color: '#FFE66D', colorEnd: '#FFD54F' },
-      { id: 'streak3', name: '连续3天', icon: '🔥', minPoints: 0, minStreak: 3, color: '#FFA726', colorEnd: '#FF7043' },
-      { id: 'streak7', name: '连续7天', icon: '🔥', minPoints: 0, minStreak: 7, color: '#FF5722', colorEnd: '#E64A19' },
-      { id: 'reader', name: '阅读达人', icon: '📚', minPoints: 100, minStreak: 0, color: '#64B5F6', colorEnd: '#42A5F5' },
-      { id: 'efficient', name: '效率之星', icon: '⚡', minPoints: 200, minStreak: 0, color: '#4ECDC4', colorEnd: '#26A69A' },
-      { id: 'streak30', name: '连续30天', icon: '🏆', minPoints: 0, minStreak: 30, color: '#B388FF', colorEnd: '#7C4DFF' },
-      { id: 'master', name: '时间大师', icon: '💎', minPoints: 500, minStreak: 0, color: '#AB47BC', colorEnd: '#8E24AA' },
-      { id: 'super', name: '超级学霸', icon: '🚀', minPoints: 1000, minStreak: 0, color: '#EF5350', colorEnd: '#E53935' }
-    ]
+    const badgeRules = app.globalData.rules?.badge || [];
+    let allBadges = [];
+    const colors = [
+      { color: '#FFE66D', colorEnd: '#FFD54F' },
+      { color: '#FFA726', colorEnd: '#FF7043' },
+      { color: '#FF5722', colorEnd: '#E64A19' },
+      { color: '#64B5F6', colorEnd: '#42A5F5' },
+      { color: '#4ECDC4', colorEnd: '#26A69A' },
+      { color: '#B388FF', colorEnd: '#7C4DFF' },
+      { color: '#AB47BC', colorEnd: '#8E24AA' },
+      { color: '#EF5350', colorEnd: '#E53935' }
+    ];
     
-    const unlockedBadges = []
-    const lockedBadges = []
+    const parseConditions = function(conditions) {
+      if (!conditions) return {};
+      if (typeof conditions === 'object') return conditions;
+      try {
+        if (typeof conditions === 'string') {
+          return JSON.parse(conditions.replace(/@{/g, '{').replace(/}/g, '}').replace(/=/g, ':'));
+        }
+      } catch (e) {}
+      return {};
+    };
+    
+    if (badgeRules.length > 0) {
+      allBadges = badgeRules.map((rule, index) => {
+        let minPoints = 0;
+        let minStreak = 0;
+        const conditions = parseConditions(rule.conditions);
+        
+        if (conditions.type === 'points') {
+          minPoints = conditions.minPoints || 0;
+        } else if (conditions.type === 'consecutive') {
+          minStreak = conditions.days || 0;
+        }
+        
+        return {
+          id: rule.ruleKey,
+          name: rule.ruleName,
+          icon: rule.icon,
+          description: rule.description,
+          minPoints: minPoints,
+          minStreak: minStreak,
+          ...colors[index % colors.length]
+        };
+      });
+    } else {
+      allBadges = [
+        { id: 'badge_beginner', name: '时间小萌新', icon: '⭐', minPoints: 0, minStreak: 0, color: '#FFE66D', colorEnd: '#FFD54F', description: '注册成功即可获得' },
+        { id: 'badge_consecutive_3', name: '连续3天', icon: '🔥', minPoints: 0, minStreak: 3, color: '#FFA726', colorEnd: '#FF7043', description: '连续签到3天' },
+        { id: 'badge_consecutive_7', name: '连续7天', icon: '🌟', minPoints: 0, minStreak: 7, color: '#FF5722', colorEnd: '#E64A19', description: '连续签到7天' },
+        { id: 'badge_reader', name: '阅读达人', icon: '📚', minPoints: 100, minStreak: 0, color: '#64B5F6', colorEnd: '#42A5F5', description: '累计获得100积分' },
+        { id: 'badge_efficient', name: '效率之星', icon: '⚡', minPoints: 200, minStreak: 0, color: '#4ECDC4', colorEnd: '#26A69A', description: '累计获得200积分' },
+        { id: 'badge_consecutive_30', name: '连续30天', icon: '🏆', minPoints: 0, minStreak: 30, color: '#B388FF', colorEnd: '#7C4DFF', description: '连续签到30天' },
+        { id: 'badge_master', name: '时间大师', icon: '💎', minPoints: 500, minStreak: 0, color: '#AB47BC', colorEnd: '#8E24AA', description: '累计获得500积分' },
+        { id: 'badge_super', name: '超级学霸', icon: '🚀', minPoints: 1000, minStreak: 0, color: '#EF5350', colorEnd: '#E53935', description: '累计获得1000积分' }
+      ];
+    }
+    
+    const unlockedBadges = [];
+    const lockedBadges = [];
     
     allBadges.forEach(badge => {
-      const isUnlocked = points >= badge.minPoints && streak >= badge.minStreak
+      const isUnlocked = points >= badge.minPoints && streak >= badge.minStreak;
       if (isUnlocked) {
-        unlockedBadges.push(badge)
+        unlockedBadges.push(badge);
       } else {
-        lockedBadges.push(badge)
+        lockedBadges.push(badge);
       }
-    })
+    });
     
-    return { unlockedBadges, lockedBadges }
+    return { unlockedBadges, lockedBadges };
   },
 
   getWishes: function() {
