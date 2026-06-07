@@ -29,7 +29,6 @@
 }
 
 .content {
-  /* padding: 30rpx; */
   padding-bottom: 120rpx;
 }
 
@@ -200,42 +199,23 @@
   opacity: 1;
 }
 
+/* 只修改数字徽章的颜色，保持卡片本身不变 */
 .level-item.reached {
-  opacity: 1 !important;
-  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%) !important;
-  color: white !important;
+  opacity: 1;
 }
 
 .level-item.reached .level-badge {
-  background: white !important;
-  color: #ff8c00 !important;
-}
-
-.level-item.reached .level-item-name {
-  color: white !important;
-}
-
-.level-item.reached .level-item-points {
-  color: rgba(255, 255, 255, 0.9) !important;
+  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+  color: white;
 }
 
 .level-item.current {
-  opacity: 1 !important;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
+  opacity: 1;
 }
 
 .level-item.current .level-badge {
-  background: white !important;
-  color: #667eea !important;
-}
-
-.level-item.current .level-item-name {
-  color: white !important;
-}
-
-.level-item.current .level-item-points {
-  color: rgba(255, 255, 255, 0.8) !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
 }
 
 .level-badge {
@@ -251,16 +231,12 @@
   font-weight: bold;
 }
 
-.level-item.current .level-badge {
-  background: white;
-  color: #667eea;
-}
-
 .level-item-name {
   font-size: 24rpx;
   font-weight: bold;
   display: block;
   margin-bottom: 5rpx;
+  color: #333;
 }
 
 .level-item-points {
@@ -269,11 +245,7 @@
   display: block;
 }
 
-.level-item.current .level-item-points {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* 勋章墙 */
+/* 勋章系统 */
 .badges-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
