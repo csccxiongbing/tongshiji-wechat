@@ -141,10 +141,10 @@ async function updateRules() {
         ruleType: 'badge',
         ruleKey: 'badge_pomodoro_master',
         ruleName: '番茄达人',
-        description: '完成10个番茄钟',
+        description: '完成50个番茄钟',
         icon: '🍅',
         order: 9,
-        conditions: { type: 'pomodoro_count', count: 10 }
+        conditions: { type: 'pomodoro_count', count: 50 }
       },
       {
         ruleType: 'badge',

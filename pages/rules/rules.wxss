@@ -191,7 +191,6 @@
   margin-bottom: 20rpx;
   opacity: 0.4;
   transition: all 0.3s;
-  width: 30%;
   box-sizing: border-box;
 }
 

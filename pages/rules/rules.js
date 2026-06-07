@@ -255,7 +255,7 @@ Page({
         { id: 'badge_consecutive_30', icon: '🏆', name: '连续30天', condition: '连续签到30天', unlocked: streakDays >= 30 },
         { id: 'badge_master', icon: '⏰', name: '时间大师', condition: '获得500积分', unlocked: currentPoints >= 500 },
         { id: 'badge_super', icon: '🚀', name: '超级学霸', condition: '获得1000积分', unlocked: currentPoints >= 1000 },
-        { id: 'badge_pomodoro_master', icon: '🍅', name: '番茄达人', condition: '完成10个番茄钟', unlocked: false },
+        { id: 'badge_pomodoro_master', icon: '🍅', name: '番茄达人', condition: '完成50个番茄钟', unlocked: false },
         { id: 'badge_points_king', icon: '💎', name: '积分王者', condition: '获得800积分', unlocked: currentPoints >= 800 },
         { id: 'badge_persistent', icon: '🎯', name: '坚持不懈', condition: '连续签到60天', unlocked: streakDays >= 60 },
         { id: 'badge_max_level', icon: '👑', name: '满级玩家', condition: '达到10级', unlocked: currentLevel >= 10 }
