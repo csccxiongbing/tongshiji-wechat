@@ -48,7 +48,7 @@ async function updateRules() {
         ruleKey: 'consecutive_checkin_15',
         ruleName: '连续打卡15天',
         description: '连续打卡15天额外奖励',
-        icon: '⭐',
+        icon: '🌙',
         points: 10,
         order: 4,
         conditions: { type: 'consecutive', days: 15 }
@@ -88,7 +88,7 @@ async function updateRules() {
         ruleKey: 'consecutive_checkin_120',
         ruleName: '连续打卡120天',
         description: '连续打卡120天额外奖励',
-        icon: '👑',
+        icon: '☀️',
         points: 100,
         order: 8,
         conditions: { type: 'consecutive', days: 120 }
@@ -147,7 +147,7 @@ async function updateRules() {
         ruleKey: 'badge_consecutive_15',
         ruleName: '连续15天',
         description: '连续打卡15天',
-        icon: '⭐',
+        icon: '🌙',
         order: 4,
         conditions: { type: 'consecutive', days: 15 }
       },
@@ -210,7 +210,7 @@ async function updateRules() {
         ruleKey: 'badge_consecutive_120',
         ruleName: '时间传奇',
         description: '连续打卡120天',
-        icon: '👑',
+        icon: '☀️',
         order: 11,
         conditions: { type: 'consecutive', days: 120 }
       },
