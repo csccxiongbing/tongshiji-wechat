@@ -320,7 +320,7 @@ Page({
         icon: rule.icon,
         title: rule.title,
         desc: rule.desc,
-        pointsText: rule.points > 0 ? '+' + rule.points + '分' : '积分'
+        pointsText: rule.points > 0 ? '+' + rule.points + '分' : '+积分'
       }))
       
       // 添加一条连续打卡规则
@@ -328,7 +328,7 @@ Page({
         icon: '🔥',
         title: '连续打卡',
         desc: '连续打卡额外奖励',
-        pointsText: '+看天数'
+        pointsText: '+积分'
       })
       
       // 按顺序排序
