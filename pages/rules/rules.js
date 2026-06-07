@@ -152,6 +152,15 @@ Page({
       }
     }
     
+    // 为每个等级添加是否已达到和是否是当前级别的标记
+    levels = levels.map((level, index) => {
+      return {
+        ...level,
+        reached: index <= currentLevelIndex,
+        current: index === currentLevelIndex
+      }
+    })
+    
     // 计算进度百分比
     const currentMinPoints = levels[currentLevelIndex]?.minPoints || 0
     const progressPercent = Math.min(100, Math.round(((currentPoints - currentMinPoints) / (nextLevelPoints - currentMinPoints)) * 100))
