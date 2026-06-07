@@ -17,7 +17,7 @@ async function updateRules() {
         ruleType: 'points',
         ruleKey: 'daily_checkin',
         ruleName: '每日打卡',
-        description: '每日打卡奖励',
+        description: '每天首次完成任务',
         icon: '📅',
         points: 1,
         order: 1,

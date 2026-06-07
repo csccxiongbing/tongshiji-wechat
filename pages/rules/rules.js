@@ -285,7 +285,7 @@ Page({
     // 处理积分获取规则
     let pointsRules = []
     if (rules.points && rules.points.length > 0) {
-      pointsRules = rules.points.map(rule => {
+      const processedRules = rules.points.map(rule => {
         const conditions = this.parseConditions(rule.conditions)
         let icon = rule.icon
         let title = rule.ruleName
@@ -294,11 +294,7 @@ Page({
         if (conditions.type === 'daily') {
           icon = '📅'
           title = '每日打卡'
-          desc = '每天首次打开应用'
-        } else if (conditions.type === 'consecutive') {
-          icon = '🔥'
-          title = rule.ruleName
-          desc = rule.description || `连续打卡${conditions.days}天额外奖励`
+          desc = '每天首次完成任务'
         } else if (conditions.type === 'pomodoro') {
           icon = '🍅'
           title = '完成番茄钟'
@@ -313,28 +309,41 @@ Page({
           icon: icon,
           title: title,
           desc: desc,
-          points: rule.points
+          points: rule.points,
+          type: conditions.type,
+          days: conditions.days
         }
-      }).sort((a, b) => {
-        const rulesArray = rules.points
-        const indexA = rulesArray.findIndex(r => r.ruleName === a.title)
-        const indexB = rulesArray.findIndex(r => r.ruleName === b.title)
-        return indexA - indexB
+      })
+      
+      // 过滤出非连续打卡的规则
+      pointsRules = processedRules.filter(rule => rule.type !== 'consecutive').map(rule => ({
+        icon: rule.icon,
+        title: rule.title,
+        desc: rule.desc,
+        pointsText: rule.points > 0 ? '+' + rule.points + '分' : '积分'
+      }))
+      
+      // 添加一条连续打卡规则
+      pointsRules.push({
+        icon: '🔥',
+        title: '连续打卡',
+        desc: '连续打卡额外奖励',
+        pointsText: '+看天数'
+      })
+      
+      // 按顺序排序
+      pointsRules.sort((a, b) => {
+        const orderMap = { '每日打卡': 0, '连续打卡': 1, '完成番茄钟': 2, '完成任务': 3 }
+        return orderMap[a.title] - orderMap[b.title]
       })
     }
     
     if (pointsRules.length === 0) {
       pointsRules = [
-        { icon: '📅', title: '每日打卡', desc: '每天首次打开应用', points: 1 },
-        { icon: '🔥', title: '连续打卡3天', desc: '连续打卡3天额外奖励', points: 2 },
-        { icon: '🌟', title: '连续打卡7天', desc: '连续打卡7天额外奖励', points: 5 },
-        { icon: '🌙', title: '连续打卡15天', desc: '连续打卡15天额外奖励', points: 10 },
-        { icon: '🏆', title: '连续打卡30天', desc: '连续打卡30天额外奖励', points: 20 },
-        { icon: '🎯', title: '连续打卡60天', desc: '连续打卡60天额外奖励', points: 40 },
-        { icon: '💪', title: '连续打卡90天', desc: '连续打卡90天额外奖励', points: 70 },
-        { icon: '☀️', title: '连续打卡120天', desc: '连续打卡120天额外奖励', points: 100 },
-        { icon: '🍅', title: '完成番茄钟', desc: '完成一次专注计时', points: 2 },
-        { icon: '📝', title: '完成任务', desc: '完成家长布置的任务', points: 0 }
+        { icon: '📅', title: '每日打卡', desc: '每天首次完成任务', pointsText: '+1分' },
+        { icon: '🔥', title: '连续打卡', desc: '连续打卡额外奖励', pointsText: '+看天数' },
+        { icon: '🍅', title: '完成番茄钟', desc: '完成一次专注计时', pointsText: '+2分' },
+        { icon: '📝', title: '完成任务', desc: '完成家长布置的任务', pointsText: '积分' }
       ]
     }
     
