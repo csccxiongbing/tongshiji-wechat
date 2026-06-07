@@ -3,10 +3,7 @@ const Rule = require('../models/Rule');
 
 async function updateRules() {
   try {
-    await mongoose.connect('mongodb://localhost:27017/time', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect('mongodb://localhost:27017/time');
 
     console.log('已连接到数据库');
 
@@ -19,8 +16,8 @@ async function updateRules() {
       {
         ruleType: 'points',
         ruleKey: 'daily_checkin',
-        ruleName: '每日签到',
-        description: '每日签到奖励',
+        ruleName: '每日打卡',
+        description: '每日打卡奖励',
         icon: '📅',
         points: 1,
         order: 1,
@@ -29,8 +26,8 @@ async function updateRules() {
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_3',
-        ruleName: '连续签到3天',
-        description: '连续签到3天额外奖励',
+        ruleName: '连续打卡3天',
+        description: '连续打卡3天额外奖励',
         icon: '🔥',
         points: 2,
         order: 2,
@@ -39,8 +36,8 @@ async function updateRules() {
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_7',
-        ruleName: '连续签到7天',
-        description: '连续签到7天额外奖励',
+        ruleName: '连续打卡7天',
+        description: '连续打卡7天额外奖励',
         icon: '🌟',
         points: 5,
         order: 3,
@@ -49,8 +46,8 @@ async function updateRules() {
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_15',
-        ruleName: '连续签到15天',
-        description: '连续签到15天额外奖励',
+        ruleName: '连续打卡15天',
+        description: '连续打卡15天额外奖励',
         icon: '⭐',
         points: 10,
         order: 4,
@@ -59,8 +56,8 @@ async function updateRules() {
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_30',
-        ruleName: '连续签到30天',
-        description: '连续签到30天额外奖励',
+        ruleName: '连续打卡30天',
+        description: '连续打卡30天额外奖励',
         icon: '🏆',
         points: 20,
         order: 5,
@@ -69,8 +66,8 @@ async function updateRules() {
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_60',
-        ruleName: '连续签到60天',
-        description: '连续签到60天额外奖励',
+        ruleName: '连续打卡60天',
+        description: '连续打卡60天额外奖励',
         icon: '🎯',
         points: 40,
         order: 6,
@@ -79,8 +76,8 @@ async function updateRules() {
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_90',
-        ruleName: '连续签到90天',
-        description: '连续签到90天额外奖励',
+        ruleName: '连续打卡90天',
+        description: '连续打卡90天额外奖励',
         icon: '💪',
         points: 70,
         order: 7,
@@ -89,8 +86,8 @@ async function updateRules() {
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_120',
-        ruleName: '连续签到120天',
-        description: '连续签到120天额外奖励',
+        ruleName: '连续打卡120天',
+        description: '连续打卡120天额外奖励',
         icon: '👑',
         points: 100,
         order: 8,
@@ -131,7 +128,7 @@ async function updateRules() {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_3',
         ruleName: '连续3天',
-        description: '连续签到3天',
+        description: '连续打卡3天',
         icon: '🔥',
         order: 2,
         conditions: { type: 'consecutive', days: 3 }
@@ -140,7 +137,7 @@ async function updateRules() {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_7',
         ruleName: '连续7天',
-        description: '连续签到7天',
+        description: '连续打卡7天',
         icon: '🌟',
         order: 3,
         conditions: { type: 'consecutive', days: 7 }
@@ -149,7 +146,7 @@ async function updateRules() {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_15',
         ruleName: '连续15天',
-        description: '连续签到15天',
+        description: '连续打卡15天',
         icon: '⭐',
         order: 4,
         conditions: { type: 'consecutive', days: 15 }
@@ -176,7 +173,7 @@ async function updateRules() {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_30',
         ruleName: '连续30天',
-        description: '连续签到30天',
+        description: '连续打卡30天',
         icon: '🏆',
         order: 7,
         conditions: { type: 'consecutive', days: 30 }
@@ -194,7 +191,7 @@ async function updateRules() {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_60',
         ruleName: '坚持不懈',
-        description: '连续签到60天',
+        description: '连续打卡60天',
         icon: '🎯',
         order: 9,
         conditions: { type: 'consecutive', days: 60 }
@@ -203,7 +200,7 @@ async function updateRules() {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_90',
         ruleName: '超级坚持',
-        description: '连续签到90天',
+        description: '连续打卡90天',
         icon: '💪',
         order: 10,
         conditions: { type: 'consecutive', days: 90 }
@@ -212,7 +209,7 @@ async function updateRules() {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_120',
         ruleName: '时间传奇',
-        description: '连续签到120天',
+        description: '连续打卡120天',
         icon: '👑',
         order: 11,
         conditions: { type: 'consecutive', days: 120 }

@@ -235,7 +235,7 @@ Page({
         } else if (conditions.type === 'points') {
           conditionText = `获得${minPoints}积分`
         } else if (conditions.type === 'consecutive') {
-          conditionText = `连续签到${minStreak}天`
+          conditionText = `连续打卡${minStreak}天`
         } else if (conditions.type === 'pomodoro_count') {
           conditionText = `完成${pomodoroCount}个番茄钟`
         } else if (conditions.type === 'level') {
@@ -259,16 +259,16 @@ Page({
     } else {
       badges = [
         { id: 'badge_beginner', icon: '⭐', name: '时间小萌新', condition: '注册即可获得', unlocked: true },
-        { id: 'badge_consecutive_3', icon: '🔥', name: '连续3天', condition: '连续签到3天', unlocked: streakDays >= 3 },
-        { id: 'badge_consecutive_7', icon: '🌟', name: '连续7天', condition: '连续签到7天', unlocked: streakDays >= 7 },
-        { id: 'badge_consecutive_15', icon: '⭐', name: '连续15天', condition: '连续签到15天', unlocked: streakDays >= 15 },
+        { id: 'badge_consecutive_3', icon: '🔥', name: '连续3天', condition: '连续打卡3天', unlocked: streakDays >= 3 },
+        { id: 'badge_consecutive_7', icon: '🌟', name: '连续7天', condition: '连续打卡7天', unlocked: streakDays >= 7 },
+        { id: 'badge_consecutive_15', icon: '⭐', name: '连续15天', condition: '连续打卡15天', unlocked: streakDays >= 15 },
         { id: 'badge_reader', icon: '📚', name: '阅读达人', condition: '获得100积分', unlocked: currentPoints >= 100 },
         { id: 'badge_efficient', icon: '⚡', name: '效率之星', condition: '获得200积分', unlocked: currentPoints >= 200 },
-        { id: 'badge_consecutive_30', icon: '🏆', name: '连续30天', condition: '连续签到30天', unlocked: streakDays >= 30 },
+        { id: 'badge_consecutive_30', icon: '🏆', name: '连续30天', condition: '连续打卡30天', unlocked: streakDays >= 30 },
         { id: 'badge_master', icon: '⏰', name: '时间大师', condition: '获得500积分', unlocked: currentPoints >= 500 },
-        { id: 'badge_consecutive_60', icon: '🎯', name: '坚持不懈', condition: '连续签到60天', unlocked: streakDays >= 60 },
-        { id: 'badge_consecutive_90', icon: '💪', name: '超级坚持', condition: '连续签到90天', unlocked: streakDays >= 90 },
-        { id: 'badge_consecutive_120', icon: '👑', name: '时间传奇', condition: '连续签到120天', unlocked: streakDays >= 120 },
+        { id: 'badge_consecutive_60', icon: '🎯', name: '坚持不懈', condition: '连续打卡60天', unlocked: streakDays >= 60 },
+        { id: 'badge_consecutive_90', icon: '💪', name: '超级坚持', condition: '连续打卡90天', unlocked: streakDays >= 90 },
+        { id: 'badge_consecutive_120', icon: '👑', name: '时间传奇', condition: '连续打卡120天', unlocked: streakDays >= 120 },
         { id: 'badge_super', icon: '🚀', name: '超级学霸', condition: '获得1000积分', unlocked: currentPoints >= 1000 },
         { id: 'badge_pomodoro_master', icon: '🍅', name: '番茄达人', condition: '完成50个番茄钟', unlocked: false },
         { id: 'badge_points_king', icon: '💎', name: '积分王者', condition: '获得800积分', unlocked: currentPoints >= 800 },
@@ -293,12 +293,12 @@ Page({
         
         if (conditions.type === 'daily') {
           icon = '📅'
-          title = '每日签到'
+          title = '每日打卡'
           desc = '每天首次打开应用'
         } else if (conditions.type === 'consecutive') {
           icon = '🔥'
           title = rule.ruleName
-          desc = rule.description || `连续签到${conditions.days}天额外奖励`
+          desc = rule.description || `连续打卡${conditions.days}天额外奖励`
         } else if (conditions.type === 'pomodoro') {
           icon = '🍅'
           title = '完成番茄钟'
@@ -325,14 +325,14 @@ Page({
     
     if (pointsRules.length === 0) {
       pointsRules = [
-        { icon: '📅', title: '每日签到', desc: '每天首次打开应用', points: 1 },
-        { icon: '🔥', title: '连续签到3天', desc: '连续签到3天额外奖励', points: 2 },
-        { icon: '🌟', title: '连续签到7天', desc: '连续签到7天额外奖励', points: 5 },
-        { icon: '⭐', title: '连续签到15天', desc: '连续签到15天额外奖励', points: 10 },
-        { icon: '🏆', title: '连续签到30天', desc: '连续签到30天额外奖励', points: 20 },
-        { icon: '🎯', title: '连续签到60天', desc: '连续签到60天额外奖励', points: 40 },
-        { icon: '💪', title: '连续签到90天', desc: '连续签到90天额外奖励', points: 70 },
-        { icon: '👑', title: '连续签到120天', desc: '连续签到120天额外奖励', points: 100 },
+        { icon: '📅', title: '每日打卡', desc: '每天首次打开应用', points: 1 },
+        { icon: '🔥', title: '连续打卡3天', desc: '连续打卡3天额外奖励', points: 2 },
+        { icon: '🌟', title: '连续打卡7天', desc: '连续打卡7天额外奖励', points: 5 },
+        { icon: '⭐', title: '连续打卡15天', desc: '连续打卡15天额外奖励', points: 10 },
+        { icon: '🏆', title: '连续打卡30天', desc: '连续打卡30天额外奖励', points: 20 },
+        { icon: '🎯', title: '连续打卡60天', desc: '连续打卡60天额外奖励', points: 40 },
+        { icon: '💪', title: '连续打卡90天', desc: '连续打卡90天额外奖励', points: 70 },
+        { icon: '👑', title: '连续打卡120天', desc: '连续打卡120天额外奖励', points: 100 },
         { icon: '🍅', title: '完成番茄钟', desc: '完成一次专注计时', points: 2 },
         { icon: '📝', title: '完成任务', desc: '完成家长布置的任务', points: 0 }
       ]
