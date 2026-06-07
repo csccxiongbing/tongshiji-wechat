@@ -198,6 +198,21 @@
   opacity: 1;
 }
 
+.level-item.reached {
+  opacity: 1;
+  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+  color: white;
+}
+
+.level-item.reached .level-badge {
+  background: white;
+  color: #ff8c00;
+}
+
+.level-item.reached .level-item-points {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .level-item.current {
   opacity: 1;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

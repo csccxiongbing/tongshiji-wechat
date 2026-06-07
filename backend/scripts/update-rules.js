@@ -21,7 +21,7 @@ async function updateRules() {
         ruleName: '每日签到',
         description: '每日签到奖励',
         icon: '📅',
-        points: 5,
+        points: 1,
         order: 1,
         conditions: { type: 'daily' }
       },
@@ -31,7 +31,7 @@ async function updateRules() {
         ruleName: '连续签到3天',
         description: '连续签到3天额外奖励',
         icon: '🔥',
-        points: 20,
+        points: 2,
         order: 2,
         conditions: { type: 'consecutive', days: 3 }
       },
@@ -41,7 +41,7 @@ async function updateRules() {
         ruleName: '连续签到7天',
         description: '连续签到7天额外奖励',
         icon: '🌟',
-        points: 50,
+        points: 5,
         order: 3,
         conditions: { type: 'consecutive', days: 7 }
       },
@@ -51,7 +51,7 @@ async function updateRules() {
         ruleName: '完成番茄钟',
         description: '完成一个番茄钟奖励',
         icon: '🍅',
-        points: 10,
+        points: 2,
         order: 4,
         conditions: { type: 'pomodoro' }
       },

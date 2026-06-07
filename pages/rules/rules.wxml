@@ -48,7 +48,7 @@
       </view>
       
       <view class="level-list">
-        <view class="level-item {{levelIndex < currentLevelIndex ? 'unlocked' : ''}} {{levelIndex === currentLevelIndex ? 'current' : ''}}" wx:for="{{levels}}" wx:key="index">
+        <view class="level-item {{reachedLevels.includes(index) ? 'reached' : ''}} {{levelIndex === index ? 'current' : ''}}" wx:for="{{levels}}" wx:key="index">
           <view class="level-badge">{{item.level}}</view>
           <text class="level-item-name">{{item.name}}</text>
           <text class="level-item-points">{{item.minPoints}}积分</text>

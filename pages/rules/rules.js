@@ -13,6 +13,7 @@ Page({
     currentLevelIndex: 0,
     levels: [],
     nextLevelPoints: 100,
+    reachedLevels: [],
     
     // 连续打卡
     streakDays: 0,
@@ -155,6 +156,12 @@ Page({
     const currentMinPoints = levels[currentLevelIndex]?.minPoints || 0
     const progressPercent = Math.min(100, Math.round(((currentPoints - currentMinPoints) / (nextLevelPoints - currentMinPoints)) * 100))
     
+    // 计算已达到的等级（当前等级及之前的所有等级）
+    const reachedLevels = []
+    for (let i = 0; i <= currentLevelIndex; i++) {
+      reachedLevels.push(i)
+    }
+    
     // 处理连续打卡规则
     let streakRewards = []
     if (rules.points && rules.points.length > 0) {
@@ -173,12 +180,8 @@ Page({
     
     if (streakRewards.length === 0) {
       streakRewards = [
-        { days: 3, bonus: 5 },
-        { days: 7, bonus: 10 },
-        { days: 15, bonus: 20 },
-        { days: 30, bonus: 40 },
-        { days: 60, bonus: 80 },
-        { days: 100, bonus: 160 }
+        { days: 3, bonus: 2 },
+        { days: 7, bonus: 5 }
       ]
     }
     
@@ -293,10 +296,10 @@ Page({
     
     if (pointsRules.length === 0) {
       pointsRules = [
-        { icon: '📅', title: '每日签到', desc: '每天首次打开应用', points: 5 },
-        { icon: '🔥', title: '连续签到3天', desc: '连续签到3天额外奖励', points: 20 },
-        { icon: '🌟', title: '连续签到7天', desc: '连续签到7天额外奖励', points: 50 },
-        { icon: '🍅', title: '完成番茄钟', desc: '完成一次专注计时', points: 10 },
+        { icon: '📅', title: '每日签到', desc: '每天首次打开应用', points: 1 },
+        { icon: '🔥', title: '连续签到3天', desc: '连续签到3天额外奖励', points: 2 },
+        { icon: '🌟', title: '连续签到7天', desc: '连续签到7天额外奖励', points: 5 },
+        { icon: '🍅', title: '完成番茄钟', desc: '完成一次专注计时', points: 2 },
         { icon: '📝', title: '完成任务', desc: '完成家长布置的任务', points: 0 }
       ]
     }
@@ -309,6 +312,7 @@ Page({
       currentLevelIndex,
       levels,
       nextLevelPoints,
+      reachedLevels,
       streakDays,
       streakRewards,
       badges,
