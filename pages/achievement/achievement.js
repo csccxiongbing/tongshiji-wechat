@@ -82,8 +82,15 @@ Page({
       // 获取连续打卡天数
       const { currentStreak, bestStreak } = this.calculateStreak()
       
+      // 获取番茄钟完成数量
+      const pomodoroHistory = app.globalData.pomodoroHistory || []
+      const completedPomodoros = pomodoroHistory.filter(p => p.completed).length
+      
+      // 获取当前等级
+      const { level: currentLevel } = this.calculateLevelInfo(currentPoints)
+      
       // 获取徽章数据
-      const { unlockedBadges, lockedBadges } = this.getBadges(currentPoints, currentStreak)
+      const { unlockedBadges, lockedBadges } = this.getBadges(currentPoints, currentStreak, completedPomodoros, currentLevel)
       console.log('已解锁徽章:', unlockedBadges.length, '待解锁徽章:', lockedBadges.length)
       
       // 获取心愿数据
@@ -230,7 +237,7 @@ Page({
     return { currentStreak, bestStreak }
   },
 
-  getBadges: function(points, streak) {
+  getBadges: function(points, streak, completedPomodoros = 0, currentLevel = 1) {
     const badgeRules = app.globalData.rules?.badge || [];
     let allBadges = [];
     const colors = [
@@ -259,12 +266,18 @@ Page({
       allBadges = badgeRules.map((rule, index) => {
         let minPoints = 0;
         let minStreak = 0;
+        let pomodoroCount = 0;
+        let level = 0;
         const conditions = parseConditions(rule.conditions);
         
         if (conditions.type === 'points') {
           minPoints = conditions.minPoints || 0;
         } else if (conditions.type === 'consecutive') {
           minStreak = conditions.days || 0;
+        } else if (conditions.type === 'pomodoro_count') {
+          pomodoroCount = conditions.count || 0;
+        } else if (conditions.type === 'level') {
+          level = conditions.level || 0;
         }
         
         return {
@@ -274,6 +287,8 @@ Page({
           description: rule.description,
           minPoints: minPoints,
           minStreak: minStreak,
+          pomodoroCount: pomodoroCount,
+          level: level,
           ...colors[index % colors.length]
         };
       });
@@ -285,8 +300,12 @@ Page({
         { id: 'badge_reader', name: '阅读达人', icon: '📚', minPoints: 100, minStreak: 0, color: '#64B5F6', colorEnd: '#42A5F5', description: '累计获得100积分' },
         { id: 'badge_efficient', name: '效率之星', icon: '⚡', minPoints: 200, minStreak: 0, color: '#4ECDC4', colorEnd: '#26A69A', description: '累计获得200积分' },
         { id: 'badge_consecutive_30', name: '连续30天', icon: '🏆', minPoints: 0, minStreak: 30, color: '#B388FF', colorEnd: '#7C4DFF', description: '连续签到30天' },
-        { id: 'badge_master', name: '时间大师', icon: '💎', minPoints: 500, minStreak: 0, color: '#AB47BC', colorEnd: '#8E24AA', description: '累计获得500积分' },
-        { id: 'badge_super', name: '超级学霸', icon: '🚀', minPoints: 1000, minStreak: 0, color: '#EF5350', colorEnd: '#E53935', description: '累计获得1000积分' }
+        { id: 'badge_master', name: '时间大师', icon: '⏰', minPoints: 500, minStreak: 0, color: '#AB47BC', colorEnd: '#8E24AA', description: '累计获得500积分' },
+        { id: 'badge_super', name: '超级学霸', icon: '🚀', minPoints: 1000, minStreak: 0, color: '#EF5350', colorEnd: '#E53935', description: '累计获得1000积分' },
+        { id: 'badge_pomodoro_master', name: '番茄达人', icon: '🍅', pomodoroCount: 10, color: '#FF7043', colorEnd: '#FF5722', description: '完成10个番茄钟' },
+        { id: 'badge_points_king', name: '积分王者', icon: '💎', minPoints: 800, minStreak: 0, color: '#E040FB', colorEnd: '#D500F9', description: '累计获得800积分' },
+        { id: 'badge_persistent', name: '坚持不懈', icon: '🎯', minStreak: 60, color: '#18FFFF', colorEnd: '#00E5FF', description: '连续签到60天' },
+        { id: 'badge_max_level', name: '满级玩家', icon: '👑', level: 6, color: '#FFD700', colorEnd: '#FFC107', description: '达到6级' }
       ];
     }
     
@@ -294,7 +313,21 @@ Page({
     const lockedBadges = [];
     
     allBadges.forEach(badge => {
-      const isUnlocked = points >= badge.minPoints && streak >= badge.minStreak;
+      let isUnlocked = true;
+      
+      if (badge.minPoints !== undefined && badge.minPoints > 0) {
+        isUnlocked = isUnlocked && points >= badge.minPoints;
+      }
+      if (badge.minStreak !== undefined && badge.minStreak > 0) {
+        isUnlocked = isUnlocked && streak >= badge.minStreak;
+      }
+      if (badge.pomodoroCount !== undefined && badge.pomodoroCount > 0) {
+        isUnlocked = isUnlocked && completedPomodoros >= badge.pomodoroCount;
+      }
+      if (badge.level !== undefined && badge.level > 0) {
+        isUnlocked = isUnlocked && currentLevel >= badge.level;
+      }
+      
       if (isUnlocked) {
         unlockedBadges.push(badge);
       } else {

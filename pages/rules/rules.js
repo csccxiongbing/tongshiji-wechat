@@ -189,14 +189,24 @@ Page({
         const conditions = this.parseConditions(rule.conditions)
         let minPoints = 0
         let minStreak = 0
+        let pomodoroCount = 0
+        let level = 0
         
         if (conditions.type === 'points') {
           minPoints = conditions.minPoints || 0
         } else if (conditions.type === 'consecutive') {
           minStreak = conditions.days || 0
+        } else if (conditions.type === 'pomodoro_count') {
+          pomodoroCount = conditions.count || 0
+        } else if (conditions.type === 'level') {
+          level = conditions.level || 0
         }
         
-        const unlocked = currentPoints >= minPoints && streakDays >= minStreak
+        let isUnlocked = true
+        if (minPoints > 0) isUnlocked = isUnlocked && currentPoints >= minPoints
+        if (minStreak > 0) isUnlocked = isUnlocked && streakDays >= minStreak
+        if (pomodoroCount > 0) isUnlocked = false
+        if (level > 0) isUnlocked = isUnlocked && currentLevel >= level
         
         let conditionText = ''
         if (conditions.type === 'register') {
@@ -205,6 +215,10 @@ Page({
           conditionText = `获得${minPoints}积分`
         } else if (conditions.type === 'consecutive') {
           conditionText = `连续签到${minStreak}天`
+        } else if (conditions.type === 'pomodoro_count') {
+          conditionText = `完成${pomodoroCount}个番茄钟`
+        } else if (conditions.type === 'level') {
+          conditionText = `达到${level}级`
         }
         
         return {
@@ -212,7 +226,7 @@ Page({
           icon: rule.icon,
           name: rule.ruleName,
           condition: rule.description || conditionText,
-          unlocked: unlocked
+          unlocked: isUnlocked
         }
       })
     } else {
@@ -223,8 +237,12 @@ Page({
         { id: 'badge_reader', icon: '📚', name: '阅读达人', condition: '获得100积分', unlocked: currentPoints >= 100 },
         { id: 'badge_efficient', icon: '⚡', name: '效率之星', condition: '获得200积分', unlocked: currentPoints >= 200 },
         { id: 'badge_consecutive_30', icon: '🏆', name: '连续30天', condition: '连续签到30天', unlocked: streakDays >= 30 },
-        { id: 'badge_master', icon: '💎', name: '时间大师', condition: '获得500积分', unlocked: currentPoints >= 500 },
-        { id: 'badge_super', icon: '🚀', name: '超级学霸', condition: '获得1000积分', unlocked: currentPoints >= 1000 }
+        { id: 'badge_master', icon: '⏰', name: '时间大师', condition: '获得500积分', unlocked: currentPoints >= 500 },
+        { id: 'badge_super', icon: '🚀', name: '超级学霸', condition: '获得1000积分', unlocked: currentPoints >= 1000 },
+        { id: 'badge_pomodoro_master', icon: '🍅', name: '番茄达人', condition: '完成10个番茄钟', unlocked: false },
+        { id: 'badge_points_king', icon: '💎', name: '积分王者', condition: '获得800积分', unlocked: currentPoints >= 800 },
+        { id: 'badge_persistent', icon: '🎯', name: '坚持不懈', condition: '连续签到60天', unlocked: streakDays >= 60 },
+        { id: 'badge_max_level', icon: '👑', name: '满级玩家', condition: '达到6级', unlocked: currentLevel >= 6 }
       ]
     }
     

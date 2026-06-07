@@ -351,7 +351,7 @@ const initData = async () => {
         ruleKey: 'badge_master',
         ruleName: '时间大师',
         description: '累计获得500积分',
-        icon: '💎',
+        icon: '⏰',
         order: 7,
         conditions: { type: 'points', minPoints: 500 }
       },
@@ -363,6 +363,42 @@ const initData = async () => {
         icon: '🚀',
         order: 8,
         conditions: { type: 'points', minPoints: 1000 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_pomodoro_master',
+        ruleName: '番茄达人',
+        description: '完成10个番茄钟',
+        icon: '🍅',
+        order: 9,
+        conditions: { type: 'pomodoro_count', count: 10 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_points_king',
+        ruleName: '积分王者',
+        description: '累计获得800积分',
+        icon: '💎',
+        order: 10,
+        conditions: { type: 'points', minPoints: 800 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_persistent',
+        ruleName: '坚持不懈',
+        description: '连续签到60天',
+        icon: '🎯',
+        order: 11,
+        conditions: { type: 'consecutive', days: 60 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_max_level',
+        ruleName: '满级玩家',
+        description: '达到6级',
+        icon: '👑',
+        order: 12,
+        conditions: { type: 'level', level: 6 }
       },
       {
         ruleType: 'level',
