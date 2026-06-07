@@ -245,6 +245,12 @@ Page({
           unlocked: isUnlocked
         }
       })
+      // 按解锁状态排序：已解锁的排前面，未解锁的排后面
+      badges.sort((a, b) => {
+        if (a.unlocked && !b.unlocked) return -1
+        if (!a.unlocked && b.unlocked) return 1
+        return 0
+      })
     } else {
       badges = [
         { id: 'badge_beginner', icon: '⭐', name: '时间小萌新', condition: '注册即可获得', unlocked: true },
@@ -260,6 +266,12 @@ Page({
         { id: 'badge_persistent', icon: '🎯', name: '坚持不懈', condition: '连续签到60天', unlocked: streakDays >= 60 },
         { id: 'badge_max_level', icon: '👑', name: '满级玩家', condition: '达到10级', unlocked: currentLevel >= 10 }
       ]
+      // 按解锁状态排序：已解锁的排前面，未解锁的排后面
+      badges.sort((a, b) => {
+        if (a.unlocked && !b.unlocked) return -1
+        if (!a.unlocked && b.unlocked) return 1
+        return 0
+      })
     }
     
     // 处理积分获取规则
