@@ -185,7 +185,6 @@
 }
 
 .level-item {
-  width: 30%;
   background: white;
   border-radius: 16rpx;
   padding: 20rpx;

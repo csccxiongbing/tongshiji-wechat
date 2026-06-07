@@ -199,8 +199,12 @@ Page({
         { min: 100, max: 199, name: '时间小达人', nextMin: 200, icon: '🌿' },
         { min: 200, max: 299, name: '时间小标兵', nextMin: 300, icon: '🌳' },
         { min: 300, max: 499, name: '时间管理师', nextMin: 500, icon: '🌲' },
-        { min: 500, max: 999, name: '时间大师', nextMin: 1000, icon: '🌴' },
-        { min: 1000, max: Infinity, name: '超级时间王者', nextMin: 1000, icon: '🎋' }
+        { min: 500, max: 799, name: '时间大师', nextMin: 800, icon: '🌴' },
+        { min: 800, max: 999, name: '时间王者', nextMin: 1000, icon: '🎋' },
+        { min: 1000, max: 1499, name: '时间传说', nextMin: 1500, icon: '⭐' },
+        { min: 1500, max: 1999, name: '时间神话', nextMin: 2000, icon: '✨' },
+        { min: 2000, max: 2999, name: '时间主宰', nextMin: 3000, icon: '🌟' },
+        { min: 3000, max: Infinity, name: '时间之神', nextMin: 3000, icon: '🏆' }
       ];
     }
     
@@ -305,7 +309,7 @@ Page({
         { id: 'badge_pomodoro_master', name: '番茄达人', icon: '🍅', pomodoroCount: 10, color: '#FF7043', colorEnd: '#FF5722', description: '完成10个番茄钟' },
         { id: 'badge_points_king', name: '积分王者', icon: '💎', minPoints: 800, minStreak: 0, color: '#E040FB', colorEnd: '#D500F9', description: '累计获得800积分' },
         { id: 'badge_persistent', name: '坚持不懈', icon: '🎯', minStreak: 60, color: '#18FFFF', colorEnd: '#00E5FF', description: '连续签到60天' },
-        { id: 'badge_max_level', name: '满级玩家', icon: '👑', level: 6, color: '#FFD700', colorEnd: '#FFC107', description: '达到6级' }
+        { id: 'badge_max_level', name: '满级玩家', icon: '👑', level: 10, color: '#FFD700', colorEnd: '#FFC107', description: '达到10级' }
       ];
     }
     

@@ -168,10 +168,10 @@ async function updateRules() {
         ruleType: 'badge',
         ruleKey: 'badge_max_level',
         ruleName: '满级玩家',
-        description: '达到6级',
+        description: '达到10级',
         icon: '👑',
         order: 12,
-        conditions: { type: 'level', level: 6 }
+        conditions: { type: 'level', level: 10 }
       },
       {
         ruleType: 'level',
@@ -216,16 +216,52 @@ async function updateRules() {
         description: 'Lv.5',
         icon: '🌴',
         order: 5,
-        conditions: { minPoints: 500, maxPoints: 999 }
+        conditions: { minPoints: 500, maxPoints: 799 }
       },
       {
         ruleType: 'level',
         ruleKey: 'level_6',
-        ruleName: '超级时间王者',
+        ruleName: '时间王者',
         description: 'Lv.6',
         icon: '🎋',
         order: 6,
-        conditions: { minPoints: 1000, maxPoints: Infinity }
+        conditions: { minPoints: 800, maxPoints: 999 }
+      },
+      {
+        ruleType: 'level',
+        ruleKey: 'level_7',
+        ruleName: '时间传说',
+        description: 'Lv.7',
+        icon: '⭐',
+        order: 7,
+        conditions: { minPoints: 1000, maxPoints: 1499 }
+      },
+      {
+        ruleType: 'level',
+        ruleKey: 'level_8',
+        ruleName: '时间神话',
+        description: 'Lv.8',
+        icon: '✨',
+        order: 8,
+        conditions: { minPoints: 1500, maxPoints: 1999 }
+      },
+      {
+        ruleType: 'level',
+        ruleKey: 'level_9',
+        ruleName: '时间主宰',
+        description: 'Lv.9',
+        icon: '🌟',
+        order: 9,
+        conditions: { minPoints: 2000, maxPoints: 2999 }
+      },
+      {
+        ruleType: 'level',
+        ruleKey: 'level_10',
+        ruleName: '时间之神',
+        description: 'Lv.10',
+        icon: '🏆',
+        order: 10,
+        conditions: { minPoints: 3000, maxPoints: Infinity }
       }
     ];
 

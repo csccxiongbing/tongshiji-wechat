@@ -21,7 +21,7 @@
             <text class="rule-title">{{item.title}}</text>
             <text class="rule-desc">{{item.desc}}</text>
           </view>
-          <view class="rule-points">+{{item.points > 0 ? item.points : '积分'}}</view>
+          <view class="rule-points">+{{item.points > 0 ? item.points +'分' : '积分'}}</view>
         </view>
       </view>
     </view>

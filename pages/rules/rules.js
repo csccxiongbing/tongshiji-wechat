@@ -127,7 +127,11 @@ Page({
         { level: 3, name: '时间小标兵', minPoints: 200 },
         { level: 4, name: '时间管理师', minPoints: 300 },
         { level: 5, name: '时间大师', minPoints: 500 },
-        { level: 6, name: '超级时间王者', minPoints: 1000 }
+        { level: 6, name: '时间王者', minPoints: 800 },
+        { level: 7, name: '时间传说', minPoints: 1000 },
+        { level: 8, name: '时间神话', minPoints: 1500 },
+        { level: 9, name: '时间主宰', minPoints: 2000 },
+        { level: 10, name: '时间之神', minPoints: 3000 }
       ]
     }
     
@@ -242,7 +246,7 @@ Page({
         { id: 'badge_pomodoro_master', icon: '🍅', name: '番茄达人', condition: '完成10个番茄钟', unlocked: false },
         { id: 'badge_points_king', icon: '💎', name: '积分王者', condition: '获得800积分', unlocked: currentPoints >= 800 },
         { id: 'badge_persistent', icon: '🎯', name: '坚持不懈', condition: '连续签到60天', unlocked: streakDays >= 60 },
-        { id: 'badge_max_level', icon: '👑', name: '满级玩家', condition: '达到6级', unlocked: currentLevel >= 6 }
+        { id: 'badge_max_level', icon: '👑', name: '满级玩家', condition: '达到10级', unlocked: currentLevel >= 10 }
       ]
     }
     
