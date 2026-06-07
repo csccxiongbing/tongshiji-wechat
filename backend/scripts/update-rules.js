@@ -47,12 +47,22 @@ async function updateRules() {
       },
       {
         ruleType: 'points',
+        ruleKey: 'consecutive_checkin_15',
+        ruleName: '连续签到15天',
+        description: '连续签到15天额外奖励',
+        icon: '💪',
+        points: 10,
+        order: 4,
+        conditions: { type: 'consecutive', days: 15 }
+      },
+      {
+        ruleType: 'points',
         ruleKey: 'complete_pomodoro',
         ruleName: '完成番茄钟',
         description: '完成一个番茄钟奖励',
         icon: '🍅',
         points: 2,
-        order: 4,
+        order: 5,
         conditions: { type: 'pomodoro' }
       },
       {
@@ -62,7 +72,7 @@ async function updateRules() {
         description: '完成一个任务奖励',
         icon: '✅',
         points: 0,
-        order: 5,
+        order: 6,
         conditions: { type: 'task', variablePoints: true }
       },
       {
@@ -94,11 +104,20 @@ async function updateRules() {
       },
       {
         ruleType: 'badge',
+        ruleKey: 'badge_consecutive_15',
+        ruleName: '连续15天',
+        description: '连续签到15天',
+        icon: '💪',
+        order: 4,
+        conditions: { type: 'consecutive', days: 15 }
+      },
+      {
+        ruleType: 'badge',
         ruleKey: 'badge_reader',
         ruleName: '阅读达人',
         description: '累计获得100积分',
         icon: '📚',
-        order: 4,
+        order: 5,
         conditions: { type: 'points', minPoints: 100 }
       },
       {
@@ -107,7 +126,7 @@ async function updateRules() {
         ruleName: '效率之星',
         description: '累计获得200积分',
         icon: '⚡',
-        order: 5,
+        order: 6,
         conditions: { type: 'points', minPoints: 200 }
       },
       {
@@ -116,7 +135,7 @@ async function updateRules() {
         ruleName: '连续30天',
         description: '连续签到30天',
         icon: '🏆',
-        order: 6,
+        order: 7,
         conditions: { type: 'consecutive', days: 30 }
       },
       {
@@ -125,8 +144,35 @@ async function updateRules() {
         ruleName: '时间大师',
         description: '累计获得500积分',
         icon: '⏰',
-        order: 7,
+        order: 8,
         conditions: { type: 'points', minPoints: 500 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_consecutive_60',
+        ruleName: '连续60天',
+        description: '连续签到60天',
+        icon: '🎯',
+        order: 9,
+        conditions: { type: 'consecutive', days: 60 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_consecutive_90',
+        ruleName: '连续90天',
+        description: '连续签到90天',
+        icon: '💎',
+        order: 10,
+        conditions: { type: 'consecutive', days: 90 }
+      },
+      {
+        ruleType: 'badge',
+        ruleKey: 'badge_consecutive_120',
+        ruleName: '连续120天',
+        description: '连续签到120天',
+        icon: '👑',
+        order: 11,
+        conditions: { type: 'consecutive', days: 120 }
       },
       {
         ruleType: 'badge',
@@ -134,7 +180,7 @@ async function updateRules() {
         ruleName: '超级学霸',
         description: '累计获得1000积分',
         icon: '🚀',
-        order: 8,
+        order: 12,
         conditions: { type: 'points', minPoints: 1000 }
       },
       {
@@ -143,7 +189,7 @@ async function updateRules() {
         ruleName: '番茄达人',
         description: '完成50个番茄钟',
         icon: '🍅',
-        order: 9,
+        order: 13,
         conditions: { type: 'pomodoro_count', count: 50 }
       },
       {
@@ -151,26 +197,17 @@ async function updateRules() {
         ruleKey: 'badge_points_king',
         ruleName: '积分王者',
         description: '累计获得800积分',
-        icon: '💎',
-        order: 10,
+        icon: '💰',
+        order: 14,
         conditions: { type: 'points', minPoints: 800 }
-      },
-      {
-        ruleType: 'badge',
-        ruleKey: 'badge_persistent',
-        ruleName: '坚持不懈',
-        description: '连续签到60天',
-        icon: '🎯',
-        order: 11,
-        conditions: { type: 'consecutive', days: 60 }
       },
       {
         ruleType: 'badge',
         ruleKey: 'badge_max_level',
         ruleName: '满级玩家',
         description: '达到10级',
-        icon: '👑',
-        order: 12,
+        icon: '🎖️',
+        order: 15,
         conditions: { type: 'level', level: 10 }
       },
       {

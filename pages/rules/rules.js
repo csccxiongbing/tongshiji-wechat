@@ -190,7 +190,8 @@ Page({
     if (streakRewards.length === 0) {
       streakRewards = [
         { days: 3, bonus: 2 },
-        { days: 7, bonus: 5 }
+        { days: 7, bonus: 5 },
+        { days: 15, bonus: 10 }
       ]
     }
     
@@ -256,15 +257,18 @@ Page({
         { id: 'badge_beginner', icon: '⭐', name: '时间小萌新', condition: '注册即可获得', unlocked: true },
         { id: 'badge_consecutive_3', icon: '🔥', name: '连续3天', condition: '连续签到3天', unlocked: streakDays >= 3 },
         { id: 'badge_consecutive_7', icon: '🌟', name: '连续7天', condition: '连续签到7天', unlocked: streakDays >= 7 },
+        { id: 'badge_consecutive_15', icon: '💪', name: '连续15天', condition: '连续签到15天', unlocked: streakDays >= 15 },
         { id: 'badge_reader', icon: '📚', name: '阅读达人', condition: '获得100积分', unlocked: currentPoints >= 100 },
         { id: 'badge_efficient', icon: '⚡', name: '效率之星', condition: '获得200积分', unlocked: currentPoints >= 200 },
         { id: 'badge_consecutive_30', icon: '🏆', name: '连续30天', condition: '连续签到30天', unlocked: streakDays >= 30 },
         { id: 'badge_master', icon: '⏰', name: '时间大师', condition: '获得500积分', unlocked: currentPoints >= 500 },
+        { id: 'badge_consecutive_60', icon: '🎯', name: '连续60天', condition: '连续签到60天', unlocked: streakDays >= 60 },
+        { id: 'badge_consecutive_90', icon: '💎', name: '连续90天', condition: '连续签到90天', unlocked: streakDays >= 90 },
+        { id: 'badge_consecutive_120', icon: '👑', name: '连续120天', condition: '连续签到120天', unlocked: streakDays >= 120 },
         { id: 'badge_super', icon: '🚀', name: '超级学霸', condition: '获得1000积分', unlocked: currentPoints >= 1000 },
         { id: 'badge_pomodoro_master', icon: '🍅', name: '番茄达人', condition: '完成50个番茄钟', unlocked: false },
-        { id: 'badge_points_king', icon: '💎', name: '积分王者', condition: '获得800积分', unlocked: currentPoints >= 800 },
-        { id: 'badge_persistent', icon: '🎯', name: '坚持不懈', condition: '连续签到60天', unlocked: streakDays >= 60 },
-        { id: 'badge_max_level', icon: '👑', name: '满级玩家', condition: '达到10级', unlocked: currentLevel >= 10 }
+        { id: 'badge_points_king', icon: '💰', name: '积分王者', condition: '获得800积分', unlocked: currentPoints >= 800 },
+        { id: 'badge_max_level', icon: '🎖️', name: '满级玩家', condition: '达到10级', unlocked: currentLevel >= 10 }
       ]
       // 按解锁状态排序：已解锁的排前面，未解锁的排后面
       badges.sort((a, b) => {
@@ -320,6 +324,7 @@ Page({
         { icon: '📅', title: '每日签到', desc: '每天首次打开应用', points: 1 },
         { icon: '🔥', title: '连续签到3天', desc: '连续签到3天额外奖励', points: 2 },
         { icon: '🌟', title: '连续签到7天', desc: '连续签到7天额外奖励', points: 5 },
+        { icon: '💪', title: '连续签到15天', desc: '连续签到15天额外奖励', points: 10 },
         { icon: '🍅', title: '完成番茄钟', desc: '完成一次专注计时', points: 2 },
         { icon: '📝', title: '完成任务', desc: '完成家长布置的任务', points: 0 }
       ]
