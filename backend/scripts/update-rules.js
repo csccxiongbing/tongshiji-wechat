@@ -15,6 +15,7 @@ async function updateRules() {
     console.log('现有规则已清空');
 
     const rules = [
+      // 积分规则
       {
         ruleType: 'points',
         ruleKey: 'daily_checkin',
@@ -50,10 +51,50 @@ async function updateRules() {
         ruleKey: 'consecutive_checkin_15',
         ruleName: '连续签到15天',
         description: '连续签到15天额外奖励',
-        icon: '💪',
+        icon: '⭐',
         points: 10,
         order: 4,
         conditions: { type: 'consecutive', days: 15 }
+      },
+      {
+        ruleType: 'points',
+        ruleKey: 'consecutive_checkin_30',
+        ruleName: '连续签到30天',
+        description: '连续签到30天额外奖励',
+        icon: '🏆',
+        points: 20,
+        order: 5,
+        conditions: { type: 'consecutive', days: 30 }
+      },
+      {
+        ruleType: 'points',
+        ruleKey: 'consecutive_checkin_60',
+        ruleName: '连续签到60天',
+        description: '连续签到60天额外奖励',
+        icon: '🎯',
+        points: 40,
+        order: 6,
+        conditions: { type: 'consecutive', days: 60 }
+      },
+      {
+        ruleType: 'points',
+        ruleKey: 'consecutive_checkin_90',
+        ruleName: '连续签到90天',
+        description: '连续签到90天额外奖励',
+        icon: '💪',
+        points: 70,
+        order: 7,
+        conditions: { type: 'consecutive', days: 90 }
+      },
+      {
+        ruleType: 'points',
+        ruleKey: 'consecutive_checkin_120',
+        ruleName: '连续签到120天',
+        description: '连续签到120天额外奖励',
+        icon: '👑',
+        points: 100,
+        order: 8,
+        conditions: { type: 'consecutive', days: 120 }
       },
       {
         ruleType: 'points',
@@ -62,7 +103,7 @@ async function updateRules() {
         description: '完成一个番茄钟奖励',
         icon: '🍅',
         points: 2,
-        order: 5,
+        order: 9,
         conditions: { type: 'pomodoro' }
       },
       {
@@ -72,9 +113,11 @@ async function updateRules() {
         description: '完成一个任务奖励',
         icon: '✅',
         points: 0,
-        order: 6,
+        order: 10,
         conditions: { type: 'task', variablePoints: true }
       },
+
+      // 徽章规则
       {
         ruleType: 'badge',
         ruleKey: 'badge_beginner',
@@ -107,7 +150,7 @@ async function updateRules() {
         ruleKey: 'badge_consecutive_15',
         ruleName: '连续15天',
         description: '连续签到15天',
-        icon: '💪',
+        icon: '⭐',
         order: 4,
         conditions: { type: 'consecutive', days: 15 }
       },
@@ -150,7 +193,7 @@ async function updateRules() {
       {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_60',
-        ruleName: '连续60天',
+        ruleName: '坚持不懈',
         description: '连续签到60天',
         icon: '🎯',
         order: 9,
@@ -159,16 +202,16 @@ async function updateRules() {
       {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_90',
-        ruleName: '连续90天',
+        ruleName: '超级坚持',
         description: '连续签到90天',
-        icon: '💎',
+        icon: '💪',
         order: 10,
         conditions: { type: 'consecutive', days: 90 }
       },
       {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_120',
-        ruleName: '连续120天',
+        ruleName: '时间传奇',
         description: '连续签到120天',
         icon: '👑',
         order: 11,
@@ -197,7 +240,7 @@ async function updateRules() {
         ruleKey: 'badge_points_king',
         ruleName: '积分王者',
         description: '累计获得800积分',
-        icon: '💰',
+        icon: '💎',
         order: 14,
         conditions: { type: 'points', minPoints: 800 }
       },
@@ -206,10 +249,12 @@ async function updateRules() {
         ruleKey: 'badge_max_level',
         ruleName: '满级玩家',
         description: '达到10级',
-        icon: '🎖️',
+        icon: '👑',
         order: 15,
         conditions: { type: 'level', level: 10 }
       },
+
+      // 等级规则
       {
         ruleType: 'level',
         ruleKey: 'level_1',
