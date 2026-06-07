@@ -25,12 +25,22 @@ async function updateRules() {
       },
       {
         ruleType: 'points',
+        ruleKey: 'streak_bonus',
+        ruleName: '连续打卡',
+        description: '连续打卡额外奖励',
+        icon: '🔥',
+        points: 0,
+        order: 2,
+        conditions: { type: 'streak' }
+      },
+      {
+        ruleType: 'points',
         ruleKey: 'consecutive_checkin_3',
         ruleName: '连续打卡3天',
         description: '连续打卡3天额外奖励',
         icon: '🔥',
         points: 2,
-        order: 2,
+        order: 3,
         conditions: { type: 'consecutive', days: 3 }
       },
       {
@@ -40,7 +50,7 @@ async function updateRules() {
         description: '连续打卡7天额外奖励',
         icon: '🌟',
         points: 5,
-        order: 3,
+        order: 4,
         conditions: { type: 'consecutive', days: 7 }
       },
       {
@@ -50,7 +60,7 @@ async function updateRules() {
         description: '连续打卡15天额外奖励',
         icon: '🌙',
         points: 10,
-        order: 4,
+        order: 5,
         conditions: { type: 'consecutive', days: 15 }
       },
       {
@@ -60,7 +70,7 @@ async function updateRules() {
         description: '连续打卡30天额外奖励',
         icon: '🏆',
         points: 20,
-        order: 5,
+        order: 6,
         conditions: { type: 'consecutive', days: 30 }
       },
       {
@@ -70,7 +80,7 @@ async function updateRules() {
         description: '连续打卡60天额外奖励',
         icon: '🎯',
         points: 40,
-        order: 6,
+        order: 7,
         conditions: { type: 'consecutive', days: 60 }
       },
       {
@@ -80,7 +90,7 @@ async function updateRules() {
         description: '连续打卡90天额外奖励',
         icon: '💪',
         points: 70,
-        order: 7,
+        order: 8,
         conditions: { type: 'consecutive', days: 90 }
       },
       {
@@ -90,7 +100,7 @@ async function updateRules() {
         description: '连续打卡120天额外奖励',
         icon: '☀️',
         points: 100,
-        order: 8,
+        order: 9,
         conditions: { type: 'consecutive', days: 120 }
       },
       {
@@ -100,7 +110,7 @@ async function updateRules() {
         description: '完成一个番茄钟奖励',
         icon: '🍅',
         points: 2,
-        order: 9,
+        order: 10,
         conditions: { type: 'pomodoro' }
       },
       {
@@ -110,7 +120,7 @@ async function updateRules() {
         description: '完成一个任务奖励',
         icon: '✅',
         points: 0,
-        order: 10,
+        order: 11,
         conditions: { type: 'task', variablePoints: true }
       },
 
