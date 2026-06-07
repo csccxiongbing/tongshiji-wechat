@@ -192,6 +192,8 @@
   margin-bottom: 20rpx;
   opacity: 0.4;
   transition: all 0.3s;
+  width: 30%;
+  box-sizing: border-box;
 }
 
 .level-item.unlocked {
@@ -199,24 +201,41 @@
 }
 
 .level-item.reached {
-  opacity: 1;
-  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
-  color: white;
+  opacity: 1 !important;
+  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%) !important;
+  color: white !important;
 }
 
 .level-item.reached .level-badge {
-  background: white;
-  color: #ff8c00;
+  background: white !important;
+  color: #ff8c00 !important;
+}
+
+.level-item.reached .level-item-name {
+  color: white !important;
 }
 
 .level-item.reached .level-item-points {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
 .level-item.current {
-  opacity: 1;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  opacity: 1 !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+}
+
+.level-item.current .level-badge {
+  background: white !important;
+  color: #667eea !important;
+}
+
+.level-item.current .level-item-name {
+  color: white !important;
+}
+
+.level-item.current .level-item-points {
+  color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .level-badge {
