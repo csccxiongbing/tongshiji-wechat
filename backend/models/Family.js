@@ -22,6 +22,17 @@ const memberSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  consecutiveCheckInDays: {
+    type: Number,
+    default: 0,
+  },
+  maxCheckInDays: {
+    type: Number,
+    default: 0,
+  },
+  lastCheckInDate: {
+    type: Date,
+  },
 });
 
 const familySchema = new mongoose.Schema({

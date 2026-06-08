@@ -221,25 +221,50 @@ Page({
       taskName: this.data.taskInfo?.title || '专注时间',
       duration: Math.round(modeConfig.duration / 60),
       completed: this.data.currentMode === 'pomodoro',
-      points: this.data.currentMode === 'pomodoro' ? 10 : 0,
+      points: 0,  // 积分由打卡奖励系统统一发放，不再单独发放
       startTime: timeStr,
       endTime: timeStr
     }
     
     if (this.data.currentMode === 'pomodoro') {
-      // 如果有任务，完成番茄钟时也完成任务
-      if (this.data.scheduleId && this.data.memberName) {
+      const memberName = this.data.memberName || this.getCurrentMemberName()
+      
+      // 如果有任务，完成番茄钟时也完成任务（会触发打卡奖励，但番茄钟打卡奖励在下面统一处理）
+      if (this.data.scheduleId && memberName) {
         await this.completeTask()
       }
       
-      // 添加番茄钟的基础积分（如果有成员名称）
-      const memberName = this.data.memberName || this.getCurrentMemberName()
-      if (memberName) {
-        await app.addPoints(memberName, 10, '完成番茄专注')
+      // 保存番茄钟历史到数据库，同时触发打卡奖励（包含番茄钟积分+每日打卡+连续打卡）
+      let totalBonus = 0
+      let checkInResult = null
+      const saveResult = await app.savePomodoroHistory(historyItem, memberName)
+      if (saveResult.success && saveResult.rewards) {
+        checkInResult = saveResult.rewards
+        // 计算总积分奖励
+        totalBonus = checkInResult.awardedPoints || 0
+      }
+      
+      // 显示积分奖励信息
+      let toastTitle = '🎉 专注完成！'
+      if (totalBonus > 0) {
+        // 显示奖励明细
+        const rewardDetails = []
+        if (checkInResult && checkInResult.rewards) {
+          checkInResult.rewards.forEach(r => {
+            if (r.ruleName && r.points > 0) {
+              rewardDetails.push(`${r.ruleName}+${r.points}`)
+            }
+          })
+        }
+        if (rewardDetails.length > 0) {
+          toastTitle = `🎉 专注完成！${rewardDetails.join(' ')}`
+        } else {
+          toastTitle = `🎉 专注完成！+${totalBonus}心愿`
+        }
       }
       
       wx.showToast({
-        title: '🎉 专注完成！+10心愿',
+        title: toastTitle,
         icon: 'success',
         duration: 2000
       })
@@ -250,13 +275,11 @@ Page({
       })
     }
     
-    // 保存到数据库
-    await app.savePomodoroHistory(historyItem)
     this.loadStats()
     
     this.autoSwitchMode()
   },
-  
+
   getCurrentMemberName: function() {
     // 获取当前用户的成员名称
     const userInfo = app.globalData.userInfo || {}
@@ -307,7 +330,7 @@ Page({
       return
     }
     
-    // 调用后端API完成任务
+    // 调用后端API完成任务（会触发任务打卡奖励，但不触发番茄钟打卡奖励）
     const result = await app.completeSchedule(scheduleId, memberName)
     
     if (!result.success) {
@@ -315,10 +338,8 @@ Page({
       return
     }
     
-    // 添加任务积分（如果任务有积分奖励）
+    // 添加任务本身的积分（任务积分由打卡奖励系统统一处理，这里只是额外显示）
     if (taskPoints > 0 && memberName) {
-      await app.addPoints(memberName, taskPoints, `完成"${this.data.taskInfo?.title || '任务'}"任务`)
-      
       wx.showToast({
         title: `任务完成！+${taskPoints}心愿`,
         icon: 'success',
@@ -336,7 +357,7 @@ Page({
       timerLabel: '专注时间'
     })
   },
-  
+
   autoSwitchMode: function() {
     if (this.data.currentMode === 'pomodoro') {
       this.setData({

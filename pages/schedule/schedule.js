@@ -456,9 +456,27 @@ Page({
         return;
       }
       
+      let totalPoints = 0
+      let bonusPoints = 0
+      
+      // 添加任务本身的积分
       if (schedule.points && schedule.points > 0) {
         await app.addPoints(memberName, schedule.points, `完成"${schedule.title}"任务`);
-        this.showPointsEffect(schedule.points, memberName, scheduleId);
+        totalPoints += schedule.points
+      }
+      
+      // 检查是否有打卡奖励
+      if (result.rewards) {
+        const rewards = result.rewards
+        if (!rewards.alreadyCheckedIn && rewards.awardedPoints > 0) {
+          bonusPoints = rewards.awardedPoints
+          totalPoints += bonusPoints
+        }
+      }
+      
+      // 显示积分效果
+      if (totalPoints > 0) {
+        this.showPointsEffect(totalPoints, memberName, scheduleId);
       }
       
       // 延迟刷新数据，让效果先展示

@@ -199,9 +199,11 @@ Page({
       ]
     }
     
-    // 获取连续打卡天数
-    const streakData = wx.getStorageSync('streakData') || {}
-    const streakDays = streakData.currentStreak || 0
+    // 获取连续打卡天数 - 从数据库中的家庭成员数据获取
+    let streakDays = 0
+    if (currentMember) {
+      streakDays = currentMember.consecutiveCheckInDays || 0
+    }
     
     // 处理徽章规则
     let badges = []
@@ -341,9 +343,9 @@ Page({
     if (pointsRules.length === 0) {
       pointsRules = [
         { icon: '📅', title: '每日打卡', desc: '每天首次完成任务', pointsText: '+1分' },
-        { icon: '🔥', title: '连续打卡', desc: '连续打卡额外奖励', pointsText: '+看天数' },
+        { icon: '🔥', title: '连续打卡', desc: '连续打卡额外奖励', pointsText: '+积分' },
         { icon: '🍅', title: '完成番茄钟', desc: '完成一次专注计时', pointsText: '+2分' },
-        { icon: '📝', title: '完成任务', desc: '完成家长布置的任务', pointsText: '积分' }
+        { icon: '📝', title: '完成任务', desc: '完成家长布置的任务', pointsText: '+积分' }
       ]
     }
     

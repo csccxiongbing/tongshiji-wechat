@@ -36,7 +36,7 @@
       <view class="level-display">
         <view class="level-current">
           <text class="level-label">当前等级</text>
-          <text class="level-value">{{currentLevel}}</text>
+          <text class="level-value">Lv.{{currentLevel}}</text>
           <text class="level-name">{{levelName}}</text>
         </view>
         <view class="level-progress">

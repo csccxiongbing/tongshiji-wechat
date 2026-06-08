@@ -7,6 +7,7 @@ Page({
     roleText: '孩子',
     wishPoints: 0,
     level: 1,
+    levelName: '新手',
     achievements: {
       totalDays: 7,
       completedTasks: 0,
@@ -65,16 +66,21 @@ Page({
     // 根据角色统计完成的任务数
     const completedTasks = this.countCompletedTasks(role, currentMemberName)
     
-    const level = this.calculateLevel(wishPoints)
+    // 获取连续打卡天数
+    const consecutiveCheckInDays = currentMember?.consecutiveCheckInDays || 0
+    console.log('连续打卡天数:', consecutiveCheckInDays, 'currentMember:', currentMember)
+    
+    const levelInfo = this.calculateLevel(wishPoints)
     
     this.setData({
       nickname: nickname,
       role: role,
       roleText: role === 'parent' ? '家长' : '孩子',
       wishPoints: wishPoints,
-      level: level,
+      level: levelInfo.level,
+      levelName: levelInfo.name,
       achievements: {
-        totalDays: 7,
+        totalDays: consecutiveCheckInDays,
         completedTasks: completedTasks,
         badges: 5
       }
@@ -175,12 +181,25 @@ Page({
   },
   
   calculateLevel: function(points) {
-    let level = 1
-    if (points >= 500) level = 5
-    else if (points >= 300) level = 4
-    else if (points >= 200) level = 3
-    else if (points >= 100) level = 2
-    return level
+    const levels = [
+      { level: 1, name: '时间小萌新', minPoints: 0 },
+      { level: 2, name: '时间小达人', minPoints: 100 },
+      { level: 3, name: '时间小标兵', minPoints: 200 },
+      { level: 4, name: '时间管理师', minPoints: 300 },
+      { level: 5, name: '时间大师', minPoints: 500 },
+      { level: 6, name: '时间王者', minPoints: 800 },
+      { level: 7, name: '时间传说', minPoints: 1000 },
+      { level: 8, name: '时间神话', minPoints: 1500 },
+      { level: 9, name: '时间主宰', minPoints: 2000 },
+      { level: 10, name: '时间之神', minPoints: 3000 }
+    ]
+    
+    for (let i = levels.length - 1; i >= 0; i--) {
+      if (points >= levels[i].minPoints) {
+        return levels[i]
+      }
+    }
+    return levels[0]
   },
   
   loadFamilyMembers: function() {

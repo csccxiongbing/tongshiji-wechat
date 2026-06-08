@@ -15,7 +15,7 @@
           <text class="user-role">{{roleText}}</text>
         </view>
       </view>
-      <view class="user-level">Lv.{{level}}</view>
+      <view class="user-level">Lv.{{level}} {{levelName}}</view>
     </view>
   </view>
   

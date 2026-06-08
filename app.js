@@ -576,11 +576,24 @@ App({
   
   completeSchedule: async function(scheduleId, memberName) {
     try {
+      const userInfo = this.globalData.userInfo
+      console.log('=== completeSchedule 调用 ===')
+      console.log('scheduleId:', scheduleId)
+      console.log('memberName:', memberName)
+      console.log('userInfo:', userInfo)
+      console.log('userInfo._id:', userInfo?._id)
+      console.log('userInfo.id:', userInfo?.id)
+      
       const result = await this.request({
         url: '/schedules/' + scheduleId + '/complete',
         method: 'PUT',
-        data: { memberName }
+        data: { 
+          memberName,
+          userId: userInfo?._id || userInfo?.id
+        }
       })
+      
+      console.log('completeSchedule 返回结果:', result)
       
       if (result.success) {
         // 重新加载家庭成员以更新积分
@@ -736,7 +749,7 @@ App({
   },
   
   // 保存番茄钟历史到数据库
-  savePomodoroHistory: async function(historyItem) {
+  savePomodoroHistory: async function(historyItem, memberName) {
     try {
       const userInfo = this.globalData.userInfo
       if (!userInfo || !userInfo.familyId || !userInfo._id) {
@@ -747,6 +760,7 @@ App({
       const dbHistoryItem = {
         familyId: userInfo.familyId,
         userId: userInfo._id,
+        memberName: memberName,
         scheduleId: historyItem.scheduleId || null,
         taskName: historyItem.taskName || '专注时间',
         duration: historyItem.duration || 25,

@@ -233,10 +233,54 @@ Page({
   },
 
   calculateStreak: function() {
-    // 从本地存储获取打卡记录
-    const streakData = wx.getStorageSync('streakData') || {}
-    const currentStreak = streakData.currentStreak || 0
-    const bestStreak = streakData.bestStreak || 0
+    // 从数据库中的家庭成员数据获取打卡记录
+    let currentStreak = 0
+    let bestStreak = 0
+    
+    const userInfo = app.globalData.userInfo || {}
+    let family = app.globalData.familyMembers
+    if (!family || (!family.members && !Array.isArray(family))) {
+      try {
+        family = wx.getStorageSync('familyMembers')
+      } catch (e) {}
+    }
+    
+    let members = []
+    if (family && Array.isArray(family.members)) {
+      members = family.members
+    } else if (family && Array.isArray(family)) {
+      members = family
+    }
+    
+    // 查找当前用户对应的成员
+    let currentMember = null
+    
+    // 1. 优先通过手机号匹配
+    const phone = userInfo.phone
+    if (phone) {
+      const phoneMatch = members.find(m => m.phone === phone)
+      if (phoneMatch) {
+        currentMember = phoneMatch
+      }
+    }
+    
+    // 2. 通过角色类型匹配
+    if (!currentMember && userInfo.role) {
+      const roleMatch = members.find(m => m.role === userInfo.role)
+      if (roleMatch) {
+        currentMember = roleMatch
+      }
+    }
+    
+    // 3. 通过 isCurrentUser 标记查找
+    if (!currentMember) {
+      currentMember = members.find(m => m.isCurrentUser)
+    }
+    
+    if (currentMember) {
+      currentStreak = currentMember.consecutiveCheckInDays || 0
+      bestStreak = currentMember.maxCheckInDays || 0
+    }
     
     return { currentStreak, bestStreak }
   },
