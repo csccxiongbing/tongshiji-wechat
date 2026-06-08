@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const Schedule = require('../models/Schedule');
+const { processCheckInAndRewards, addTaskPoints } = require('../services/rewards');
+
+console.log('=== schedules.js 已被加载 ===');
 
 // 辅助函数：根据 id 查找日程（支持多种格式）
 async function findScheduleById(id) {
@@ -172,7 +175,7 @@ router.delete('/:id', async (req, res) => {
 
 router.put('/:id/complete', async (req, res) => {
   try {
-    const { memberName } = req.body;
+    const { memberName, userId } = req.body;
     console.log('complete 路由被调用, id:', req.params.id, 'memberName:', memberName);
     
     const schedule = await findScheduleById(req.params.id);
@@ -182,21 +185,101 @@ router.put('/:id/complete', async (req, res) => {
       return res.json({ success: false, message: '日程不存在' });
     }
     
-    if (!schedule.completedBy.includes(memberName)) {
+    const isFirstComplete = !schedule.completedBy.includes(memberName);
+    
+    if (isFirstComplete) {
       schedule.completedBy.push(memberName);
     }
     
     schedule.completed = schedule.scheduleMembers.length === schedule.completedBy.length;
     
     await schedule.save();
+
+    let rewardsResult = null;
+    let taskPointsResult = null;
+    
+    if (isFirstComplete && schedule.familyId && userId && memberName) {
+      console.log('=== 开始处理任务完成 ===');
+      
+      // 1. 先调用 processCheckInAndRewards 获取打卡奖励
+      try {
+        rewardsResult = await processCheckInAndRewards({
+          familyId: schedule.familyId,
+          userId,
+          memberName,
+          checkInType: 'task',
+          referenceId: schedule._id
+        });
+        console.log('打卡奖励获取成功:', rewardsResult);
+      } catch (rewardError) {
+        console.error('发放打卡奖励失败:', rewardError);
+        console.error('错误堆栈:', rewardError.stack);
+      }
+      
+      // 2. 如果任务有积分，单独调用 addTaskPoints 发放任务积分
+      if (schedule.points && schedule.points > 0) {
+        try {
+          taskPointsResult = await addTaskPoints({
+            familyId: schedule.familyId,
+            userId,
+            memberName,
+            taskPoints: schedule.points,
+            taskTitle: schedule.title
+          });
+          console.log('任务积分添加成功:', taskPointsResult);
+        } catch (taskPointsError) {
+          console.error('发放任务积分失败:', taskPointsError);
+          console.error('错误堆栈:', taskPointsError.stack);
+        }
+      }
+    } else {
+      console.log('=== 不调用打卡奖励 ===');
+      console.log('isFirstComplete:', isFirstComplete);
+      console.log('schedule.familyId:', schedule.familyId);
+      console.log('userId:', userId);
+      console.log('memberName:', memberName);
+    }
+    
+    // 计算总奖励积分
+    let totalAwardedPoints = 0;
+    if (rewardsResult && rewardsResult.awardedPoints) {
+      totalAwardedPoints += rewardsResult.awardedPoints;
+    }
+    if (taskPointsResult && taskPointsResult.awardedPoints) {
+      totalAwardedPoints += taskPointsResult.awardedPoints;
+    }
+    
+    // 合并奖励列表
+    let combinedRewards = [];
+    if (rewardsResult && rewardsResult.rewards) {
+      combinedRewards = [...rewardsResult.rewards];
+    }
+    if (taskPointsResult && taskPointsResult.awardedPoints > 0) {
+      combinedRewards.push({
+        ruleKey: 'task_points',
+        ruleName: `任务：${schedule.title}`,
+        icon: '✅',
+        points: taskPointsResult.awardedPoints
+      });
+    }
     
     // 返回时添加 id 字段
     const formattedSchedule = {
       ...schedule.toObject(),
       id: schedule._id.toString()
     };
-    res.json({ success: true, schedule: formattedSchedule });
+    res.json({ 
+      success: true, 
+      schedule: formattedSchedule,
+      rewards: {
+        ...rewardsResult,
+        awardedPoints: totalAwardedPoints,
+        rewards: combinedRewards
+      }
+    });
   } catch (error) {
+    console.error('完成任务时发生错误:', error);
+    console.error('错误堆栈:', error.stack);
     res.json({ success: false, message: error.message });
   }
 });
@@ -215,11 +298,12 @@ router.put('/:id/uncomplete', async (req, res) => {
     }
     
     // 从 completedBy 中移除该成员
-    schedule.completedBy = schedule.completedBy.filter(name => name !== memberName);
+    const index = schedule.completedBy.indexOf(memberName);
+    if (index > -1) {
+      schedule.completedBy.splice(index, 1);
+    }
     
-    // 重新计算是否全部完成
-    schedule.completed = schedule.scheduleMembers.length > 0 && 
-                         schedule.scheduleMembers.length === schedule.completedBy.length;
+    schedule.completed = schedule.scheduleMembers.length === schedule.completedBy.length;
     
     await schedule.save();
     

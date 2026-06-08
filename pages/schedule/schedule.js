@@ -431,16 +431,10 @@ Page({
         return;
       }
       
-      // 取消完成时扣除积分
-      if (schedule.points && schedule.points > 0) {
-        await app.subtractPoints(memberName, schedule.points, `取消完成"${schedule.title}"任务`);
-        this.showMinusPointsEffect(schedule.points, memberName, scheduleId);
-      }
-      
-      // 延迟刷新数据，让效果先展示
+      // 延迟刷新数据
       setTimeout(() => {
         this.initSchedules();
-      }, 1000);
+      }, 500);
       return;
     }
     
@@ -457,20 +451,12 @@ Page({
       }
       
       let totalPoints = 0
-      let bonusPoints = 0
       
-      // 添加任务本身的积分
-      if (schedule.points && schedule.points > 0) {
-        await app.addPoints(memberName, schedule.points, `完成"${schedule.title}"任务`);
-        totalPoints += schedule.points
-      }
-      
-      // 检查是否有打卡奖励
+      // 检查是否有积分奖励
       if (result.rewards) {
         const rewards = result.rewards
-        if (!rewards.alreadyCheckedIn && rewards.awardedPoints > 0) {
-          bonusPoints = rewards.awardedPoints
-          totalPoints += bonusPoints
+        if (rewards.awardedPoints > 0) {
+          totalPoints = rewards.awardedPoints
         }
       }
       
