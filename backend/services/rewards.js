@@ -39,6 +39,7 @@ async function processCheckInAndRewards({ familyId, userId, memberName, checkInT
 
     if (checkInRecord) {
       // 这条记录已经打过卡了
+      console.log('该打卡记录已存在，跳过奖励发放');
       return {
         success: true,
         alreadyCheckedIn: true,
@@ -48,14 +49,15 @@ async function processCheckInAndRewards({ familyId, userId, memberName, checkInT
       };
     }
 
-    // 2. 检查今天是否已经打过卡（用于判断是否给每日打卡奖励）
+    // 2. 检查今天是否已经打过任何类型的卡（用于判断是否给每日打卡奖励）
     const hasDailyCheckedInToday = await CheckIn.findOne({
       familyId,
       userId,
       date: today
     });
+    console.log('今天是否已打卡:', !!hasDailyCheckedInToday);
 
-    // 3. 获取积分规则
+    // 3. 获取所有积分规则
     const pointsRules = await Rule.find({
       ruleType: 'points',
       isActive: true
@@ -67,55 +69,75 @@ async function processCheckInAndRewards({ familyId, userId, memberName, checkInT
     
     // 详细打印每个规则
     pointsRules.forEach((rule, index) => {
-      const conditions = rule.conditions;
-      console.log(`规则${index + 1}: ${rule.ruleName}`);
-      console.log(`  conditions类型: ${typeof conditions}`);
-      console.log(`  conditions内容:`, JSON.stringify(conditions));
-      if (typeof conditions === 'object') {
-        console.log(`  conditions.type:`, conditions?.type);
-      }
+      console.log(`规则${index + 1}: ${rule.ruleName} (key: ${rule.ruleKey})`);
+      console.log(`  points: ${rule.points}`);
+      console.log(`  conditions:`, JSON.stringify(rule.conditions));
     });
 
-    // 4. 根据打卡类型计算对应的奖励
+    // 4. 根据打卡类型查找对应的规则
     let taskRule = null;
     let pomodoroRule = null;
+    let dailyRule = null;
     
     for (const rule of pointsRules) {
-      if (rule.conditions?.type === 'pomodoro') {
+      const ruleType = rule.conditions?.type;
+      if (ruleType === 'pomodoro') {
         pomodoroRule = rule;
         console.log('找到番茄钟规则:', rule.ruleName, '积分:', rule.points);
-      } else if (rule.conditions?.type === 'task') {
+      } else if (ruleType === 'task') {
         taskRule = rule;
         console.log('找到任务规则:', rule.ruleName, '积分:', rule.points);
+      } else if (ruleType === 'daily') {
+        dailyRule = rule;
+        console.log('找到每日打卡规则:', rule.ruleName, '积分:', rule.points);
       }
     }
     
+    // 5. 添加对应类型的积分
+    console.log('=== 添加积分 ===');
+    console.log('checkInType:', checkInType);
+    
     if (checkInType === 'pomodoro') {
-      if (pomodoroRule && pomodoroRule.points > 0) {
-        awardedPoints += pomodoroRule.points;
-        rewards.push({
-          ruleKey: pomodoroRule.ruleKey,
-          ruleName: pomodoroRule.ruleName,
-          icon: pomodoroRule.icon,
-          points: pomodoroRule.points
-        });
-        console.log('添加番茄钟积分:', pomodoroRule.points);
+      console.log('处理番茄钟打卡');
+      if (pomodoroRule) {
+        console.log('pomodoroRule.points:', pomodoroRule.points);
+        if (pomodoroRule.points > 0) {
+          awardedPoints += pomodoroRule.points;
+          rewards.push({
+            ruleKey: pomodoroRule.ruleKey,
+            ruleName: pomodoroRule.ruleName,
+            icon: pomodoroRule.icon,
+            points: pomodoroRule.points
+          });
+          console.log('添加番茄钟积分:', pomodoroRule.points);
+        }
+      } else {
+        console.log('警告: 没有找到番茄钟规则!');
       }
     } else if (checkInType === 'task') {
-      if (taskRule && taskRule.points > 0) {
-        awardedPoints += taskRule.points;
-        rewards.push({
-          ruleKey: taskRule.ruleKey,
-          ruleName: taskRule.ruleName,
-          icon: taskRule.icon,
-          points: taskRule.points
-        });
-        console.log('添加任务积分:', taskRule.points);
+      console.log('处理任务打卡');
+      if (taskRule) {
+        console.log('taskRule.points:', taskRule.points);
+        if (taskRule.points > 0) {
+          awardedPoints += taskRule.points;
+          rewards.push({
+            ruleKey: taskRule.ruleKey,
+            ruleName: taskRule.ruleName,
+            icon: taskRule.icon,
+            points: taskRule.points
+          });
+          console.log('添加任务积分:', taskRule.points);
+        }
       }
     }
 
-    // 5. 计算每日打卡奖励（只有今天第一次打卡才给）
-    const dailyRule = pointsRules.find(r => r.conditions?.type === 'daily');
+    // 6. 计算每日打卡奖励（只有今天第一次打卡才给）
+    console.log('=== 每日打卡奖励 ===');
+    console.log('hasDailyCheckedInToday:', !!hasDailyCheckedInToday);
+    if (dailyRule) {
+      console.log('dailyRule.points:', dailyRule.points);
+    }
+    
     if (!hasDailyCheckedInToday && dailyRule && dailyRule.points > 0) {
       awardedPoints += dailyRule.points;
       rewards.push({
@@ -124,9 +146,12 @@ async function processCheckInAndRewards({ familyId, userId, memberName, checkInT
         icon: dailyRule.icon,
         points: dailyRule.points
       });
+      console.log('添加每日打卡积分:', dailyRule.points);
+    } else {
+      console.log('不添加每日打卡积分（原因: hasDailyCheckedInToday=', !!hasDailyCheckedInToday, ', dailyRule=', !!dailyRule, ', dailyRule.points=', dailyRule?.points, ')');
     }
 
-    // 6. 创建新的打卡记录（放在每日打卡奖励检查之后）
+    // 7. 创建新的打卡记录（放在每日打卡奖励检查之后）
     checkInRecord = new CheckIn({
       familyId,
       userId,
@@ -136,18 +161,26 @@ async function processCheckInAndRewards({ familyId, userId, memberName, checkInT
       referenceId
     });
     await checkInRecord.save();
+    console.log('打卡记录已创建');
 
-    // 7. 计算连续打卡奖励（基于总打卡天数，而不是按类型）
+    // 8. 计算连续打卡奖励（基于总打卡天数，而不是按类型）
     const { consecutiveDays, maxDays } = await calculateCheckInStats(familyId, userId);
+    console.log('=== 连续打卡奖励 ===');
+    console.log('连续打卡天数:', consecutiveDays);
+    
     const consecutiveRules = pointsRules
       .filter(r => r.conditions?.type === 'consecutive')
       .sort((a, b) => (a.conditions?.days || 0) - (b.conditions?.days || 0));
-
+    
+    console.log('连续打卡规则数量:', consecutiveRules.length);
+    
     let lastEligibleConsecutiveRule = null;
     for (const rule of consecutiveRules) {
       const requiredDays = rule.conditions?.days || 0;
+      console.log(`检查连续打卡规则: ${rule.ruleName}, 需要天数: ${requiredDays}, 当前天数: ${consecutiveDays}`);
       if (consecutiveDays >= requiredDays && rule.points > 0) {
         lastEligibleConsecutiveRule = rule;
+        console.log(`匹配成功: ${rule.ruleName}, 积分: ${rule.points}`);
       }
     }
 
@@ -159,12 +192,17 @@ async function processCheckInAndRewards({ familyId, userId, memberName, checkInT
         icon: lastEligibleConsecutiveRule.icon,
         points: lastEligibleConsecutiveRule.points
       });
+      console.log('添加连续打卡积分:', lastEligibleConsecutiveRule.points);
     }
 
-    // 8. 更新积分和打卡统计
+    // 9. 更新积分和打卡统计
+    console.log('=== 更新积分 ===');
+    console.log('总积分:', awardedPoints);
+    console.log('rewards:', JSON.stringify(rewards));
+    
     if (awardedPoints > 0) {
       await updateMemberPoints(familyId, memberName, userId, awardedPoints, rewards, consecutiveDays, maxDays);
-      console.log('更新积分成功:', awardedPoints, 'rewards:', rewards);
+      console.log('积分已更新');
     } else {
       // 即使没有积分奖励，也要更新打卡统计
       await updateMemberCheckInStats(familyId, memberName, consecutiveDays, maxDays);
