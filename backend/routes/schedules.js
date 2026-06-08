@@ -198,10 +198,12 @@ router.put('/:id/complete', async (req, res) => {
     let rewardsResult = null;
     let taskPointsResult = null;
     
-    if (isFirstComplete && schedule.familyId && userId && memberName) {
+    // 每次完成任务都给积分，不再限制 isFirstComplete
+    if (schedule.familyId && userId && memberName) {
       console.log('=== 开始处理任务完成 ===');
+      console.log('isFirstComplete:', isFirstComplete);
       
-      // 1. 先调用 processCheckInAndRewards 获取打卡奖励
+      // 1. 先调用 processCheckInAndRewards 获取打卡奖励（包含每日打卡和连续打卡奖励）
       try {
         rewardsResult = await processCheckInAndRewards({
           familyId: schedule.familyId,
@@ -232,12 +234,6 @@ router.put('/:id/complete', async (req, res) => {
           console.error('错误堆栈:', taskPointsError.stack);
         }
       }
-    } else {
-      console.log('=== 不调用打卡奖励 ===');
-      console.log('isFirstComplete:', isFirstComplete);
-      console.log('schedule.familyId:', schedule.familyId);
-      console.log('userId:', userId);
-      console.log('memberName:', memberName);
     }
     
     // 计算总奖励积分
