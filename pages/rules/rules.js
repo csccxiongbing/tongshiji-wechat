@@ -31,6 +31,7 @@ Page({
   },
 
   onShow: function() {
+    if (!app.checkLogin()) return
     this.loadUserData()
   },
 

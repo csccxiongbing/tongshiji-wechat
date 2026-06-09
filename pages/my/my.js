@@ -19,6 +19,7 @@ Page({
   },
   
   onShow: async function() {
+    if (!app.checkLogin()) return
     console.log('====== my.js onShow 开始 ======')
     
     // 先加载必要的数据（loadFamilyMembers 已经会加载 memberPoints
@@ -297,24 +298,32 @@ Page({
     }
   },
   
-  goToEditProfile: function() {
+  goToEditProfile: async function() {
     const userInfo = app.globalData.userInfo
     wx.showModal({
       title: '修改昵称',
       editable: true,
       placeholderText: '请输入新昵称',
       content: userInfo?.nickname || '',
-      success: (res) => {
+      success: async (res) => {
         if (res.confirm && res.content && res.content.trim()) {
-          userInfo.nickname = res.content.trim()
-          app.saveUserInfo(userInfo)
-          this.setData({
-            nickname: userInfo.nickname
-          })
-          wx.showToast({
-            title: '修改成功',
-            icon: 'success'
-          })
+          const newNickname = res.content.trim()
+          wx.showLoading({ title: '保存中...', mask: true })
+          try {
+            await app.updateUser(userInfo._id || userInfo.id, { nickname: newNickname })
+            wx.hideLoading()
+            wx.showToast({
+              title: '修改成功',
+              icon: 'success'
+            })
+          } catch (e) {
+            wx.hideLoading()
+            console.error('修改昵称失败:', e)
+            wx.showToast({
+              title: '修改失败',
+              icon: 'none'
+            })
+          }
         }
       }
     })
@@ -386,6 +395,12 @@ Page({
     })
   },
 
+  goToPomodoroHistory: function() {
+    wx.navigateTo({
+      url: '/pages/pomodoro-history/pomodoro-history'
+    })
+  },
+
   logout: function() {
     wx.showModal({
       title: '确认退出',
@@ -393,17 +408,6 @@ Page({
       success: (res) => {
         if (res.confirm) {
           app.logout()
-          
-          wx.showToast({
-            title: '退出成功',
-            icon: 'success'
-          })
-          
-          setTimeout(() => {
-            wx.reLaunch({
-              url: '/pages/login/login'
-            })
-          }, 1500)
         }
       }
     })

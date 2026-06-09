@@ -41,6 +41,7 @@ Page({
   ],
 
   onShow: async function() {
+    if (!app.checkLogin()) return
     await this.loadData()
   },
 

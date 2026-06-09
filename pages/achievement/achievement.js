@@ -15,6 +15,7 @@ Page({
   },
 
   onShow: function() {
+    if (!app.checkLogin()) return
     this.loadAchievementData()
     this.updateTabBar()
   },

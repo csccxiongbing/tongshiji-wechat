@@ -24,6 +24,7 @@ Page({
   },
   
   onShow: async function() {
+    if (!app.checkLogin()) return
     this.initUserRole();
     this.initWeekDays();
     await this.loadFamilyMembers();
@@ -466,7 +467,9 @@ Page({
       }
       
       // 延迟刷新数据，让效果先展示
-      setTimeout(() => {
+      setTimeout(async () => {
+        // 重新加载家庭成员数据以显示最新积分
+        await app.loadFamilyMembers()
         this.initSchedules();
       }, 1000);
     }

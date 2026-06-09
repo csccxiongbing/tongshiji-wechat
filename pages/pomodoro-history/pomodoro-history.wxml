@@ -1,0 +1,92 @@
+<view class="container">
+  <view class="filter-section">
+    <view class="filter-row">
+      <view class="filter-item">
+        <text class="filter-icon">📅</text>
+        <picker mode="selector" range="{{timeOptions}}" range-key="label" value="{{selectedTimeIndex}}" bindchange="onTimeChange">
+          <view class="picker-box">
+            <text class="picker-text">{{timeOptions[selectedTimeIndex].label}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="filter-item">
+        <text class="filter-icon">🍅</text>
+        <picker mode="selector" range="{{typeOptions}}" range-key="label" value="{{selectedTypeIndex}}" bindchange="onTypeChange">
+          <view class="picker-box">
+            <text class="picker-text">{{typeOptions[selectedTypeIndex].label}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="filter-item">
+        <text class="filter-icon">👶</text>
+        <picker mode="selector" range="{{memberOptions}}" range-key="label" value="{{selectedMemberIndex}}" bindchange="onMemberChange">
+          <view class="picker-box">
+            <text class="picker-text">{{memberOptions[selectedMemberIndex].label}}</text>
+            <text class="picker-arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+  </view>
+
+  <view class="stats-summary">
+    <view class="summary-item">
+      <text class="summary-icon">🍅</text>
+      <text class="summary-value">{{totalPomodoros}}</text>
+      <text class="summary-label">专注次数</text>
+    </view>
+    <view class="summary-item">
+      <text class="summary-icon">⏱️</text>
+      <text class="summary-value">{{totalMinutes}}</text>
+      <text class="summary-label">专注分钟</text>
+    </view>
+    <view class="summary-item">
+      <text class="summary-icon">⭐</text>
+      <text class="summary-value">{{totalPoints}}</text>
+      <text class="summary-label">获得积分</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-header">
+      <text class="section-title">番茄记录</text>
+      <text class="section-count">共{{filteredHistory.length}}条</text>
+    </view>
+
+    <view class="history-list">
+      <block wx:for="{{displayedHistory}}" wx:key="index">
+        <view class="history-item">
+          <view class="history-icon-box {{item.type}}">
+            <text wx:if="{{item.type === 'pomodoro'}}">🍅</text>
+            <text wx:elif="{{item.type === 'shortBreak'}}">☕</text>
+            <text wx:else>😴</text>
+          </view>
+          <view class="history-info">
+            <text class="history-name">{{item.displayName}}</text>
+            <text class="history-time">{{item.startTime}} ~ {{item.endTime}}</text>
+            <text class="history-date">{{item.dateStr}}</text>
+          </view>
+          <view class="history-right">
+            <text class="history-duration">{{item.duration}}分钟</text>
+            <text wx:if="{{item.type === 'pomodoro' && item.points > 0}}" class="history-points">+{{item.points}}</text>
+          </view>
+        </view>
+      </block>
+
+      <view wx:if="{{displayedHistory.length === 0}}" class="empty-state">
+        <text class="empty-icon">📝</text>
+        <text class="empty-text">暂无番茄钟记录</text>
+      </view>
+
+      <view class="bottom-tip" wx:if="{{displayedHistory.length > 0}}">
+        <text wx:if="{{loadingMore}}" class="bottom-tip-text">加载中...</text>
+        <text wx:elif="{{!hasMore}}" class="bottom-tip-text">— 已到底部 —</text>
+        <text wx:else class="bottom-tip-text">上滑加载更多</text>
+      </view>
+    </view>
+  </view>
+</view>

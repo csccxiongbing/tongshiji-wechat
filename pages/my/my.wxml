@@ -52,6 +52,11 @@
         <text class="menu-text">心愿中心</text>
         <text class="menu-arrow">→</text>
       </view>
+      <view class="menu-item" bindtap="goToPomodoroHistory">
+        <view class="menu-icon">🍅</view>
+        <text class="menu-text">番茄记录</text>
+        <text class="menu-arrow">→</text>
+      </view>
       <view class="menu-item" bindtap="goToRules">
         <view class="menu-icon">📜</view>
         <text class="menu-text">积分规则</text>

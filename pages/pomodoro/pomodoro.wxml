@@ -1,100 +1,96 @@
 <view class="container">
   <view class="header-section">
-    <text class="page-title">🍅 番茄专注</text>
-    <text class="page-subtitle">提升专注力，高效学习</text>
+    <view class="header-left">
+      <text class="page-title">🍅</text>
+    </view>
+    <view class="header-center">
+      <text class="page-title-text">番茄专注</text>
+      <text class="page-subtitle">专注学习，快乐成长</text>
+    </view>
+    <view class="header-right">
+      <view class="history-btn" bindtap="goToHistory">
+        <text class="history-btn-icon">📋</text>
+      </view>
+    </view>
   </view>
   
   <view class="timer-section">
-    <view class="timer-ring">
-      <view class="timer-content">
-        <text class="timer-time">{{formattedTime}}</text>
-        <text class="timer-label">{{timerLabel}}</text>
+    <view class="timer-container">
+      <view class="timer-ring">
+        <view class="timer-progress" style="background: conic-gradient(#FF6B35 0deg, #FF6B35 {{progress}}deg, #FFE4B5 {{progress}}deg, #FFE4B5 360deg);"></view>
+        <view class="timer-inner">
+          <text class="timer-emoji">{{timerEmoji}}</text>
+          <text class="timer-time">{{formattedTime}}</text>
+          <text class="timer-label">{{timerLabel}}</text>
+        </view>
       </view>
     </view>
     
     <view class="timer-controls">
       <view class="control-btn secondary" bindtap="resetTimer">
-        <text>🔄</text>
+        <text class="control-icon">↻</text>
       </view>
       <view class="control-btn primary" bindtap="toggleTimer">
-        <text>{{isRunning ? '⏸️' : '▶️'}}</text>
+        <text class="control-icon">{{isRunning ? '❚❚' : '▶'}}</text>
       </view>
-      <view class="control-btn secondary" bindtap="skipTimer">
-        <text>⏭️</text>
+      <view class="control-btn secondary complete-btn" bindtap="completeAndGoBack">
+        <text class="control-icon">✓</text>
       </view>
     </view>
   </view>
   
   <view class="mode-section">
     <view 
-      class="mode-item {{currentMode === 'pomodoro' ? 'active' : ''}}" 
+      class="mode-card {{currentMode === 'pomodoro' ? 'active' : ''}}" 
       bindtap="setMode"
       data-mode="pomodoro"
     >
-      <text class="mode-icon">🍅</text>
+      <text class="mode-emoji">🍅</text>
       <text class="mode-name">专注</text>
       <text class="mode-duration">25分钟</text>
     </view>
     <view 
-      class="mode-item {{currentMode === 'shortBreak' ? 'active' : ''}}" 
+      class="mode-card {{currentMode === 'shortBreak' ? 'active' : ''}}" 
       bindtap="setMode"
       data-mode="shortBreak"
     >
-      <text class="mode-icon">☕</text>
+      <text class="mode-emoji">☕</text>
       <text class="mode-name">短休息</text>
       <text class="mode-duration">5分钟</text>
     </view>
     <view 
-      class="mode-item {{currentMode === 'longBreak' ? 'active' : ''}}" 
+      class="mode-card {{currentMode === 'longBreak' ? 'active' : ''}}" 
       bindtap="setMode"
       data-mode="longBreak"
     >
-      <text class="mode-icon">😴</text>
+      <text class="mode-emoji">😴</text>
       <text class="mode-name">长休息</text>
       <text class="mode-duration">15分钟</text>
     </view>
   </view>
   
   <view class="stats-section">
-    <view class="stat-item">
-      <text class="stat-icon">🍅</text>
-      <text class="stat-value">{{completedPomodoros}}</text>
-      <text class="stat-label">完成番茄</text>
+    <view class="stat-card">
+      <text class="stat-emoji">🍅</text>
+      <text class="stat-value">{{todayPomodoros}}</text>
+      <text class="stat-label">今日番茄</text>
     </view>
-    <view class="stat-item">
-      <text class="stat-icon">⏱️</text>
+    <view class="stat-card">
+      <text class="stat-emoji">⏱️</text>
       <text class="stat-value">{{totalMinutes}}</text>
-      <text class="stat-label">累计分钟</text>
+      <text class="stat-label">专注分钟</text>
     </view>
-    <view class="stat-item">
-      <text class="stat-icon">🔥</text>
-      <text class="stat-value">{{streakDays}}</text>
-      <text class="stat-label">连续天数</text>
-    </view>
-  </view>
-  
-  <view class="section">
-    <view class="section-header">
-      <text class="section-title">今日记录</text>
-    </view>
-    
-    <view class="history-list">
-      <block wx:for="{{todayHistory}}" wx:key="id">
-        <view class="history-item">
-          <view class="history-icon">{{item.type === 'pomodoro' ? '🍅' : '☕'}}</view>
-          <view class="history-info">
-            <text class="history-name">{{item.type === 'pomodoro' ? '专注时间' : '休息时间'}}</text>
-            <text class="history-time">{{item.time}}</text>
-          </view>
-          <view class="history-duration">{{item.duration}}分钟</view>
-        </view>
-      </block>
-      
-      <view wx:if="{{todayHistory.length === 0}}" class="empty-state">
-        <text class="empty-icon">📝</text>
-        <text class="empty-text">今天还没有专注记录</text>
-      </view>
+    <view class="stat-card">
+      <text class="stat-emoji">🔥</text>
+      <text class="stat-value">{{thisWeekPomodoros}}</text>
+      <text class="stat-label">本周番茄</text>
     </view>
   </view>
   
+  <view class="encourage-section">
+    <view class="encourage-card">
+      <text class="encourage-emoji">💪</text>
+      <text class="encourage-text">{{encourageText}}</text>
+    </view>
+  </view>
 </view>

@@ -51,7 +51,11 @@ Page({
     const date = new Date(dateStr)
     return weekDays[date.getDay()]
   },
-  
+
+  onShow: function() {
+    if (!app.checkLogin()) return
+  },
+
   onLoad: function(options) {
     const today = new Date()
     const year = today.getFullYear()

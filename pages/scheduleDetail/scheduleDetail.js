@@ -7,6 +7,10 @@ Page({
     memberStatusList: []
   },
 
+  onShow: function() {
+    if (!app.checkLogin()) return
+  },
+
   onLoad: function(options) {
     console.log('日程详情页面加载，参数:', options)
     

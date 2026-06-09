@@ -4,90 +4,87 @@ Page({
   data: {
     currentMode: 'pomodoro',
     isRunning: false,
-    timeLeft: 25 * 60,
-    totalTime: 25 * 60,
+    timeLeft: 1500,
+    totalTime: 1500,
     progress: 0,
     formattedTime: '25:00',
     timerLabel: '专注时间',
-    completedPomodoros: 3,
-    totalMinutes: 75,
-    streakDays: 5,
-    todayHistory: [
-      { id: 1, type: 'pomodoro', time: '09:30', duration: 25 },
-      { id: 2, type: 'shortBreak', time: '10:00', duration: 5 },
-      { id: 3, type: 'pomodoro', time: '10:15', duration: 25 }
-    ],
+    timerEmoji: '🍅',
+    todayPomodoros: 0,
+    totalMinutes: 0,
+    thisWeekPomodoros: 0,
+    todayHistory: [],
     timer: null,
-    // 新增：来自任务的参数
     taskInfo: null,
     scheduleId: null,
     memberName: '',
     taskPoints: 0,
-    hasTask: false
+    hasTask: false,
+    encourageText: '加油！你很棒！💪'
   },
   
   modes: {
-    pomodoro: { duration: 25 * 60, label: '专注时间', color: '#FF6B6B' },
-    shortBreak: { duration: 5 * 60, label: '短休息', color: '#4ECDC4' },
-    longBreak: { duration: 15 * 60, label: '长休息', color: '#45B7D1' }
+    pomodoro: { duration: 1500, label: '专注时间', color: '#FF6B35', emoji: '🍅' },
+    shortBreak: { duration: 300, label: '短休息', color: '#4ECDC4', emoji: '☕' },
+    longBreak: { duration: 900, label: '长休息', color: '#96CEB4', emoji: '😴' }
   },
   
   onLoad: async function(options) {
+    if (!app.checkLogin()) return
+    var that = this
     console.log('番茄钟页面加载')
     console.log('options:', options)
     
-    // 尝试从全局变量获取任务信息（通过 switchTab 跳转）
-    const pomodoroTaskInfo = app.globalData.pomodoroTaskInfo
+    var pomodoroTaskInfo = app.globalData.pomodoroTaskInfo
     console.log('全局变量任务信息:', pomodoroTaskInfo)
     
     if (pomodoroTaskInfo) {
-      this.setData({
+      that.setData({
         taskInfo: pomodoroTaskInfo.taskInfo,
         scheduleId: pomodoroTaskInfo.scheduleId,
         memberName: pomodoroTaskInfo.memberName,
         taskPoints: pomodoroTaskInfo.points,
         hasTask: true,
-        timerLabel: pomodoroTaskInfo.taskInfo?.title || '专注时间'
+        timerLabel: pomodoroTaskInfo.taskInfo ? pomodoroTaskInfo.taskInfo.title : '专注时间'
       })
       
       wx.showToast({
-        title: `任务：${pomodoroTaskInfo.taskInfo?.title || '任务'}`,
+        title: '任务：' + (pomodoroTaskInfo.taskInfo ? pomodoroTaskInfo.taskInfo.title : '任务'),
         icon: 'none',
         duration: 2000
       })
       
-      // 清除全局变量，避免下次进入时重复使用
       app.globalData.pomodoroTaskInfo = null
     }
     
-    this.updateTabBar()
-    // 加载最新的番茄钟历史
+    await app.loadFamilyMembers()
+    that.updateTabBar()
     await app.loadPomodoroHistory()
-    this.loadStats()
+    that.loadStats()
   },
   
   onShow: async function() {
-    // 在 onShow 中再次检查全局变量（因为 switchTab 可能不会触发 onLoad）
-    if (!this.data.hasTask) {
-      const pomodoroTaskInfo = app.globalData.pomodoroTaskInfo
+    var that = this
+    if (!that.data.hasTask) {
+      var pomodoroTaskInfo = app.globalData.pomodoroTaskInfo
       if (pomodoroTaskInfo) {
-        this.setData({
+        that.setData({
           taskInfo: pomodoroTaskInfo.taskInfo,
           scheduleId: pomodoroTaskInfo.scheduleId,
           memberName: pomodoroTaskInfo.memberName,
           taskPoints: pomodoroTaskInfo.points,
           hasTask: true,
-          timerLabel: pomodoroTaskInfo.taskInfo?.title || '专注时间'
+          timerLabel: pomodoroTaskInfo.taskInfo ? pomodoroTaskInfo.taskInfo.title : '专注时间'
         })
         
         app.globalData.pomodoroTaskInfo = null
       }
     }
     
-    // 加载最新的番茄钟历史
+    await app.loadFamilyMembers()
     await app.loadPomodoroHistory()
-    this.loadStats()
-    this.updateTabBar()
+    that.loadStats()
+    that.updateTabBar()
   },
   
   onUnload: function() {
@@ -103,21 +100,46 @@ Page({
   },
   
   loadStats: function() {
-    const history = app.globalData.pomodoroHistory || []
-    let completedPomodoros = 0
-    let totalMinutes = 0
+    var that = this
+    var history = app.globalData.pomodoroHistory || []
+    var todayPomodoros = 0
+    var thisWeekPomodoros = 0
+    var totalMinutes = 0
     
-    history.forEach(item => {
-      // 数据库中的 completed 字段或者旧数据的 type 字段
-      if (item.completed === true || item.type === 'pomodoro') {
-        completedPomodoros++
+    var today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
+    var dayOfWeek = today.getDay()
+    var monday = new Date(today)
+    var offset = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+    monday.setDate(today.getDate() - offset)
+    monday.setHours(0, 0, 0, 0)
+    
+    // history 已经是按当前用户 userId 拉取的，直接遍历
+    for (var i = 0; i < history.length; i++) {
+      var item = history[i]
+      var itemDate = new Date(item.createdAt || item.date)
+      itemDate.setHours(0, 0, 0, 0)
+      
+      // 只计算番茄钟专注的记录
+      if (item.type === 'pomodoro') {
+        if (itemDate.getTime() === today.getTime()) {
+          todayPomodoros++
+        }
+        
+        if (itemDate >= monday) {
+          thisWeekPomodoros++
+        }
+        
+        // 专注累计：只计算番茄钟的累计时间
+        totalMinutes += item.duration || 0
       }
-      totalMinutes += item.duration || 25
-    })
+    }
     
-    this.setData({
+    that.setData({
       todayHistory: history,
-      completedPomodoros: completedPomodoros,
+      todayPomodoros: todayPomodoros,
+      thisWeekPomodoros: thisWeekPomodoros,
       totalMinutes: totalMinutes
     })
   },
@@ -131,23 +153,24 @@ Page({
       return
     }
     
-    const mode = e.currentTarget.dataset.mode
-    const modeConfig = this.modes[mode]
+    var mode = e.currentTarget.dataset.mode
+    var modeConfig = this.modes[mode]
     
     this.setData({
       currentMode: mode,
       timeLeft: modeConfig.duration,
       totalTime: modeConfig.duration,
       timerLabel: modeConfig.label,
+      timerEmoji: modeConfig.emoji,
       formattedTime: this.formatTime(modeConfig.duration),
       progress: 0
     })
   },
   
   formatTime: function(seconds) {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+    var mins = Math.floor(seconds / 60)
+    var secs = seconds % 60
+    return (mins < 10 ? '0' + mins : mins) + ':' + (secs < 10 ? '0' + secs : secs)
   },
   
   toggleTimer: function() {
@@ -158,42 +181,107 @@ Page({
     }
   },
   
-  startTimer: function() {
-    this.setData({ isRunning: true })
-    
-    this.data.timer = setInterval(() => {
-      const newTime = this.data.timeLeft - 1
-      
-      if (newTime <= 0) {
-        this.completeTimer()
-        return
-      }
-      
-      const progress = ((this.data.totalTime - newTime) / this.data.totalTime) * 100
-      
-      this.setData({
-        timeLeft: newTime,
-        formattedTime: this.formatTime(newTime),
-        progress: progress
+  stopAlarmSound: function() {
+    if (this.alarmInterval) {
+      clearInterval(this.alarmInterval)
+      this.alarmInterval = null
+    }
+  },
+
+  playAlarmSound: function() {
+    var that = this
+    try {
+      wx.vibrateLong({
+        success: function() {},
+        fail: function() {}
       })
-    }, 1000)
+      
+      var beepCount = 0
+      that.alarmInterval = setInterval(function() {
+        try {
+          var ctx = wx.createWebAudioContext()
+          var oscillator = ctx.createOscillator()
+          var gainNode = ctx.createGain()
+          oscillator.connect(gainNode)
+          gainNode.connect(ctx.destination)
+          oscillator.type = 'sine'
+          oscillator.frequency.setValueAtTime(880, ctx.currentTime)
+          gainNode.gain.setValueAtTime(0.6, ctx.currentTime)
+          oscillator.start(ctx.currentTime)
+          oscillator.stop(ctx.currentTime + 0.3)
+        } catch (err) {
+          console.error('生成蜂鸣声失败:', err)
+        }
+        
+        beepCount++
+        if (beepCount >= 15) {
+          that.stopAlarmSound()
+        }
+      }, 500)
+    } catch (e) {
+      console.error('播放提示音失败:', e)
+    }
+  },
+
+  playCompleteSound: function() {
+    try {
+      if (!this.completeAudioCtx) {
+        this.completeAudioCtx = wx.createInnerAudioContext()
+        this.completeAudioCtx.src = '/audio/yay.mp3'
+        this.completeAudioCtx.volume = 1.0
+      }
+      this.completeAudioCtx.stop()
+      this.completeAudioCtx.seek(0)
+      this.completeAudioCtx.play()
+    } catch (e) {
+      console.error('播放完成音失败:', e)
+    }
+  },
+
+  startTimer: function() {
+    var that = this
+    that.setData({ isRunning: true })
+    
+    that.data.timer = {
+      interval: setInterval(function() {
+        var newTime = that.data.timeLeft - 1
+        
+        if (newTime <= 0) {
+          that.playAlarmSound()
+          that.data.timer.isAutoCompleted = true
+          that.completeTimer()
+          return
+        }
+        
+        var progress = ((that.data.totalTime - newTime) / that.data.totalTime) * 100
+        
+        that.setData({
+          timeLeft: newTime,
+          formattedTime: that.formatTime(newTime),
+          progress: progress
+        })
+      }, 1000),
+      isAutoCompleted: false
+    }
   },
   
   pauseTimer: function() {
     this.stopTimer()
+    this.stopAlarmSound()
     this.setData({ isRunning: false })
   },
   
   stopTimer: function() {
     if (this.data.timer) {
-      clearInterval(this.data.timer)
+      clearInterval(this.data.timer.interval)
       this.data.timer = null
     }
   },
   
   resetTimer: function() {
     this.stopTimer()
-    const modeConfig = this.modes[this.data.currentMode]
+    this.stopAlarmSound()
+    var modeConfig = this.modes[this.data.currentMode]
     
     this.setData({
       isRunning: false,
@@ -206,60 +294,185 @@ Page({
   },
   
   skipTimer: function() {
+    if (this.data.timer) {
+      this.data.timer.isAutoCompleted = false
+    }
     this.completeTimer()
   },
-  
-  completeTimer: async function() {
-    this.stopTimer()
-    
-    const modeConfig = this.modes[this.data.currentMode]
-    const now = new Date()
-    const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
-    
-    const historyItem = {
-      scheduleId: this.data.scheduleId,
-      taskName: this.data.taskInfo?.title || '专注时间',
-      duration: Math.round(modeConfig.duration / 60),
-      completed: this.data.currentMode === 'pomodoro',
-      points: 0,  // 积分由打卡奖励系统统一发放，不再单独发放
-      startTime: timeStr,
-      endTime: timeStr
+
+  completeAndGoBack: async function() {
+    var that = this
+    that.playCompleteSound()
+    wx.showLoading({ title: '正在完成...', mask: true })
+    try {
+      await that.completeTimer(true)
+    } catch (err) {
+      console.error('完成番茄钟出错:', err)
+    } finally {
+      wx.hideLoading()
     }
+    setTimeout(function() {
+      wx.navigateBack()
+    }, 500)
+  },
+
+  goToHistory: function() {
+    wx.navigateTo({
+      url: '/pages/pomodoro-history/pomodoro-history'
+    })
+  },
+
+  // 根据类型获取任务名称
+  getTaskName: function(mode, taskInfo) {
+    if (mode === 'pomodoro') {
+      return taskInfo ? taskInfo.title : '专注时间'
+    } else if (mode === 'shortBreak') {
+      return '短休息'
+    } else if (mode === 'longBreak') {
+      return '长休息'
+    }
+    return '专注时间'
+  },
+  
+  // 根据秒数计算分钟数（至少1分钟）
+  getDurationMinutes: function(seconds) {
+    var minutes = Math.round(seconds / 60)
+    return minutes < 1 ? 1 : minutes
+  },
+  
+  completeTimer: async function(isUserCompleted) {
+    var that = this
+    var timerData = that.data.timer
+    that.stopTimer()
     
-    if (this.data.currentMode === 'pomodoro') {
-      const memberName = this.data.memberName || this.getCurrentMemberName()
-      
-      // 如果有任务，完成番茄钟时也完成任务（会触发打卡奖励，但番茄钟打卡奖励在下面统一处理）
-      if (this.data.scheduleId && memberName) {
-        await this.completeTask()
+    var modeConfig = that.modes[that.data.currentMode]
+    var now = new Date()
+    var timeStr = (now.getHours() < 10 ? '0' + now.getHours() : now.getHours()) + ':' + (now.getMinutes() < 10 ? '0' + now.getMinutes() : now.getMinutes())
+    
+    var isAutoCompleted = isUserCompleted === true ? false : (timerData ? timerData.isAutoCompleted : true)
+    var currentMode = that.data.currentMode
+    
+    if (isAutoCompleted) {
+      // 计时器自动完成：保存记录但积分=0，不调用打卡奖励
+      var historyItem = {
+        scheduleId: that.data.scheduleId,
+        taskName: that.getTaskName(currentMode, that.data.taskInfo),
+        duration: that.getDurationMinutes(modeConfig.duration),
+        completed: currentMode === 'pomodoro',
+        type: currentMode,
+        points: 0,
+        startTime: timeStr,
+        endTime: timeStr
       }
       
-      // 保存番茄钟历史到数据库，同时触发打卡奖励（包含番茄钟积分+每日打卡+连续打卡）
-      let totalBonus = 0
-      let checkInResult = null
-      const saveResult = await app.savePomodoroHistory(historyItem, memberName)
+      var memberName = that.data.memberName || that.getCurrentMemberName()
+      var saveResult = await app.savePomodoroHistory(historyItem, memberName)
+      if (saveResult.success) {
+        console.log('自动完成记录已保存，类型:', currentMode)
+      }
+      
+      if (currentMode === 'pomodoro') {
+        wx.showToast({
+          title: '⏰ 计时完成',
+          icon: 'none',
+          duration: 2000
+        })
+      } else {
+        wx.showToast({
+          title: '休息时间结束',
+          icon: 'none',
+          duration: 2000
+        })
+      }
+      
+      await app.loadFamilyMembers()
+      that.loadStats()
+      that.autoSwitchMode()
+    } else {
+      // 用户点击完成
+      if (currentMode !== 'pomodoro') {
+        wx.showToast({
+          title: '休息时间结束',
+          icon: 'none'
+        })
+        that.autoSwitchMode()
+        return
+      }
+      
+      var taskScheduleId = that.data.scheduleId
+      var taskMemberName = that.data.memberName
+      var taskPoints = that.data.taskPoints
+      var taskTitle = that.data.taskInfo ? that.data.taskInfo.title : '专注时间'
+      
+      console.log('点击完成 - 任务信息:', {
+        scheduleId: taskScheduleId,
+        memberName: taskMemberName,
+        taskPoints: taskPoints,
+        taskTitle: taskTitle
+      })
+      
+      if (!taskMemberName) {
+        taskMemberName = that.getCurrentMemberName()
+      }
+      
+      console.log('点击完成 - 最终成员名:', taskMemberName)
+      
+      // 先完成任务（如果有任务信息）
+      var taskCompleted = false
+      if (taskScheduleId && taskMemberName) {
+        console.log('开始调用 completeSchedule 完成任务')
+        var taskResult = await app.completeSchedule(taskScheduleId, taskMemberName)
+        taskCompleted = taskResult.success
+        console.log('任务完成结果:', taskResult)
+      } else {
+        console.log('跳过任务完成: scheduleId或memberName为空')
+      }
+      
+      // 保存番茄钟记录
+      var historyItem = {
+        scheduleId: taskScheduleId,
+        taskName: taskTitle,
+        duration: that.getDurationMinutes(modeConfig.duration),
+        completed: true,
+        type: 'pomodoro',
+        points: 0,
+        startTime: timeStr,
+        endTime: timeStr
+      }
+      
+      var totalBonus = 0
+      var checkInResult = null
+      var saveResult = await app.savePomodoroHistory(historyItem, taskMemberName)
       if (saveResult.success && saveResult.rewards) {
         checkInResult = saveResult.rewards
-        // 计算总积分奖励
         totalBonus = checkInResult.awardedPoints || 0
       }
       
-      // 显示积分奖励信息
-      let toastTitle = '🎉 专注完成！'
+      // 清空任务状态
+      that.setData({
+        hasTask: false,
+        scheduleId: null,
+        memberName: '',
+        taskPoints: 0,
+        taskInfo: null,
+        timerLabel: '专注时间'
+      })
+      
+      var toastTitle = '🎉 专注完成！'
       if (totalBonus > 0) {
-        // 显示奖励明细
-        const rewardDetails = []
+        var rewardDetails = []
         if (checkInResult && checkInResult.rewards) {
-          checkInResult.rewards.forEach(r => {
+          for (var j = 0; j < checkInResult.rewards.length; j++) {
+            var r = checkInResult.rewards[j]
             if (r.ruleName && r.points > 0) {
-              rewardDetails.push(`${r.ruleName}+${r.points}`)
+              rewardDetails.push(r.ruleName + '+' + r.points)
             }
-          })
+          }
         }
         if (rewardDetails.length > 0) {
-          toastTitle = `🎉 专注完成！${rewardDetails.join(' ')}`
+          toastTitle = '🎉 专注完成！' + rewardDetails.join(' ')
         } else {
-          toastTitle = `🎉 专注完成！+${totalBonus}心愿`
+          toastTitle = '🎉 专注完成！+' + totalBonus + '心愿'
         }
       }
       
@@ -268,87 +481,84 @@ Page({
         icon: 'success',
         duration: 2000
       })
-    } else {
-      wx.showToast({
-        title: '休息时间结束',
-        icon: 'none'
-      })
+      
+      await app.loadFamilyMembers()
+      that.loadStats()
+      that.autoSwitchMode()
     }
-    
-    this.loadStats()
-    
-    this.autoSwitchMode()
   },
 
   getCurrentMemberName: function() {
-    // 获取当前用户的成员名称
-    const userInfo = app.globalData.userInfo || {}
-    let family = app.globalData.familyMembers
+    var userInfo = app.globalData.userInfo || {}
+    var family = app.globalData.familyMembers
     if (!family || (!family.members && !Array.isArray(family))) {
       try {
         family = wx.getStorageSync('familyMembers')
       } catch (e) {}
     }
     
-    let members = []
+    var members = []
     if (family && Array.isArray(family.members)) {
       members = family.members
     } else if (family && Array.isArray(family)) {
       members = family
     }
     
-    // 1. 优先通过手机号匹配
-    const phone = userInfo.phone
+    var phone = userInfo.phone
     if (phone) {
-      const phoneMatch = members.find(m => m.phone === phone)
-      if (phoneMatch) return phoneMatch.name
+      for (var k = 0; k < members.length; k++) {
+        if (members[k].phone === phone) {
+          return members[k].name
+        }
+      }
     }
     
-    // 2. 通过角色类型匹配
     if (userInfo.role) {
-      const roleMatch = members.find(m => m.role === userInfo.role)
-      if (roleMatch) return roleMatch.name
+      for (var l = 0; l < members.length; l++) {
+        if (members[l].role === userInfo.role) {
+          return members[l].name
+        }
+      }
     }
     
-    // 3. 最后才通过 isCurrentUser 标记查找
-    const currentMember = members.find(m => m.isCurrentUser)
-    if (currentMember) return currentMember.name
+    for (var m = 0; m < members.length; m++) {
+      if (members[m].isCurrentUser) {
+        return members[m].name
+      }
+    }
     
     return ''
   },
   
   completeTask: async function() {
-    const scheduleId = this.data.scheduleId
-    const memberName = this.data.memberName
-    const taskPoints = this.data.taskPoints
+    var that = this
+    var scheduleId = that.data.scheduleId
+    var memberName = that.data.memberName
+    var taskPoints = that.data.taskPoints
     
     console.log('完成任务:', scheduleId, memberName, taskPoints)
     
-    // 容错处理：如果 scheduleId 不存在或为空
     if (!scheduleId) {
       console.error('scheduleId 为空，无法完成任务')
       return
     }
     
-    // 调用后端API完成任务（会触发任务打卡奖励，但不触发番茄钟打卡奖励）
-    const result = await app.completeSchedule(scheduleId, memberName)
+    var result = await app.completeSchedule(scheduleId, memberName)
     
     if (!result.success) {
       console.error('完成任务失败:', result.message)
       return
     }
     
-    // 添加任务本身的积分（任务积分由打卡奖励系统统一处理，这里只是额外显示）
     if (taskPoints > 0 && memberName) {
       wx.showToast({
-        title: `任务完成！+${taskPoints}心愿`,
+        title: '任务完成！+' + taskPoints + '心愿',
         icon: 'success',
         duration: 2000
       })
     }
     
-    // 重置任务状态
-    this.setData({
+    that.setData({
       hasTask: false,
       scheduleId: null,
       memberName: '',
@@ -365,7 +575,7 @@ Page({
         timeLeft: this.modes.shortBreak.duration,
         totalTime: this.modes.shortBreak.duration,
         timerLabel: '短休息',
-        formattedTime: '05:00',
+        formattedTime: this.formatTime(this.modes.shortBreak.duration),
         progress: 0
       })
     } else {
@@ -374,7 +584,7 @@ Page({
         timeLeft: this.modes.pomodoro.duration,
         totalTime: this.modes.pomodoro.duration,
         timerLabel: '专注时间',
-        formattedTime: '25:00',
+        formattedTime: this.formatTime(this.modes.pomodoro.duration),
         progress: 0
       })
     }

@@ -1,97 +1,103 @@
 const mongoose = require('mongoose');
 const Rule = require('../models/Rule');
 
-async function updateRules() {
+const restoreRules = async () => {
   try {
-    await mongoose.connect('mongodb://localhost:27017/time');
+    await mongoose.connect('mongodb://localhost:27017/fasttime');
+    console.log('连接数据库成功');
 
-    console.log('已连接到数据库');
-
-    // 清空现有规则
     await Rule.deleteMany({});
-    console.log('现有规则已清空');
+    console.log('已清空现有规则');
 
     const rules = [
       // 积分规则
       {
         ruleType: 'points',
         ruleKey: 'daily_checkin',
-        ruleName: '每日打卡',
-        description: '每天首次完成任务',
+        ruleName: '每日签到',
+        description: '每日签到奖励',
         icon: '📅',
         points: 1,
         order: 1,
-        conditions: { type: 'daily' }
+        conditions: { type: 'daily' },
+        isActive: true
       },
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_3',
-        ruleName: '连续打卡3天',
-        description: '连续打卡3天额外奖励',
+        ruleName: '连续签到3天',
+        description: '连续签到3天额外奖励',
         icon: '🔥',
         points: 2,
         order: 2,
-        conditions: { type: 'consecutive', days: 3 }
+        conditions: { type: 'consecutive', days: 3 },
+        isActive: true
       },
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_7',
-        ruleName: '连续打卡7天',
-        description: '连续打卡7天额外奖励',
+        ruleName: '连续签到7天',
+        description: '连续签到7天额外奖励',
         icon: '🌟',
         points: 5,
         order: 3,
-        conditions: { type: 'consecutive', days: 7 }
+        conditions: { type: 'consecutive', days: 7 },
+        isActive: true
       },
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_15',
-        ruleName: '连续打卡15天',
-        description: '连续打卡15天额外奖励',
-        icon: '🌙',
+        ruleName: '连续签到15天',
+        description: '连续签到15天额外奖励',
+        icon: '⭐',
         points: 10,
         order: 4,
-        conditions: { type: 'consecutive', days: 15 }
+        conditions: { type: 'consecutive', days: 15 },
+        isActive: true
       },
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_30',
-        ruleName: '连续打卡30天',
-        description: '连续打卡30天额外奖励',
+        ruleName: '连续签到30天',
+        description: '连续签到30天额外奖励',
         icon: '🏆',
         points: 20,
         order: 5,
-        conditions: { type: 'consecutive', days: 30 }
+        conditions: { type: 'consecutive', days: 30 },
+        isActive: true
       },
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_60',
-        ruleName: '连续打卡60天',
-        description: '连续打卡60天额外奖励',
+        ruleName: '连续签到60天',
+        description: '连续签到60天额外奖励',
         icon: '🎯',
         points: 40,
         order: 6,
-        conditions: { type: 'consecutive', days: 60 }
+        conditions: { type: 'consecutive', days: 60 },
+        isActive: true
       },
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_90',
-        ruleName: '连续打卡90天',
-        description: '连续打卡90天额外奖励',
+        ruleName: '连续签到90天',
+        description: '连续签到90天额外奖励',
         icon: '💪',
         points: 70,
         order: 7,
-        conditions: { type: 'consecutive', days: 90 }
+        conditions: { type: 'consecutive', days: 90 },
+        isActive: true
       },
       {
         ruleType: 'points',
         ruleKey: 'consecutive_checkin_120',
-        ruleName: '连续打卡120天',
-        description: '连续打卡120天额外奖励',
-        icon: '☀️',
+        ruleName: '连续签到120天',
+        description: '连续签到120天额外奖励',
+        icon: '👑',
         points: 100,
         order: 8,
-        conditions: { type: 'consecutive', days: 120 }
+        conditions: { type: 'consecutive', days: 120 },
+        isActive: true
       },
       {
         ruleType: 'points',
@@ -101,7 +107,8 @@ async function updateRules() {
         icon: '🍅',
         points: 2,
         order: 9,
-        conditions: { type: 'pomodoro' }
+        conditions: { type: 'pomodoro' },
+        isActive: true
       },
       {
         ruleType: 'points',
@@ -111,9 +118,9 @@ async function updateRules() {
         icon: '✅',
         points: 0,
         order: 10,
-        conditions: { type: 'task', variablePoints: true }
+        conditions: { type: 'task', variablePoints: true },
+        isActive: true
       },
-
       // 徽章规则
       {
         ruleType: 'badge',
@@ -122,34 +129,38 @@ async function updateRules() {
         description: '注册成功即可获得',
         icon: '⭐',
         order: 1,
-        conditions: { type: 'register' }
+        conditions: { type: 'register' },
+        isActive: true
       },
       {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_3',
         ruleName: '连续3天',
-        description: '连续打卡3天',
+        description: '连续签到3天',
         icon: '🔥',
         order: 2,
-        conditions: { type: 'consecutive', days: 3 }
+        conditions: { type: 'consecutive', days: 3 },
+        isActive: true
       },
       {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_7',
         ruleName: '连续7天',
-        description: '连续打卡7天',
+        description: '连续签到7天',
         icon: '🌟',
         order: 3,
-        conditions: { type: 'consecutive', days: 7 }
+        conditions: { type: 'consecutive', days: 7 },
+        isActive: true
       },
       {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_15',
         ruleName: '连续15天',
-        description: '连续打卡15天',
-        icon: '🌙',
+        description: '连续签到15天',
+        icon: '⭐',
         order: 4,
-        conditions: { type: 'consecutive', days: 15 }
+        conditions: { type: 'consecutive', days: 15 },
+        isActive: true
       },
       {
         ruleType: 'badge',
@@ -158,7 +169,8 @@ async function updateRules() {
         description: '累计获得100积分',
         icon: '📚',
         order: 5,
-        conditions: { type: 'points', minPoints: 100 }
+        conditions: { type: 'points', minPoints: 100 },
+        isActive: true
       },
       {
         ruleType: 'badge',
@@ -167,16 +179,18 @@ async function updateRules() {
         description: '累计获得200积分',
         icon: '⚡',
         order: 6,
-        conditions: { type: 'points', minPoints: 200 }
+        conditions: { type: 'points', minPoints: 200 },
+        isActive: true
       },
       {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_30',
         ruleName: '连续30天',
-        description: '连续打卡30天',
+        description: '连续签到30天',
         icon: '🏆',
         order: 7,
-        conditions: { type: 'consecutive', days: 30 }
+        conditions: { type: 'consecutive', days: 30 },
+        isActive: true
       },
       {
         ruleType: 'badge',
@@ -185,34 +199,38 @@ async function updateRules() {
         description: '累计获得500积分',
         icon: '⏰',
         order: 8,
-        conditions: { type: 'points', minPoints: 500 }
+        conditions: { type: 'points', minPoints: 500 },
+        isActive: true
       },
       {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_60',
         ruleName: '坚持不懈',
-        description: '连续打卡60天',
+        description: '连续签到60天',
         icon: '🎯',
         order: 9,
-        conditions: { type: 'consecutive', days: 60 }
+        conditions: { type: 'consecutive', days: 60 },
+        isActive: true
       },
       {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_90',
         ruleName: '超级坚持',
-        description: '连续打卡90天',
+        description: '连续签到90天',
         icon: '💪',
         order: 10,
-        conditions: { type: 'consecutive', days: 90 }
+        conditions: { type: 'consecutive', days: 90 },
+        isActive: true
       },
       {
         ruleType: 'badge',
         ruleKey: 'badge_consecutive_120',
         ruleName: '时间传奇',
-        description: '连续打卡120天',
-        icon: '☀️',
+        description: '连续签到120天',
+        icon: '👑',
         order: 11,
-        conditions: { type: 'consecutive', days: 120 }
+        conditions: { type: 'consecutive', days: 120 },
+        isActive: true
       },
       {
         ruleType: 'badge',
@@ -221,7 +239,8 @@ async function updateRules() {
         description: '累计获得1000积分',
         icon: '🚀',
         order: 12,
-        conditions: { type: 'points', minPoints: 1000 }
+        conditions: { type: 'points', minPoints: 1000 },
+        isActive: true
       },
       {
         ruleType: 'badge',
@@ -230,7 +249,8 @@ async function updateRules() {
         description: '完成50个番茄钟',
         icon: '🍅',
         order: 13,
-        conditions: { type: 'pomodoro_count', count: 50 }
+        conditions: { type: 'pomodoro_count', count: 50 },
+        isActive: true
       },
       {
         ruleType: 'badge',
@@ -239,7 +259,8 @@ async function updateRules() {
         description: '累计获得800积分',
         icon: '💎',
         order: 14,
-        conditions: { type: 'points', minPoints: 800 }
+        conditions: { type: 'points', minPoints: 800 },
+        isActive: true
       },
       {
         ruleType: 'badge',
@@ -248,9 +269,9 @@ async function updateRules() {
         description: '达到10级',
         icon: '👑',
         order: 15,
-        conditions: { type: 'level', level: 10 }
+        conditions: { type: 'level', level: 10 },
+        isActive: true
       },
-
       // 等级规则
       {
         ruleType: 'level',
@@ -259,7 +280,8 @@ async function updateRules() {
         description: 'Lv.1',
         icon: '🌱',
         order: 1,
-        conditions: { minPoints: 0, maxPoints: 99 }
+        conditions: { minPoints: 0, maxPoints: 99 },
+        isActive: true
       },
       {
         ruleType: 'level',
@@ -268,7 +290,8 @@ async function updateRules() {
         description: 'Lv.2',
         icon: '🌿',
         order: 2,
-        conditions: { minPoints: 100, maxPoints: 199 }
+        conditions: { minPoints: 100, maxPoints: 199 },
+        isActive: true
       },
       {
         ruleType: 'level',
@@ -277,7 +300,8 @@ async function updateRules() {
         description: 'Lv.3',
         icon: '🌳',
         order: 3,
-        conditions: { minPoints: 200, maxPoints: 299 }
+        conditions: { minPoints: 200, maxPoints: 299 },
+        isActive: true
       },
       {
         ruleType: 'level',
@@ -286,7 +310,8 @@ async function updateRules() {
         description: 'Lv.4',
         icon: '🌲',
         order: 4,
-        conditions: { minPoints: 300, maxPoints: 499 }
+        conditions: { minPoints: 300, maxPoints: 499 },
+        isActive: true
       },
       {
         ruleType: 'level',
@@ -295,7 +320,8 @@ async function updateRules() {
         description: 'Lv.5',
         icon: '🌴',
         order: 5,
-        conditions: { minPoints: 500, maxPoints: 799 }
+        conditions: { minPoints: 500, maxPoints: 799 },
+        isActive: true
       },
       {
         ruleType: 'level',
@@ -304,7 +330,8 @@ async function updateRules() {
         description: 'Lv.6',
         icon: '🎋',
         order: 6,
-        conditions: { minPoints: 800, maxPoints: 999 }
+        conditions: { minPoints: 800, maxPoints: 999 },
+        isActive: true
       },
       {
         ruleType: 'level',
@@ -313,7 +340,8 @@ async function updateRules() {
         description: 'Lv.7',
         icon: '⭐',
         order: 7,
-        conditions: { minPoints: 1000, maxPoints: 1499 }
+        conditions: { minPoints: 1000, maxPoints: 1499 },
+        isActive: true
       },
       {
         ruleType: 'level',
@@ -322,7 +350,8 @@ async function updateRules() {
         description: 'Lv.8',
         icon: '✨',
         order: 8,
-        conditions: { minPoints: 1500, maxPoints: 1999 }
+        conditions: { minPoints: 1500, maxPoints: 1999 },
+        isActive: true
       },
       {
         ruleType: 'level',
@@ -331,7 +360,8 @@ async function updateRules() {
         description: 'Lv.9',
         icon: '🌟',
         order: 9,
-        conditions: { minPoints: 2000, maxPoints: 2999 }
+        conditions: { minPoints: 2000, maxPoints: 2999 },
+        isActive: true
       },
       {
         ruleType: 'level',
@@ -340,20 +370,22 @@ async function updateRules() {
         description: 'Lv.10',
         icon: '🏆',
         order: 10,
-        conditions: { minPoints: 3000, maxPoints: Infinity }
+        conditions: { minPoints: 3000, maxPoints: Infinity },
+        isActive: true
       }
     ];
 
     await Rule.insertMany(rules);
-    console.log(`规则已更新，共 ${rules.length} 条规则`);
+    console.log(`已恢复规则: ${rules.length} 条`);
+    console.log('  - 积分规则: 10 条');
+    console.log('  - 徽章规则: 16 条');
+    console.log('  - 等级规则: 9 条');
 
-    await mongoose.connection.close();
-    console.log('数据库连接已关闭');
-    process.exit(0);
+    mongoose.disconnect();
   } catch (error) {
-    console.error('更新规则错误:', error);
+    console.error('恢复规则失败:', error);
     process.exit(1);
   }
-}
+};
 
-updateRules();
+restoreRules();

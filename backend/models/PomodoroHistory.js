@@ -28,9 +28,17 @@ const pomodoroHistorySchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  type: {
+    type: String,
+    default: 'pomodoro',
+  },
   points: {
     type: Number,
     default: 0,
+  },
+  memberName: {
+    type: String,
+    default: '',
   },
   startTime: {
     type: String,

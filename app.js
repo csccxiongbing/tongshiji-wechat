@@ -24,7 +24,7 @@ App({
     try {
       console.log('App初始化中...')
       const userInfo = wx.getStorageSync('userInfo')
-      if (userInfo && typeof userInfo === 'object') {
+      if (userInfo && typeof userInfo === 'object' && userInfo._id) {
         this.globalData.userInfo = userInfo
         console.log('加载用户信息成功:', userInfo)
         this.loadFamilyMembers()
@@ -32,23 +32,45 @@ App({
         this.loadPomodoroHistory()
         this.loadRules()
       }
-      
-      // 加载缓存中的其他数据
-      try {
-        const cachedMemberPoints = wx.getStorageSync('memberPoints')
-        if (cachedMemberPoints) {
-          this.globalData.memberPoints = cachedMemberPoints
-        }
-        const cachedPoints = wx.getStorageSync('points')
-        if (cachedPoints) {
-          this.globalData.points = cachedPoints
-        }
-      } catch (e) {}
     } catch (e) {
       console.error('数据加载错误:', e)
     }
   },
+
+  logout: function() {
+    try {
+      wx.removeStorageSync('userInfo')
+      wx.removeStorageSync('familyMembers')
+      wx.removeStorageSync('memberPoints')
+      wx.removeStorageSync('points')
+      wx.removeStorageSync('schedules')
+      wx.removeStorageSync('pointsHistory')
+      wx.removeStorageSync('users')
+    } catch (e) {}
+    this.globalData.userInfo = null
+    this.globalData.familyMembers = {}
+    this.globalData.schedules = []
+    this.globalData.points = 0
+    this.globalData.memberPoints = {}
+    this.globalData.pointsHistory = []
+    this.globalData.pomodoroHistory = []
+    this.globalData.users = []
+    wx.redirectTo({
+      url: '/pages/login/login'
+    })
+  },
   
+  checkLogin: function() {
+    const userInfo = this.globalData.userInfo
+    if (!userInfo || !userInfo._id) {
+      wx.redirectTo({
+        url: '/pages/login/login'
+      })
+      return false
+    }
+    return true
+  },
+
   request: function(options) {
     return new Promise((resolve, reject) => {
       wx.request({
@@ -180,7 +202,7 @@ App({
     }
   },
   
-  // 从数据库加载番茄钟历史记录
+  // 从数据库加载番茄钟历史记录（按当前用户+当前家庭）
   loadPomodoroHistory: async function() {
     try {
       const userInfo = this.globalData.userInfo
@@ -190,7 +212,7 @@ App({
       }
       
       const result = await this.request({
-        url: '/pomodoro/family/' + userInfo.familyId,
+        url: '/pomodoro/user/' + userInfo._id + '/family/' + userInfo.familyId,
         method: 'GET'
       })
       
@@ -764,8 +786,9 @@ App({
         scheduleId: historyItem.scheduleId || null,
         taskName: historyItem.taskName || '专注时间',
         duration: historyItem.duration || 25,
-        completed: historyItem.completed || true,
-        points: historyItem.points || 10,
+        completed: historyItem.completed !== undefined ? historyItem.completed : true,
+        type: historyItem.type || 'pomodoro',
+        points: historyItem.points || 0,
         startTime: historyItem.startTime || '',
         endTime: historyItem.endTime || ''
       }
@@ -827,39 +850,6 @@ App({
     } catch (error) {
       console.error('更新用户错误:', error)
       return { success: false, message: error }
-    }
-  },
-  
-  logout: function() {
-    try {
-      this.globalData.userInfo = null
-      this.globalData.familyMembers = { members: [] }
-      this.globalData.schedules = []
-      this.globalData.points = 0
-      this.globalData.memberPoints = {}
-      this.globalData.pointsHistory = []
-      this.globalData.pomodoroHistory = []
-      this.globalData.pomodoroTaskInfo = null
-      this.globalData.wishes = []
-      this.globalData.wishExchangeHistory = []
-      this.globalData.rules = {
-        points: [],
-        badge: [],
-        level: []
-      }
-      
-      wx.removeStorageSync('userInfo')
-      wx.removeStorageSync('familyMembers')
-      wx.removeStorageSync('schedules')
-      wx.removeStorageSync('points')
-      wx.removeStorageSync('memberPoints')
-      wx.removeStorageSync('pointsHistory')
-      wx.removeStorageSync('pomodoroHistory')
-      wx.removeStorageSync('wishes')
-      wx.removeStorageSync('wishExchangeHistory')
-      wx.removeStorageSync('rules')
-    } catch (e) {
-      console.error('退出登录错误:', e)
     }
   },
   

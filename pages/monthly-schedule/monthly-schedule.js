@@ -25,6 +25,7 @@ Page({
   },
   
   onShow: function() {
+    if (!app.checkLogin()) return
     this.generateCalendar()
     this.updateTabBar()
   },

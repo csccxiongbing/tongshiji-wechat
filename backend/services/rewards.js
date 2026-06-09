@@ -3,16 +3,6 @@ const Rule = require('../models/Rule');
 const Family = require('../models/Family');
 const PointsHistory = require('../models/PointsHistory');
 
-/**
- * 处理打卡并发放奖励
- * @param {Object} params - 参数
- * @param {string} params.familyId - 家庭ID
- * @param {string} params.userId - 用户ID
- * @param {string} params.memberName - 成员姓名
- * @param {string} params.checkInType - 打卡类型 (task/pomodoro)
- * @param {string} params.referenceId - 关联ID
- * @returns {Promise<Object>} 奖励结果
- */
 async function processCheckInAndRewards({ familyId, userId, memberName, checkInType, referenceId }) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -57,7 +47,15 @@ async function processCheckInAndRewards({ familyId, userId, memberName, checkInT
     }
     consecutiveRules.sort((a, b) => (a.conditions?.days || 0) - (b.conditions?.days || 0));
 
-    // 3. 添加对应类型的积分（每次完成都给）
+    // 3. 检查今天是否已经打过卡（不区分类型，只判断是否有今天的记录）
+    const hasDailyCheckedInToday = await CheckIn.findOne({
+      familyId,
+      userId,
+      date: today
+    });
+    console.log('今天是否已打卡:', !!hasDailyCheckedInToday);
+
+    // 4. 添加对应类型的基础积分（每次完成都给）
     console.log('=== 添加基础积分（每次完成都给）===');
     let basePoints = 0;
     let baseRewards = [];
@@ -88,19 +86,12 @@ async function processCheckInAndRewards({ familyId, userId, memberName, checkInT
       }
     }
 
-    // 4. 检查今天是否已经打过卡（用于判断每日打卡和连续打卡奖励）
-    const hasDailyCheckedInToday = await CheckIn.findOne({
-      familyId,
-      userId,
-      date: today
-    });
-    console.log('今天是否已打卡:', !!hasDailyCheckedInToday);
-
     // 5. 如果今天还没打过卡，添加每日打卡奖励和连续打卡奖励
     let checkInRewards = [];
     let checkInPoints = 0;
+    let needsToCreateCheckIn = !hasDailyCheckedInToday;
     
-    if (!hasDailyCheckedInToday) {
+    if (needsToCreateCheckIn) {
       // 添加每日打卡奖励
       if (dailyRule && dailyRule.points > 0) {
         checkInPoints += dailyRule.points;
@@ -136,19 +127,19 @@ async function processCheckInAndRewards({ familyId, userId, memberName, checkInT
         console.log('添加连续打卡积分:', lastEligibleConsecutiveRule.points);
       }
 
-      // 创建打卡记录（只有第一次打卡时创建）
+      // 创建打卡记录（用当前的checkInType）
       const checkInRecord = new CheckIn({
         familyId,
         userId,
         memberName,
         date: today,
-        checkInType: 'daily',
+        checkInType: checkInType,
         referenceId: referenceId
       });
       await checkInRecord.save();
-      console.log('打卡记录已创建');
+      console.log('打卡记录已创建，类型:', checkInType);
     } else {
-      console.log('今天已经打过卡，跳过每日打卡和连续打卡奖励');
+      console.log('今天已打过卡，跳过每日打卡和连续打卡奖励');
     }
 
     // 6. 合并所有奖励
@@ -185,16 +176,6 @@ async function processCheckInAndRewards({ familyId, userId, memberName, checkInT
   }
 }
 
-/**
- * 专门添加任务积分的函数
- * @param {Object} params - 参数
- * @param {string} params.familyId - 家庭ID
- * @param {string} params.userId - 用户ID
- * @param {string} params.memberName - 成员姓名
- * @param {number} params.taskPoints - 任务积分
- * @param {string} params.taskTitle - 任务标题
- * @returns {Promise<Object>} 结果
- */
 async function addTaskPoints({ familyId, userId, memberName, taskPoints, taskTitle }) {
   try {
     console.log('=== 添加任务积分 ===');
@@ -245,12 +226,6 @@ async function addTaskPoints({ familyId, userId, memberName, taskPoints, taskTit
   }
 }
 
-/**
- * 计算连续打卡天数和最长连续打卡天数
- * @param {string} familyId - 家庭ID
- * @param {string} userId - 用户ID
- * @returns {Promise<{consecutiveDays: number, maxDays: number}>} 连续打卡天数和最长连续打卡天数
- */
 async function calculateCheckInStats(familyId, userId) {
   try {
     const checkIns = await CheckIn.find({
@@ -317,16 +292,6 @@ async function calculateCheckInStats(familyId, userId) {
   }
 }
 
-/**
- * 更新成员积分和打卡统计
- * @param {string} familyId - 家庭ID
- * @param {string} memberName - 成员姓名
- * @param {string} userId - 用户ID
- * @param {number} amount - 积分数量
- * @param {Array} rewards - 奖励详情
- * @param {number} consecutiveDays - 当前连续打卡天数
- * @param {number} maxDays - 历史最长连续打卡天数
- */
 async function updateMemberPoints(familyId, memberName, userId, amount, rewards, consecutiveDays, maxDays) {
   const family = await Family.findById(familyId);
   if (!family) {

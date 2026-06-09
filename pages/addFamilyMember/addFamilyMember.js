@@ -22,6 +22,10 @@ Page({
       ]
     })
   },
+
+  onShow: function() {
+    if (!app.checkLogin()) return
+  },
   
   selectRole: function(e) {
     const role = e.currentTarget.dataset.role

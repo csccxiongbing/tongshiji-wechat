@@ -5,6 +5,12 @@ const bodyParser = require('body-parser');
 
 const app = express();
 
+// 添加请求日志中间件
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 connectDB();
 
 app.use(cors());

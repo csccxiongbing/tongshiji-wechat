@@ -17,6 +17,7 @@
     "pages/scheduleDetail/scheduleDetail",
     "pages/points/points",
     "pages/pomodoro/pomodoro",
+    "pages/pomodoro-history/pomodoro-history",
     "pages/monthly-schedule/monthly-schedule",
     "pages/wish/wish",
     "pages/rules/rules"
