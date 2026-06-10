@@ -8,11 +8,6 @@ Page({
     wishPoints: 0,
     level: 1,
     levelName: '新手',
-    achievements: {
-      totalDays: 7,
-      completedTasks: 0,
-      badges: 5
-    },
     familyMembers: [],
     selectedMembers: [],
     showMemberPicker: false
@@ -22,7 +17,7 @@ Page({
     if (!app.checkLogin()) return
     console.log('====== my.js onShow 开始 ======')
     
-    // 先加载必要的数据（loadFamilyMembers 已经会加载 memberPoints
+    // 先加载必要的数据
     await app.loadFamilyMembers()
     
     const userInfo = app.globalData.userInfo || {}
@@ -64,13 +59,6 @@ Page({
       console.log('家长角色 - wishPoints:', wishPoints)
     }
     
-    // 根据角色统计完成的任务数
-    const completedTasks = this.countCompletedTasks(role, currentMemberName)
-    
-    // 获取连续打卡天数
-    const consecutiveCheckInDays = currentMember?.consecutiveCheckInDays || 0
-    console.log('连续打卡天数:', consecutiveCheckInDays, 'currentMember:', currentMember)
-    
     const levelInfo = this.calculateLevel(wishPoints)
     
     this.setData({
@@ -79,12 +67,7 @@ Page({
       roleText: role === 'parent' ? '家长' : '孩子',
       wishPoints: wishPoints,
       level: levelInfo.level,
-      levelName: levelInfo.name,
-      achievements: {
-        totalDays: consecutiveCheckInDays,
-        completedTasks: completedTasks,
-        badges: 5
-      }
+      levelName: levelInfo.name
     })
     
     console.log('最终显示的 wishPoints:', wishPoints)
@@ -101,12 +84,6 @@ Page({
     if (!userInfo) return null
     
     let family = app.globalData.familyMembers
-    if (!family || (!family.members && !Array.isArray(family))) {
-      try {
-        family = wx.getStorageSync('familyMembers')
-        console.log('从 Storage 读取 family:', family)
-      } catch (e) {}
-    }
     
     let members = []
     if (family && Array.isArray(family.members)) {
@@ -157,28 +134,6 @@ Page({
   findCurrentMemberName: function(userInfo) {
     const member = this.findCurrentMember(userInfo)
     return member ? member.name : (userInfo.nickname || '')
-  },
-  
-  // 统计完成的任务数
-  countCompletedTasks: function(role, currentMemberName) {
-    const schedules = app.globalData.schedules || []
-    
-    if (role === 'child') {
-      // 孩子角色：统计自己完成的任务数
-      if (!currentMemberName) return 0
-      return schedules.filter(schedule => {
-        const completedBy = schedule.completedBy || []
-        return completedBy.includes(currentMemberName)
-      }).length
-    } else {
-      // 家长角色：统计所有成员完成的任务总数
-      let totalCount = 0
-      schedules.forEach(schedule => {
-        const completedBy = schedule.completedBy || []
-        totalCount += completedBy.length
-      })
-      return totalCount
-    }
   },
   
   calculateLevel: function(points) {
@@ -289,11 +244,8 @@ Page({
   
   updateTabBar: function() {
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      const userInfo = app.globalData.userInfo || {}
-      const role = userInfo?.role || 'child'
-      const currentIndex = role === 'parent' ? 2 : 3
       this.getTabBar().setData({
-        currentIndex: currentIndex
+        currentIndex: 3
       })
     }
   },
@@ -310,12 +262,21 @@ Page({
           const newNickname = res.content.trim()
           wx.showLoading({ title: '保存中...', mask: true })
           try {
-            await app.updateUser(userInfo._id || userInfo.id, { nickname: newNickname })
+            const result = await app.updateUser(userInfo._id || userInfo.id, { nickname: newNickname })
             wx.hideLoading()
-            wx.showToast({
-              title: '修改成功',
-              icon: 'success'
-            })
+            if (result.success) {
+              app.globalData.userInfo = { ...app.globalData.userInfo, nickname: newNickname }
+              this.setData({ nickname: newNickname })
+              wx.showToast({
+                title: '修改成功',
+                icon: 'success'
+              })
+            } else {
+              wx.showToast({
+                title: result.message || '修改失败',
+                icon: 'none'
+              })
+            }
           } catch (e) {
             wx.hideLoading()
             console.error('修改昵称失败:', e)
@@ -342,17 +303,6 @@ Page({
   },
   
   goToAchievement: function() {
-    const userInfo = app.globalData.userInfo || {}
-    
-    // 只允许孩子角色访问成就页面
-    if (userInfo.role !== 'child') {
-      wx.showToast({
-        title: '成就页面仅对孩子开放',
-        icon: 'none'
-      })
-      return
-    }
-    
     wx.navigateTo({
       url: '/pages/achievement/achievement'
     })
@@ -365,23 +315,6 @@ Page({
     })
   },
 
-  printStorage: function() {
-    console.log('========== 本地存储数据 ==========')
-    try {
-      const keys = ['userInfo', 'familyMembers', 'schedules', 'points', 'pointsHistory', 'pomodoroHistory', 'memberPoints']
-      keys.forEach(key => {
-        const value = wx.getStorageSync(key)
-        console.log(`${key}:`, value)
-      })
-      wx.showToast({
-        title: '已打印到控制台',
-        icon: 'success'
-      })
-    } catch(e) {
-      console.error('读取存储失败', e)
-    }
-  },
-  
   goToHelp: function() {
     wx.showToast({
       title: '帮助与反馈功能开发中',
@@ -408,38 +341,6 @@ Page({
       success: (res) => {
         if (res.confirm) {
           app.logout()
-        }
-      }
-    })
-  },
-  
-  clearAllData: async function() {
-    wx.showModal({
-      title: '确认清空',
-      content: '确定要清空所有用户数据和任务数据吗？此操作不可恢复。',
-      confirmColor: '#FF6B6B',
-      success: async (res) => {
-        if (res.confirm) {
-          wx.showLoading({ title: '清空中...' })
-          const result = await app.clearAllData()
-          wx.hideLoading()
-          
-          if (result.success) {
-            wx.showToast({
-              title: '数据已清空',
-              icon: 'success'
-            })
-            setTimeout(() => {
-              wx.reLaunch({
-                url: '/pages/index/index'
-              })
-            }, 1500)
-          } else {
-            wx.showToast({
-              title: '清空失败',
-              icon: 'none'
-            })
-          }
         }
       }
     })

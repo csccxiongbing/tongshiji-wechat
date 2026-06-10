@@ -37,7 +37,7 @@
       </view>
 
       <view class="detail-row" wx:if="{{memberStatusList.length > 0}}">
-        <text class="detail-label">参与成员</text>
+        <text class="detail-label">参与成员 (所有人完成算完成)</text>
         <view class="detail-members">
           <view wx:for="{{memberStatusList}}" wx:key="index" class="member-item">
             <text class="member-tag {{item.completed ? 'completed' : ''}}">

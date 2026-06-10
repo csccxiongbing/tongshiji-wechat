@@ -20,7 +20,8 @@ Page({
     showPointsPopup: false,
     pointsPopupText: '',
     pointsScheduleId: null,
-    pointsPopupMember: ''
+    pointsPopupMember: '',
+    isProcessing: false
   },
   
   onShow: async function() {
@@ -55,11 +56,6 @@ Page({
     if (!userInfo) return ''
     
     let family = app.globalData.familyMembers
-    if (!family || (!family.members && !Array.isArray(family))) {
-      try {
-        family = wx.getStorageSync('familyMembers')
-      } catch (e) {}
-    }
     
     let members = []
     if (family && Array.isArray(family.members)) {
@@ -90,7 +86,6 @@ Page({
   
   initWeekDays: function() {
     const now = new Date()
-    const today = now.getDate()
     const dayOfWeek = now.getDay()
     
     const weekdays = ['日', '一', '二', '三', '四', '五', '六']
@@ -100,12 +95,15 @@ Page({
     for (let i = 0; i < 7; i++) {
       const diff = i - dayOfWeek
       const date = new Date(now)
-      date.setDate(today + diff)
+      date.setDate(date.getDate() + diff)
+      
+      const fullDate = this.formatDate(date);
+      console.log(`initWeekDays - day ${i}: date=${date.getDate()}, fullDate=${fullDate}`);
       
       weekDays.push({
         name: weekdays[i],
         date: date.getDate(),
-        fullDate: this.formatDate(date),
+        fullDate: fullDate,
         dateObj: date,
         hasSchedule: false
       })
@@ -134,7 +132,6 @@ Page({
         
         if (result.success) {
           app.globalData.schedules = result.schedules;
-          wx.setStorageSync('schedules', result.schedules);
           schedules = result.schedules || [];
         }
       } catch (error) {
@@ -150,10 +147,54 @@ Page({
     const { weekDays, isChildRole, currentMemberName, selectedMembers } = this.data;
     
     const weekSchedules = {};
-    weekDays.forEach((day, i) => {
+    const allCompletions = {};
+    
+    // 获取每天的完成记录
+    for (let i = 0; i < weekDays.length; i++) {
+      const day = weekDays[i];
       const daySchedules = this.getSchedulesForDate(schedules, day.dateObj);
+      
+      // 获取每天每个日程的完成记录
+      for (const schedule of daySchedules) {
+        const scheduleId = schedule._id || schedule.id;
+        const dateStr = day.fullDate;
+        const key = `${scheduleId}_${dateStr}`;
+        
+        if (!allCompletions[key]) {
+          try {
+            const result = await app.getDailyCompletion(scheduleId, dateStr);
+            if (result.success && result.completion) {
+              allCompletions[key] = result.completion.completions || [];
+            } else {
+              allCompletions[key] = [];
+            }
+          } catch (error) {
+            allCompletions[key] = [];
+          }
+        }
+      }
+      
       weekSchedules[i] = daySchedules;
-    });
+    }
+    
+    // 为每个日程设置 memberStatus 和 completed（使用每日完成记录）
+    for (let i = 0; i < weekDays.length; i++) {
+      const day = weekDays[i];
+      weekSchedules[i] = weekSchedules[i].map(schedule => {
+        const scheduleId = schedule._id || schedule.id;
+        const dateStr = day.fullDate;
+        const key = `${scheduleId}_${dateStr}`;
+        const completions = allCompletions[key] || [];
+        const members = schedule.scheduleMembers || [];
+        
+        return {
+          ...schedule,
+          _dailyCompletions: completions,
+          memberStatus: this.getMemberStatusWithCompletions(schedule, completions),
+          completed: completions.length === members.length && members.length > 0
+        };
+      });
+    }
     
     const updatedWeekDays = this.data.weekDays.map((day, i) => {
       let daySchedules = weekSchedules[i] || [];
@@ -185,19 +226,52 @@ Page({
 
   getSchedulesForDate: function(schedules, targetDate) {
     const targetDateStr = this.formatDate(targetDate);
+    const dayOfWeek = targetDate.getDay();
+    const dayOfMonth = targetDate.getDate();
     
     const result = [];
     
     schedules.forEach(schedule => {
       let shouldShow = false;
       
-      if (schedule.startTime) {
-        const scheduleDate = new Date(schedule.startTime.replace(/-/g, '/'));
-        const scheduleDateStr = this.formatDate(scheduleDate);
-        
-        if (scheduleDateStr === targetDateStr) {
+      const repeatRule = schedule.repeatRule || 'never';
+      const startDate = schedule.startDate || (schedule.startTime ? this.formatDate(new Date(schedule.startTime.replace(/-/g, '/'))) : '');
+      const endRepeat = schedule.endRepeat || 'never';
+      const endRepeatDate = schedule.endRepeatDate || '';
+      
+      if (startDate && targetDateStr < startDate) {
+        return;
+      }
+      
+      if (endRepeat === 'date' && endRepeatDate && targetDateStr > endRepeatDate) {
+        return;
+      }
+      
+      switch (repeatRule) {
+        case 'daily':
           shouldShow = true;
-        }
+          break;
+        case 'weekday':
+          shouldShow = dayOfWeek >= 1 && dayOfWeek <= 5;
+          break;
+        case 'weekly':
+          const repeatDays = schedule.repeatDays || [];
+          shouldShow = repeatDays.includes(dayOfWeek);
+          break;
+        case 'monthly':
+          const repeatMonthDays = schedule.repeatDays || [];
+          shouldShow = repeatMonthDays.includes(dayOfMonth);
+          break;
+        case 'never':
+        default:
+          if (schedule.startTime) {
+            const scheduleDate = new Date(schedule.startTime.replace(/-/g, '/'));
+            const scheduleDateStr = this.formatDate(scheduleDate);
+            shouldShow = scheduleDateStr === targetDateStr;
+          } else if (startDate) {
+            shouldShow = startDate === targetDateStr;
+          }
+          break;
       }
       
       if (shouldShow) {
@@ -235,10 +309,16 @@ Page({
     const day = parseInt(e.currentTarget.dataset.day);
     const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     
+    console.log('selectDay - 选择日期:', day, dayNames[day]);
+    
     this.setData({
       selectedDay: day,
       selectedDayName: dayNames[day]
     });
+    
+    // 调试：确认日期是否正确更新
+    const selectedDayObj = this.data.weekDays[day];
+    console.log('selectDay - 选中的日期对象:', selectedDayObj);
     
     this.filterSchedules();
   },
@@ -262,7 +342,6 @@ Page({
         
         if (result.success) {
           app.globalData.familyMembers = result.family
-          wx.setStorageSync('familyMembers', result.family)
           members = result.family.members || []
         }
       } catch (error) {
@@ -390,6 +469,37 @@ Page({
     })
   },
 
+  // 使用每日完成记录获取成员状态
+  getMemberStatusWithCompletions: function(schedule, completions) {
+    const members = schedule.scheduleMembers || []
+    const completedNames = (completions || []).map(c => c.memberName)
+    const currentMemberName = this.data.currentMemberName
+    const isChild = this.data.isChildRole
+    
+    if (isChild) {
+      // 孩子角色：只显示自己
+      return [{
+        name: currentMemberName,
+        completed: completedNames.includes(currentMemberName),
+        isMe: true,
+        isClickable: true,
+        showFireworks: false
+      }]
+    }
+    
+    // 家长角色：显示所有成员
+    return members.map(name => {
+      const isMe = isChild && name === currentMemberName
+      return {
+        name: name,
+        completed: completedNames.includes(name),
+        isMe: isMe,
+        isClickable: !isChild || isMe,
+        showFireworks: false
+      }
+    })
+  },
+
   checkAllCompleted: function(members, completedBy) {
     if (!members || members.length === 0) return false
     if (!completedBy || completedBy.length === 0) return false
@@ -397,81 +507,83 @@ Page({
   },
 
   toggleMemberComplete: async function(e) {
-    const scheduleId = e.currentTarget.dataset.id;
-    const memberName = e.currentTarget.dataset.member;
-    const day = this.data.selectedDay;
-
-    console.log('toggleMemberComplete - scheduleId:', scheduleId, 'memberName:', memberName);
-
-    // 容错处理：如果 scheduleId 不存在或为空
-    if (!scheduleId) {
-      console.error('scheduleId 为空');
-      return;
-    }
-
-    const daySchedules = [...this.data.weekSchedules[day]];
-    const scheduleIndex = daySchedules.findIndex(s => s.id === scheduleId || s._id === scheduleId);
-    const schedule = daySchedules[scheduleIndex];
-    
-    if (!schedule) {
-      console.error('未找到对应的 schedule, scheduleId:', scheduleId);
+    if (this.data.isProcessing) {
+      console.log('正在处理中，忽略重复点击');
       return;
     }
     
-    const isCompleted = (schedule.completedBy || []).includes(memberName);
+    this.setData({ isProcessing: true });
     
-    // 如果已完成，则取消完成
-    if (isCompleted) {
-      const result = await app.uncompleteSchedule(scheduleId, memberName);
+    try {
+      const scheduleId = e.currentTarget.dataset.id;
+      const memberName = e.currentTarget.dataset.member;
+      const day = this.data.selectedDay;
+      const selectedDayObj = this.data.weekDays[day];
+      const dateStr = selectedDayObj ? selectedDayObj.fullDate : '';
+
+      console.log('toggleMemberComplete - selectedDay:', day);
+      console.log('toggleMemberComplete - weekDays数组:', this.data.weekDays);
+      console.log('toggleMemberComplete - selectedDayObj:', selectedDayObj);
+      console.log('toggleMemberComplete - scheduleId:', scheduleId, 'memberName:', memberName, 'day:', day, 'dateStr:', dateStr);
+      
+      if (!dateStr) {
+        console.error('日期为空，无法完成任务');
+        wx.showToast({
+          title: '日期无效',
+          icon: 'none'
+        });
+        return;
+      }
+
+      if (!scheduleId) {
+        console.error('scheduleId 为空');
+        return;
+      }
+
+      const daySchedules = [...this.data.weekSchedules[day]];
+      const scheduleIndex = daySchedules.findIndex(s => s.id === scheduleId || s._id === scheduleId);
+      const schedule = daySchedules[scheduleIndex];
+      
+      if (!schedule) {
+        console.error('未找到对应的 schedule, scheduleId:', scheduleId);
+        return;
+      }
+      
+      // 使用每日完成记录判断完成状态
+      const completions = schedule._dailyCompletions || [];
+      const completedNames = completions.map(c => c.memberName);
+      const isCompleted = completedNames.includes(memberName);
+      const points = schedule.points || 0;
+      
+      // 使用 updateDailyCompletion 更新每日完成记录
+      console.log('调用 updateDailyCompletion - scheduleId:', scheduleId, 'date:', dateStr, 'memberName:', memberName, 'completed:', !isCompleted);
+      const result = await app.updateDailyCompletion(scheduleId, dateStr, memberName, !isCompleted);
+      
+      console.log('updateDailyCompletion 返回结果:', result);
       
       if (!result.success) {
+        console.error('更新完成记录失败:', result.message);
         wx.showToast({
-          title: result.message,
+          title: result.message || '操作失败',
           icon: 'none'
         });
         return;
       }
       
-      // 延迟刷新数据
+      console.log('更新完成记录成功');
+      
+      if (!isCompleted && points > 0) {
+        this.showPointsEffect(points, memberName, scheduleId);
+      } else if (isCompleted && points > 0) {
+        this.showMinusPointsEffect(points, memberName, scheduleId);
+      }
+      
       setTimeout(() => {
-        this.initSchedules();
-      }, 500);
-      return;
-    }
-    
-    // 如果未完成，则标记完成
-    if (!isCompleted) {
-      const result = await app.completeSchedule(scheduleId, memberName);
-      
-      if (!result.success) {
-        wx.showToast({
-          title: result.message,
-          icon: 'none'
-        });
-        return;
-      }
-      
-      let totalPoints = 0
-      
-      // 检查是否有积分奖励
-      if (result.rewards) {
-        const rewards = result.rewards
-        if (rewards.awardedPoints > 0) {
-          totalPoints = rewards.awardedPoints
-        }
-      }
-      
-      // 显示积分效果
-      if (totalPoints > 0) {
-        this.showPointsEffect(totalPoints, memberName, scheduleId);
-      }
-      
-      // 延迟刷新数据，让效果先展示
-      setTimeout(async () => {
-        // 重新加载家庭成员数据以显示最新积分
-        await app.loadFamilyMembers()
+        console.log('重新加载日程');
         this.initSchedules();
       }, 1000);
+    } finally {
+      this.setData({ isProcessing: false });
     }
   },
   
@@ -594,14 +706,36 @@ Page({
       });
     }
     
-    // 重新计算 memberStatus（因为全局数据可能变了）
+    // 使用每日完成记录重新计算 memberStatus 和 completed
     schedules = schedules.map(s => {
-      // 总是重新计算 memberStatus，确保孩子角色时只显示自己
+      const completions = s._dailyCompletions || [];
+      const completedNames = completions.map(c => c.memberName);
+      const members = s.scheduleMembers || [];
+      
+      let newMemberStatus;
+      if (isChildRole) {
+        newMemberStatus = [{
+          name: currentMemberName,
+          completed: completedNames.includes(currentMemberName),
+          isMe: true,
+          isClickable: true,
+          showFireworks: false
+        }];
+      } else {
+        newMemberStatus = members.map(name => ({
+          name: name,
+          completed: completedNames.includes(name),
+          isMe: false,
+          isClickable: true,
+          showFireworks: false
+        }));
+      }
+      
       return {
         ...s,
-        memberStatus: this.getMemberStatus(s),
-        _memberStatusCached: true
-      }
+        memberStatus: newMemberStatus,
+        completed: completions.length === members.length
+      };
     })
     
     let totalSchedules = 0;
@@ -621,14 +755,24 @@ Page({
       
       totalSchedules += filteredDaySchedules.length;
       filteredDaySchedules.forEach(s => {
-        if (s.completed) totalCompleted++;
+        const completions = s._dailyCompletions || [];
+        const members = s.scheduleMembers || [];
+        if (completions.length === members.length && members.length > 0) totalCompleted++;
       });
     });
     
     const avgCompletion = totalSchedules > 0 ? Math.round((totalCompleted / totalSchedules) * 100) : 0;
     
+    // 按完成状态排序：未完成在前，已完成在后（与今日日程一致）
+    const sortedSchedules = schedules.sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      return 0;
+    });
+    
     this.setData({
-      daySchedules: schedules,
+      daySchedules: sortedSchedules,
       completedSchedules: totalCompleted,
       totalSchedules: totalSchedules,
       avgCompletion: avgCompletion
@@ -664,8 +808,14 @@ Page({
 
   watchScheduleDetail: function(e) {
     const scheduleId = parseInt(e.currentTarget.dataset.id)
+    
+    // 获取当前选中的日期
+    const day = this.data.selectedDay;
+    const selectedDayObj = this.data.weekDays[day];
+    const dateStr = selectedDayObj ? selectedDayObj.fullDate : '';
+    
     wx.navigateTo({
-      url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}`
+      url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}&date=${dateStr}`
     })
   },
   
@@ -677,12 +827,20 @@ Page({
     const schedules = app.globalData.schedules || []
     const schedule = schedules.find(s => s.id === scheduleId || s._id === scheduleId)
     
+    // 获取当前选中的日期
+    const day = this.data.selectedDay;
+    const selectedDayObj = this.data.weekDays[day];
+    const dateStr = selectedDayObj ? selectedDayObj.fullDate : '';
+    
     app.globalData.pomodoroTaskInfo = {
       scheduleId: scheduleId,
       memberName: memberName,
       points: points,
-      taskInfo: schedule
+      taskInfo: schedule,
+      date: dateStr  // 传递当前选中的日期
     }
+    
+    console.log('startPomodoro - 传递日期:', dateStr);
     
     wx.navigateTo({
       url: '/pages/pomodoro/pomodoro'
@@ -693,11 +851,14 @@ Page({
     const scheduleId = e.currentTarget.dataset.id
     const userInfo = app.globalData.userInfo || {}
     const isChildRole = userInfo.role === 'child'
+    const day = this.data.selectedDay
+    const selectedDayObj = this.data.weekDays[day]
+    const dateStr = selectedDayObj ? selectedDayObj.fullDate : ''
     
     if (isChildRole) {
       // 孩子角色跳转到详情页
       wx.navigateTo({
-        url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}`
+        url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}&date=${dateStr}`
       })
     } else {
       // 家长角色跳转到编辑页面

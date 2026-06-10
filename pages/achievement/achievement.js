@@ -11,7 +11,14 @@ Page({
     bestStreak: 0,
     unlockedBadges: [],
     lockedBadges: [],
-    wishes: []
+    wishes: [],
+    totalTasks: 0,
+    completedTasks: 0,
+    role: 'child',
+    childMembers: [],
+    selectedChildName: '选择孩子',
+    selectedChildIndex: 0,
+    showChildPicker: false
   },
 
   onShow: function() {
@@ -36,69 +43,63 @@ Page({
       const userInfo = app.globalData.userInfo || {}
       const role = userInfo.role || 'child'
       
-      // 只允许孩子角色访问
-      if (role !== 'child') {
-        wx.showToast({
-          title: '该页面仅对孩子开放',
-          icon: 'none'
-        })
-        setTimeout(() => {
-          wx.navigateBack()
-        }, 1500)
-        return
-      }
+      // 获取孩子成员列表
+      const childMembers = this.getChildMembers()
+      console.log('孩子成员列表:', childMembers)
       
-      // 尝试加载最新的心愿数据
-      try {
-        if (app.loadWishes && typeof app.loadWishes === 'function') {
-          await app.loadWishes()
-        }
-      } catch (e) {
-        console.error('加载心愿失败:', e)
+      if (app.loadWishes && typeof app.loadWishes === 'function') {
+        await app.loadWishes()
       }
 
-      // 获取当前用户角色名称
-      const currentMemberName = this.findCurrentMemberName()
-      console.log('当前成员名称:', currentMemberName)
+      // 根据角色确定查看谁的数据
+      let currentMemberName
+      if (role === 'parent' && childMembers.length > 0) {
+        // 家长角色默认查看第一个孩子的数据
+        currentMemberName = this.data.selectedChildName !== '选择孩子' 
+          ? this.data.selectedChildName 
+          : childMembers[0].name
+      } else {
+        currentMemberName = this.findCurrentMemberName()
+      }
       
-      // 获取当前积分
+      console.log('当前查看成员名称:', currentMemberName)
+      
       const memberPoints = app.globalData.memberPoints || {}
       let currentPoints = memberPoints[currentMemberName] || 0
-      console.log('当前积分:', currentPoints, 'memberPoints:', memberPoints)
       
-      // 如果积分仍为0，从缓存读取
-      if (currentPoints === 0) {
-        try {
-          const cachedPoints = wx.getStorageSync('memberPoints') || {}
-          currentPoints = cachedPoints[currentMemberName] || 0
-          console.log('从缓存读取积分:', currentPoints)
-        } catch (e) {
-          console.error('读取缓存积分失败:', e)
+      // 如果是孩子角色，优先从 currentMember 获取积分
+      if (role === 'child') {
+        const currentMember = this.getCurrentMember()
+        if (currentMember && currentMember.points !== undefined && currentMember.points !== null) {
+          currentPoints = currentMember.points
         }
       }
       
-      // 计算等级和进度
+      console.log('当前积分:', currentPoints, 'memberPoints:', memberPoints)
+      
       const { level, levelName, progress, pointsToNext } = this.calculateLevelInfo(currentPoints)
       
-      // 获取连续打卡天数
-      const { currentStreak, bestStreak } = this.calculateStreak()
+      // 获取打卡天数
+      const { currentStreak, bestStreak } = await this.getMemberStreak(currentMemberName)
       
-      // 获取番茄钟完成数量
       const pomodoroHistory = app.globalData.pomodoroHistory || []
       const completedPomodoros = pomodoroHistory.filter(p => p.completed).length
       
-      // 获取当前等级
       const { level: currentLevel } = this.calculateLevelInfo(currentPoints)
       
-      // 获取徽章数据
       const { unlockedBadges, lockedBadges } = this.getBadges(currentPoints, currentStreak, completedPomodoros, currentLevel)
       console.log('已解锁徽章:', unlockedBadges.length, '待解锁徽章:', lockedBadges.length)
       
-      // 获取心愿数据
-      const wishes = this.getWishes()
+      const wishes = this.getWishes(currentMemberName)
       console.log('心愿数量:', wishes.length)
       
+      // 获取任务统计
+      const { totalTasks, completedTasks } = await this.getTaskStats(role, currentMemberName)
+      
       this.setData({
+        role: role,
+        childMembers: childMembers,
+        selectedChildName: currentMemberName,
         currentPoints: currentPoints,
         level: level,
         levelName: levelName,
@@ -108,7 +109,9 @@ Page({
         bestStreak: bestStreak,
         unlockedBadges: unlockedBadges,
         lockedBadges: lockedBadges,
-        wishes: wishes
+        wishes: wishes,
+        totalTasks: totalTasks,
+        completedTasks: completedTasks
       })
     } catch (error) {
       console.error('加载成就数据失败:', error)
@@ -119,16 +122,145 @@ Page({
     }
   },
 
+  // 获取孩子成员列表
+  getChildMembers: function() {
+    let family = app.globalData.familyMembers
+    let members = []
+    
+    if (family && Array.isArray(family.members)) {
+      members = family.members
+    } else if (family && Array.isArray(family)) {
+      members = family
+    }
+    
+    // 筛选孩子角色
+    return members.filter(m => m.role === 'child')
+  },
+
+  // 获取当前用户对应的成员
+  getCurrentMember: function() {
+    const userInfo = app.globalData.userInfo || {}
+    if (!userInfo) return null
+    
+    let family = app.globalData.familyMembers
+    let members = []
+    
+    if (family && Array.isArray(family.members)) {
+      members = family.members
+    } else if (family && Array.isArray(family)) {
+      members = family
+    }
+    
+    // 1. 优先通过手机号匹配
+    const phone = userInfo.phone
+    if (phone) {
+      const phoneMatch = members.find(m => m.phone === phone)
+      if (phoneMatch) return phoneMatch
+    }
+    
+    // 2. 通过角色类型匹配
+    if (userInfo.role) {
+      const roleMatch = members.find(m => m.role === userInfo.role)
+      if (roleMatch) return roleMatch
+    }
+    
+    // 3. 通过 isCurrentUser 标记查找
+    return members.find(m => m.isCurrentUser)
+  },
+
+  // 获取成员的连续打卡天数
+  getMemberStreak: async function(memberName) {
+    let currentStreak = 0
+    let bestStreak = 0
+    
+    let family = app.globalData.familyMembers
+    let members = []
+    
+    if (family && Array.isArray(family.members)) {
+      members = family.members
+    } else if (family && Array.isArray(family)) {
+      members = family
+    }
+    
+    // 查找指定成员
+    const member = members.find(m => m.name === memberName)
+    if (member) {
+      currentStreak = member.consecutiveCheckInDays || 0
+      bestStreak = member.maxCheckInDays || 0
+    }
+    
+    return { currentStreak, bestStreak }
+  },
+
+  // 切换下拉框显示
+  toggleChildPicker: function() {
+    this.setData({
+      showChildPicker: !this.data.showChildPicker
+    })
+  },
+
+  // 选择孩子成员
+  selectChildMember: async function(e) {
+    const name = e.currentTarget.dataset.name
+    const childMembers = this.data.childMembers
+    const index = childMembers.findIndex(m => m.name === name)
+    
+    if (index >= 0) {
+      this.setData({
+        selectedChildIndex: index,
+        selectedChildName: name,
+        showChildPicker: false
+      })
+      
+      // 重新加载数据
+      await this.loadAchievementData()
+    }
+  },
+
+  getTaskStats: async function(role, currentMemberName) {
+    const userInfo = app.globalData.userInfo || {}
+    const familyId = userInfo.familyId
+    
+    // 获取任务总数
+    const schedules = app.globalData.schedules || []
+    const totalTasks = schedules.length
+    
+    // 获取完成任务数
+    let completedTasks = 0
+    
+    if (familyId) {
+      try {
+        let result
+        if (role === 'parent' && currentMemberName) {
+          // 家长查看孩子数据
+          result = await app.getCompletedTaskStats(familyId, currentMemberName)
+        } else if (role === 'child' && currentMemberName) {
+          result = await app.getCompletedTaskStats(familyId, currentMemberName)
+        } else {
+          result = await app.getCompletedTaskStats(familyId)
+        }
+        
+        if (result.success) {
+          if (currentMemberName) {
+            completedTasks = result.total || 0
+          } else {
+            const stats = result.stats || {}
+            completedTasks = Object.values(stats).reduce((sum, count) => sum + count, 0)
+          }
+        }
+      } catch (error) {
+        console.error('获取任务统计失败:', error)
+      }
+    }
+    
+    return { totalTasks, completedTasks }
+  },
+
   findCurrentMemberName: function() {
     const userInfo = app.globalData.userInfo || {}
     if (!userInfo) return ''
     
     let family = app.globalData.familyMembers
-    if (!family || (!family.members && !Array.isArray(family))) {
-      try {
-        family = wx.getStorageSync('familyMembers')
-      } catch (e) {}
-    }
     
     let members = []
     if (family && Array.isArray(family.members)) {
@@ -240,11 +372,6 @@ Page({
     
     const userInfo = app.globalData.userInfo || {}
     let family = app.globalData.familyMembers
-    if (!family || (!family.members && !Array.isArray(family))) {
-      try {
-        family = wx.getStorageSync('familyMembers')
-      } catch (e) {}
-    }
     
     let members = []
     if (family && Array.isArray(family.members)) {
@@ -387,54 +514,29 @@ Page({
     return { unlockedBadges, lockedBadges };
   },
 
-  getWishes: function() {
-    // 获取当前用户角色名称
-    const currentMemberName = this.findCurrentMemberName()
-    console.log('当前成员名称:', currentMemberName)
-    
-    // 从 app.globalData 获取心愿数据
+  getWishes: function(memberName) {
+    if (!memberName) {
+      memberName = this.findCurrentMemberName()
+    }
     let allWishes = app.globalData.wishes || []
-    console.log('从 globalData 获取到的心愿:', allWishes)
     
-    // 如果没有数据，尝试从缓存读取
     if (allWishes.length === 0) {
       try {
         const cachedWishes = wx.getStorageSync('wishes') || []
         if (cachedWishes.length > 0) {
-          console.log('从缓存获取到心愿:', cachedWishes)
           allWishes = cachedWishes
           app.globalData.wishes = cachedWishes
         }
-      } catch (e) {
-        console.error('从缓存读取心愿失败:', e)
-      }
+      } catch (e) {}
     }
     
-    // 如果还是没有数据，使用默认数据
-    if (allWishes.length === 0) {
-      console.log('使用默认心愿数据')
-      allWishes = [
-        { id: 'default1', name: '看电影', icon: '🎬', points: 50, assignedTo: [currentMemberName] },
-        { id: 'default2', name: '玩游戏1小时', icon: '🎮', points: 100, assignedTo: [currentMemberName], weeklyLimitEnabled: true, weeklyLimitCount: 3 },
-        { id: 'default3', name: '冰淇淋', icon: '🍦', points: 30, assignedTo: [currentMemberName], weeklyLimitEnabled: true, weeklyLimitCount: 2 },
-        { id: 'default4', name: '去游乐园', icon: '🎢', points: 300, assignedTo: [currentMemberName] },
-        { id: 'default5', name: '买玩具', icon: '🎁', points: 200, assignedTo: [currentMemberName] },
-        { id: 'default6', name: '吃大餐', icon: '🍔', points: 80, assignedTo: [currentMemberName] }
-      ]
-    }
-    
-    // 筛选当前用户可兑换的心愿
     const filteredWishes = allWishes.filter(wish => {
-      // 如果心愿没有分配给特定成员，则所有孩子都可以兑换
       if (!wish.assignedTo || wish.assignedTo.length === 0) {
         return true
       }
-      // 否则检查是否分配给了当前成员
-      return wish.assignedTo.includes(currentMemberName)
+      return wish.assignedTo.includes(memberName)
     })
-    console.log('筛选后的心愿:', filteredWishes)
     
-    // 定义一些渐变色用于显示
     const gradients = [
       { color: '#FF80AB', colorEnd: '#FF4081' },
       { color: '#4ECDC4', colorEnd: '#26A69A' },
@@ -444,7 +546,6 @@ Page({
       { color: '#EF5350', colorEnd: '#E53935' }
     ]
     
-    // 格式化心愿数据
     return filteredWishes.map((wish, index) => ({
       id: wish.id || wish._id,
       name: wish.name,

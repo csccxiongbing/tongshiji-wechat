@@ -4,8 +4,8 @@ Page({
   data: {
     currentMode: 'pomodoro',
     isRunning: false,
-    timeLeft: 1500,
-    totalTime: 1500,
+    timeLeft: 25 * 60,
+    totalTime: 25 * 60,
     progress: 0,
     formattedTime: '25:00',
     timerLabel: '专注时间',
@@ -24,9 +24,9 @@ Page({
   },
   
   modes: {
-    pomodoro: { duration: 1500, label: '专注时间', color: '#FF6B35', emoji: '🍅' },
-    shortBreak: { duration: 300, label: '短休息', color: '#4ECDC4', emoji: '☕' },
-    longBreak: { duration: 900, label: '长休息', color: '#96CEB4', emoji: '😴' }
+    pomodoro: { duration: 25 * 60, label: '专注时间', color: '#FF6B35', emoji: '🍅' },
+    shortBreak: { duration: 5 * 60, label: '短休息', color: '#4ECDC4', emoji: '☕' },
+    longBreak: { duration: 15 * 60, label: '长休息', color: '#96CEB4', emoji: '😴' }
   },
   
   onLoad: async function(options) {
@@ -39,8 +39,14 @@ Page({
     console.log('全局变量任务信息:', pomodoroTaskInfo)
     
     if (pomodoroTaskInfo) {
+      // 如果有传递的日期，合并到 taskInfo 中
+      var taskInfo = pomodoroTaskInfo.taskInfo || {}
+      if (pomodoroTaskInfo.date) {
+        taskInfo.date = pomodoroTaskInfo.date
+      }
+      
       that.setData({
-        taskInfo: pomodoroTaskInfo.taskInfo,
+        taskInfo: taskInfo,
         scheduleId: pomodoroTaskInfo.scheduleId,
         memberName: pomodoroTaskInfo.memberName,
         taskPoints: pomodoroTaskInfo.points,
@@ -57,10 +63,7 @@ Page({
       app.globalData.pomodoroTaskInfo = null
     }
     
-    await app.loadFamilyMembers()
     that.updateTabBar()
-    await app.loadPomodoroHistory()
-    that.loadStats()
   },
   
   onShow: async function() {
@@ -417,11 +420,22 @@ Page({
       
       console.log('点击完成 - 最终成员名:', taskMemberName)
       
-      // 先完成任务（如果有任务信息）
+      // 获取日期字符串 - 优先使用从周计划传递的日期
+      var dateStr
+      if (that.data.taskInfo && that.data.taskInfo.date) {
+        dateStr = that.data.taskInfo.date
+        console.log('使用周计划传递的日期:', dateStr)
+      } else {
+        var now = new Date()
+        dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0')
+        console.log('使用当前日期:', dateStr)
+      }
+      
+      // 先完成任务（如果有任务信息）- 使用每日完成记录
       var taskCompleted = false
       if (taskScheduleId && taskMemberName) {
-        console.log('开始调用 completeSchedule 完成任务')
-        var taskResult = await app.completeSchedule(taskScheduleId, taskMemberName)
+        console.log('开始调用 updateDailyCompletion 完成任务')
+        var taskResult = await app.updateDailyCompletion(taskScheduleId, dateStr, taskMemberName, true)
         taskCompleted = taskResult.success
         console.log('任务完成结果:', taskResult)
       } else {
@@ -491,11 +505,6 @@ Page({
   getCurrentMemberName: function() {
     var userInfo = app.globalData.userInfo || {}
     var family = app.globalData.familyMembers
-    if (!family || (!family.members && !Array.isArray(family))) {
-      try {
-        family = wx.getStorageSync('familyMembers')
-      } catch (e) {}
-    }
     
     var members = []
     if (family && Array.isArray(family.members)) {
@@ -543,7 +552,12 @@ Page({
       return
     }
     
-    var result = await app.completeSchedule(scheduleId, memberName)
+    // 获取当前日期字符串
+    var now = new Date()
+    var dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0')
+    
+    // 使用每日完成记录完成任务
+    var result = await app.updateDailyCompletion(scheduleId, dateStr, memberName, true)
     
     if (!result.success) {
       console.error('完成任务失败:', result.message)

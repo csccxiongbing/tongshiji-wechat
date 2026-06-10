@@ -3,7 +3,7 @@ const app = getApp()
 Component({
   data: {
     currentIndex: 0,
-    childTabList: [
+    tabList: [
       {
         pagePath: '/pages/home/home',
         text: '今日',
@@ -24,25 +24,7 @@ Component({
         text: '我的',
         icon: '👤'
       }
-    ],
-    parentTabList: [
-      {
-        pagePath: '/pages/home/home',
-        text: '今日',
-        icon: '📅'
-      },
-      {
-        pagePath: '/pages/schedule/schedule',
-        text: '周计划',
-        icon: '📋'
-      },
-      {
-        pagePath: '/pages/my/my',
-        text: '我的',
-        icon: '👤'
-      }
-    ],
-    tabList: []
+    ]
   },
   
   attached: function() {
@@ -51,6 +33,7 @@ Component({
   },
   
   show: function() {
+    this.updateTabList()
     this.setCurrentIndex()
   },
   
@@ -61,8 +44,31 @@ Component({
     updateTabList: function() {
       const userInfo = app.globalData.userInfo
       const role = userInfo?.role || 'child'
-      const tabList = role === 'parent' ? this.data.parentTabList : this.data.childTabList
-      this.setData({ tabList: tabList })
+      // 家长和孩子都显示成就按钮
+      this.setData({
+        tabList: [
+          {
+            pagePath: '/pages/home/home',
+            text: '今日',
+            icon: '📅'
+          },
+          {
+            pagePath: '/pages/schedule/schedule',
+            text: '周计划',
+            icon: '📋'
+          },
+          {
+            pagePath: '/pages/achievement/achievement',
+            text: '成就',
+            icon: '🏆'
+          },
+          {
+            pagePath: '/pages/my/my',
+            text: '我的',
+            icon: '👤'
+          }
+        ]
+      })
     },
     
     setCurrentIndex: function() {

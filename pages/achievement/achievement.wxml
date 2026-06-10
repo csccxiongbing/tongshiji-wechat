@@ -1,6 +1,26 @@
 <view class="container">
   <view class="achieve-header">
-    <view class="achieve-title">我的成就</view>
+    <view class="header-top">
+      <view class="achieve-title">我的成就</view>
+      <view class="child-picker" wx:if="{{role === 'parent' && childMembers.length > 0}}">
+        <view class="picker-trigger" bindtap="toggleChildPicker">
+          <text class="picker-text">{{selectedChildName}}</text>
+          <text class="picker-arrow {{showChildPicker ? 'arrow-up' : ''}}">›</text>
+        </view>
+        <view class="picker-dropdown" wx:if="{{showChildPicker}}">
+          <view 
+            class="picker-option {{item.name === selectedChildName ? 'selected' : ''}}" 
+            wx:for="{{childMembers}}" 
+            wx:key="name"
+            bindtap="selectChildMember"
+            data-name="{{item.name}}"
+          >
+            <text>{{item.name}}</text>
+            <text class="option-check" wx:if="{{item.name === selectedChildName}}">✓</text>
+          </view>
+        </view>
+      </view>
+    </view>
     <view class="level-badge">
       <text class="crown-icon">👑</text>
       <text class="level-name">{{levelName}}</text>
@@ -10,6 +30,26 @@
         <view class="level-fill" style="width:{{levelProgress}}%;"></view>
       </view>
       <text class="level-text">距离下一等级还需 {{pointsToNext}} 积分</text>
+    </view>
+  </view>
+
+  <view class="stats-card">
+    <view class="stats-item">
+      <view class="stats-icon">⭐</view>
+      <text class="stats-val">{{currentPoints}}</text>
+      <text class="stats-lbl">当前积分</text>
+    </view>
+    <view class="stats-divider"></view>
+    <view class="stats-item">
+      <view class="stats-icon">📋</view>
+      <text class="stats-val">{{totalTasks}}</text>
+      <text class="stats-lbl">任务总数</text>
+    </view>
+    <view class="stats-divider"></view>
+    <view class="stats-item">
+      <view class="stats-icon">✅</view>
+      <text class="stats-val">{{completedTasks}}</text>
+      <text class="stats-lbl">完成任务</text>
     </view>
   </view>
 

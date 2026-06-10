@@ -48,10 +48,27 @@ const scheduleSchema = new mongoose.Schema({
   },
   repeatRule: {
     type: String,
-    enum: ['daily', 'weekday', 'weekly', 'never'],
+    enum: ['daily', 'weekday', 'weekly', 'monthly', 'never'],
     default: 'never',
   },
+  repeatDays: {
+    type: [Number],
+    default: [],
+  },
   repeatRuleText: {
+    type: String,
+    default: '',
+  },
+  startDate: {
+    type: String,
+    default: '',
+  },
+  endRepeat: {
+    type: String,
+    enum: ['never', 'date'],
+    default: 'never',
+  },
+  endRepeatDate: {
     type: String,
     default: '',
   },
@@ -66,6 +83,10 @@ const scheduleSchema = new mongoose.Schema({
   remindMembersText: {
     type: String,
     default: '',
+  },
+  remindTime: {
+    type: Number,
+    default: 0,
   },
   note: {
     type: String,

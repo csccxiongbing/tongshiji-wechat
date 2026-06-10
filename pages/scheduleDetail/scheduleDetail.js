@@ -4,7 +4,8 @@ Page({
   data: {
     scheduleId: null,
     schedule: null,
-    memberStatusList: []
+    memberStatusList: [],
+    dateStr: ''
   },
 
   onShow: function() {
@@ -16,13 +17,14 @@ Page({
     
     if (options.id) {
       this.setData({
-        scheduleId: options.id
+        scheduleId: options.id,
+        dateStr: options.date || ''
       })
       this.loadScheduleDetail()
     }
   },
 
-  loadScheduleDetail: function() {
+  loadScheduleDetail: async function() {
     const { scheduleId } = this.data
     const schedules = app.globalData.schedules || []
     
@@ -40,7 +42,7 @@ Page({
     if (schedule) {
       console.log('找到日程:', schedule)
       const formattedSchedule = this.formatScheduleTime(schedule)
-      const memberStatusList = this.getMemberStatusList(formattedSchedule)
+      const memberStatusList = await this.getMemberStatusList(formattedSchedule)
       this.setData({
         schedule: formattedSchedule,
         memberStatusList: memberStatusList
@@ -51,10 +53,45 @@ Page({
     }
   },
   
-  getMemberStatusList: function(schedule) {
+  getMemberStatusList: async function(schedule) {
     const members = schedule.scheduleMembers || []
-    const completedBy = schedule.completedBy || []
+    const { dateStr, scheduleId } = this.data
     
+    console.log('getMemberStatusList - dateStr:', dateStr, 'scheduleId:', scheduleId)
+    
+    // 如果有日期参数，使用每日完成记录
+    if (dateStr) {
+      try {
+        console.log('调用 getDailyCompletion - scheduleId:', scheduleId, 'dateStr:', dateStr)
+        const result = await app.getDailyCompletion(scheduleId, dateStr)
+        console.log('getDailyCompletion 返回:', result)
+        if (result.success) {
+          if (result.completion) {
+            const completions = result.completion.completions || []
+            console.log('完成记录:', completions)
+            const completedNames = completions.map(c => c.memberName)
+            console.log('已完成成员:', completedNames)
+            return members.map(name => ({
+              name: name,
+              completed: completedNames.includes(name)
+            }))
+          } else {
+            // 有日期但没有完成记录，说明当天没有人完成
+            console.log('当天没有完成记录，返回空完成状态')
+            return members.map(name => ({
+              name: name,
+              completed: false
+            }))
+          }
+        }
+      } catch (error) {
+        console.error('获取完成记录错误:', error)
+      }
+    }
+    
+    // 否则使用旧的 completedBy
+    console.log('使用旧的 completedBy:', schedule.completedBy)
+    const completedBy = schedule.completedBy || []
     return members.map(name => ({
       name: name,
       completed: completedBy.includes(name)
@@ -73,7 +110,7 @@ Page({
       if (result.success && result.schedule) {
         console.log('从服务器获取日程:', result.schedule)
         const formattedSchedule = this.formatScheduleTime(result.schedule)
-        const memberStatusList = this.getMemberStatusList(formattedSchedule)
+        const memberStatusList = await this.getMemberStatusList(formattedSchedule)
         this.setData({
           schedule: formattedSchedule,
           memberStatusList: memberStatusList

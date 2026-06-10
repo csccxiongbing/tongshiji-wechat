@@ -16,7 +16,8 @@ Page({
     showMemberPicker: false,
     selectedMembers: [],
     isChildRole: false,
-    currentMemberName: ''
+    currentMemberName: '',
+    isProcessing: false
   },
   
   onShow: async function() {
@@ -105,69 +106,29 @@ Page({
   
   loadSchedules: async function() {
     const userInfo = app.globalData.userInfo || {}
-    let schedules = []
-    
-    // 优先从后端API获取数据
-    if (userInfo.familyId) {
-      try {
-        const result = await app.request({
-          url: '/schedules/family/' + userInfo.familyId,
-          method: 'GET'
-        })
-        
-        if (result.success) {
-          app.globalData.schedules = result.schedules
-          wx.setStorageSync('schedules', result.schedules)
-          schedules = result.schedules || []
-        }
-      } catch (error) {
-        console.error('加载日程错误:', error)
-      }
-    }
-    
-    // 如果后端API获取失败，使用本地缓存
-    if (schedules.length === 0) {
-      schedules = (app.globalData.schedules && app.globalData.schedules.length > 0) ? app.globalData.schedules : []
-    }
-    
     const now = new Date()
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     const todayWeekday = now.getDay()
     const currentMemberName = this.data.currentMemberName
     const isChild = this.data.isChildRole
-
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
-    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
-
-    let todaySchedules = schedules.filter(schedule => {
-      if (!schedule.startTime && !schedule.endTime) return true
-
-      let startInRange = true
-      let endInRange = true
-
-      if (schedule.startTime) {
-        const startDate = new Date(schedule.startTime.replace(/-/g, '/'))
-        startInRange = startDate >= todayStart
-      }
-
-      if (schedule.endTime) {
-        const endDate = new Date(schedule.endTime.replace(/-/g, '/'))
-        endInRange = endDate <= todayEnd
-      }
-
-      return startInRange && endInRange
-    })
     
-    // 如果是孩子角色，只显示任务成员中包含当前孩子的任务
+    let todaySchedules = []
+    
+    if (userInfo.familyId) {
+      try {
+        const result = await app.loadTodaySchedules()
+        if (result.success) {
+          todaySchedules = result.schedules || []
+        }
+      } catch (error) {
+        console.error('加载今日日程错误:', error)
+      }
+    }
+    
     if (isChild && currentMemberName) {
       todaySchedules = todaySchedules.filter(schedule => {
         return schedule.scheduleMembers && schedule.scheduleMembers.includes(currentMemberName)
       })
-    }
-    
-    const getWeekDay = (dateStr) => {
-      const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
-      const date = new Date(dateStr.replace(/-/g, '/'))
-      return weekdays[date.getDay()]
     }
     
     const extractTime = (datetimeStr) => {
@@ -176,15 +137,28 @@ Page({
       return match ? match[1] : datetimeStr
     }
     
+    const todayCompletions = {}
+    for (const schedule of todaySchedules) {
+      try {
+        const result = await app.getDailyCompletion(schedule.id || schedule._id, todayStr)
+        if (result.success && result.completion) {
+          todayCompletions[schedule.id || schedule._id] = result.completion.completions || []
+        }
+      } catch (error) {
+        console.error('获取完成记录错误:', error)
+      }
+    }
+    
     const getMemberStatus = (schedule) => {
       const members = schedule.scheduleMembers || []
-      const completedBy = schedule.completedBy || []
+      const completions = todayCompletions[schedule.id || schedule._id] || []
+      const completedNames = completions.map(c => c.memberName)
       
       if (isChild && currentMemberName) {
         if (members.includes(currentMemberName)) {
           return [{
             name: currentMemberName,
-            completed: completedBy.includes(currentMemberName)
+            completed: completedNames.includes(currentMemberName)
           }]
         }
         return []
@@ -192,7 +166,7 @@ Page({
       
       return members.map(name => ({
         name: name,
-        completed: completedBy.includes(name)
+        completed: completedNames.includes(name)
       }))
     }
     
@@ -201,8 +175,9 @@ Page({
       time: s.time || s.startTime || '00:00',
       formattedStartTime: extractTime(s.startTime),
       formattedEndTime: extractTime(s.endTime),
-      weekDay: s.startTime ? getWeekDay(s.startTime) : ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][todayWeekday],
-      memberStatus: getMemberStatus(s)
+      weekDay: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][todayWeekday],
+      memberStatus: getMemberStatus(s),
+      completed: (todayCompletions[s.id || s._id] || []).length === (s.scheduleMembers || []).length
     }))
     
     const sortedSchedules = formattedSchedules.sort((a, b) => {
@@ -365,33 +340,37 @@ Page({
   },
   
   toggleMemberComplete: async function(e) {
-    const scheduleId = e.currentTarget.dataset.id
-    const memberName = e.currentTarget.dataset.member
+    if (this.data.isProcessing) {
+      console.log('正在处理中，忽略重复点击')
+      return
+    }
     
-    console.log('toggleMemberComplete - scheduleId:', scheduleId, 'memberName:', memberName)
+    this.setData({ isProcessing: true })
     
-    // 容错处理：如果 scheduleId 不存在或为空
-    if (!scheduleId) {
-      console.error('scheduleId 为空，从 todaySchedules 中查找')
-      // 尝试从数据中找到对应的 schedule
-      const currentSchedules = this.data.todaySchedules || []
-      if (currentSchedules.length > 0) {
-        console.log('todaySchedules 样本:', currentSchedules[0])
+    try {
+      const scheduleId = e.currentTarget.dataset.id
+      const memberName = e.currentTarget.dataset.member
+      const now = new Date()
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+      
+      console.log('toggleMemberComplete - scheduleId:', scheduleId, 'memberName:', memberName)
+      
+      if (!scheduleId) {
+        console.error('scheduleId 为空')
+        return
       }
-      return
-    }
-    
-    const schedule = this.data.todaySchedules.find(s => s.id === scheduleId || s._id === scheduleId)
-    if (!schedule) {
-      console.error('未找到对应的 schedule, scheduleId:', scheduleId)
-      return
-    }
-    
-    const isCompleted = (schedule.completedBy || []).includes(memberName)
-    
-    // 如果已完成，则取消完成
-    if (isCompleted) {
-      const result = await app.uncompleteSchedule(scheduleId, memberName)
+      
+      const schedule = this.data.todaySchedules.find(s => s.id === scheduleId || s._id === scheduleId)
+      if (!schedule) {
+        console.error('未找到对应的 schedule, scheduleId:', scheduleId)
+        return
+      }
+      
+      const memberStatus = schedule.memberStatus.find(m => m.name === memberName)
+      const isCompleted = memberStatus ? memberStatus.completed : false
+      const points = schedule.points || 0
+      
+      const result = await app.updateDailyCompletion(scheduleId, dateStr, memberName, !isCompleted)
       
       if (!result.success) {
         wx.showToast({
@@ -401,41 +380,17 @@ Page({
         return
       }
       
-      // 取消完成时扣除积分
-      if (schedule.points && schedule.points > 0) {
-        await app.subtractPoints(memberName, schedule.points, `取消完成"${schedule.title}"任务`)
-        this.showMinusPointsEffect(schedule.points, memberName, scheduleId)
+      if (!isCompleted && points > 0) {
+        this.showPointsEffect(points, memberName, scheduleId)
+      } else if (isCompleted && points > 0) {
+        this.showMinusPointsEffect(points, memberName, scheduleId)
       }
       
-      // 延迟刷新数据，让效果先展示
       setTimeout(() => {
         this.loadSchedules()
       }, 1000)
-      return
-    }
-    
-    // 如果未完成，则标记完成
-    if (!isCompleted) {
-      const result = await app.completeSchedule(scheduleId, memberName)
-      
-      if (!result.success) {
-        wx.showToast({
-          title: result.message,
-          icon: 'none'
-        })
-        return
-      }
-      
-      // 完成任务时添加积分，积分加到完成任务的成员角色
-      if (schedule.points && schedule.points > 0) {
-        await app.addPoints(memberName, schedule.points, `完成"${schedule.title}"任务`)
-        this.showPointsEffect(schedule.points, memberName, scheduleId)
-      }
-      
-      // 延迟刷新数据，让效果先展示
-      setTimeout(() => {
-        this.loadSchedules()
-      }, 1000)
+    } finally {
+      this.setData({ isProcessing: false })
     }
   },
   
@@ -554,11 +509,13 @@ Page({
     const scheduleId = e.currentTarget.dataset.id
     const userInfo = app.globalData.userInfo || {}
     const isChildRole = userInfo.role === 'child'
+    const now = new Date()
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
     
     if (isChildRole) {
       // 孩子角色跳转到详情页
       wx.navigateTo({
-        url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}`
+        url: `/pages/scheduleDetail/scheduleDetail?id=${scheduleId}&date=${dateStr}`
       })
     } else {
       // 家长角色跳转到编辑页面

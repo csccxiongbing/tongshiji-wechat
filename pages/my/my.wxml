@@ -19,27 +19,6 @@
     </view>
   </view>
   
-  <view class="section" wx:if="{{role === 'child'}}">
-    
-    <view class="achievements-grid">
-      <view class="achievement-item" bindtap="goToAchievement">
-        <view class="achievement-icon">⭐</view>
-        <text class="achievement-num">{{wishPoints}}</text>
-        <text class="achievement-label">积分</text>
-      </view>
-      <view class="achievement-item" bindtap="goToAchievement">
-        <view class="achievement-icon">🏆</view>
-        <text class="achievement-num">{{achievements.totalDays}}</text>
-        <text class="achievement-label">连续打卡天数</text>
-      </view>
-      <view class="achievement-item" bindtap="goToAchievement">
-        <view class="achievement-icon">✅</view>
-        <text class="achievement-num">{{achievements.completedTasks}}</text>
-        <text class="achievement-label">完成任务数</text>
-      </view>
-    </view>
-  </view>
-  
   <view class="section">
     <view class="menu-list">
       <view class="menu-item" bindtap="goToFamily">
@@ -70,16 +49,6 @@
       <view class="menu-item" bindtap="goToHelp">
         <view class="menu-icon">💡</view>
         <text class="menu-text">帮助与反馈</text>
-        <text class="menu-arrow">→</text>
-      </view>
-      <view class="menu-item" bindtap="printStorage">
-        <view class="menu-icon">🔍</view>
-        <text class="menu-text">查看本地存储</text>
-        <text class="menu-arrow">→</text>
-      </view>
-      <view class="menu-item clear-data-btn" wx:if="{{role === 'parent'}}" bindtap="clearAllData">
-        <view class="menu-icon">🗑️</view>
-        <text class="menu-text">清空所有数据</text>
         <text class="menu-arrow">→</text>
       </view>
       <view class="menu-item logout-btn" bindtap="logout">

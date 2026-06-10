@@ -27,7 +27,86 @@
 .achieve-title {
   font-size: 44rpx;
   font-weight: 900;
-  margin-bottom: 32rpx;
+  flex: 1;
+  text-align: center;
+}
+
+.header-top {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 24rpx;
+  position: relative;
+}
+
+.child-picker {
+  position: absolute;
+  right: 0;
+}
+
+.picker-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 10rpx 20rpx;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 24rpx;
+  transition: all 0.2s ease;
+}
+
+.picker-trigger:active {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.picker-text {
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 500;
+}
+
+.picker-arrow {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.8);
+  transition: transform 0.2s ease;
+}
+
+.picker-arrow.arrow-up {
+  transform: rotate(90deg);
+}
+
+.picker-dropdown {
+  position: absolute;
+  top: calc(100% + 8rpx);
+  right: 0;
+  min-width: 180rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.12);
+}
+
+.picker-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 28rpx;
+  font-size: 28rpx;
+  color: #333;
+  transition: background 0.15s ease;
+}
+
+.picker-option:active {
+  background: #f5f5f5;
+}
+
+.picker-option.selected {
+  color: #7C4DFF;
+  background: #f8f4ff;
+}
+
+.option-check {
+  font-size: 24rpx;
+  color: #7C4DFF;
 }
 
 .level-badge {
@@ -71,6 +150,46 @@
   margin-top: 16rpx;
   opacity: 0.85;
   display: block;
+}
+
+.stats-card {
+  background: #fff;
+  margin: 32rpx;
+  border-radius: 32rpx;
+  padding: 40rpx 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  box-shadow: 0 8rpx 32rpx rgba(0,0,0,0.06);
+}
+
+.stats-item {
+  text-align: center;
+  flex: 1;
+}
+
+.stats-icon {
+  font-size: 48rpx;
+  margin-bottom: 12rpx;
+}
+
+.stats-val {
+  font-size: 48rpx;
+  font-weight: 900;
+  color: #333;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.stats-lbl {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.stats-divider {
+  width: 2rpx;
+  height: 80rpx;
+  background: #F0F0F0;
 }
 
 .streak-card {
